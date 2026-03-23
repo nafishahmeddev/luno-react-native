@@ -3,9 +3,9 @@ import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Alert
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
-import { useCategories, useDeleteCategory } from '../../src/features/categories/hooks';
-import { Category } from '../../src/features/categories/api';
-import { CategoryFormModal } from '../../src/features/categories/components/CategoryFormModal';
+import { useCategories, useDeleteCategory } from '../../src/hooks/categories';
+import { Category } from '../../src/api/categories';
+import { CategoryFormModal } from '../../src/components/modals/CategoryFormModal';
 
 export default function CategoriesScreen() {
   const { data: categories, isLoading } = useCategories();

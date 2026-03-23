@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, ViewStyle } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { colors } from '../../theme/colors';
 
 type CardProps = {
@@ -9,9 +10,9 @@ type CardProps = {
 
 export function Card({ children, style }: CardProps) {
   return (
-    <View style={[styles.card, style]}>
+    <BlurView intensity={25} tint="dark" style={[styles.card, style]}>
       {children}
-    </View>
+    </BlurView>
   );
 }
 
@@ -20,12 +21,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
     borderWidth: 1,
     borderColor: colors.border,
+    overflow: 'hidden',
   },
 });

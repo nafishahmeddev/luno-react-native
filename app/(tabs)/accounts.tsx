@@ -3,9 +3,9 @@ import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Alert
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
-import { useAccounts, useDeleteAccount } from '../../src/features/accounts/hooks';
-import { Account } from '../../src/features/accounts/api';
-import { AccountFormModal } from '../../src/features/accounts/components/AccountFormModal';
+import { useAccounts, useDeleteAccount } from '../../src/hooks/accounts';
+import { Account } from '../../src/api/accounts';
+import { AccountFormModal } from '../../src/components/modals/AccountFormModal';
 
 export default function AccountsScreen() {
   const { data: accounts, isLoading } = useAccounts();

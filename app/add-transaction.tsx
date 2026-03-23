@@ -9,12 +9,12 @@ import { typography } from '../src/theme/typography';
 import { Input } from '../src/components/ui/Input';
 import { Button } from '../src/components/ui/Button';
 
-import { useCreateTransaction } from '../src/features/transactions/hooks';
-import { useAccounts } from '../src/features/accounts/hooks';
-import { useCategories } from '../src/features/categories/hooks';
+import { useCreateTransaction } from '../src/hooks/transactions';
+import { useAccounts } from '../src/hooks/accounts';
+import { useCategories } from '../src/hooks/categories';
 
-import { AccountFormModal } from '../src/features/accounts/components/AccountFormModal';
-import { CategoryFormModal } from '../src/features/categories/components/CategoryFormModal';
+import { AccountFormModal } from '../src/components/modals/AccountFormModal';
+import { CategoryFormModal } from '../src/components/modals/CategoryFormModal';
 
 export default function AddTransactionScreen() {
   const router = useRouter();

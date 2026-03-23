@@ -6,8 +6,8 @@ import { typography } from '../../src/theme/typography';
 import { Button } from '../../src/components/ui/Button';
 import { Input } from '../../src/components/ui/Input';
 import { useOnboarding } from '../../src/providers/OnboardingProvider';
-import { useCreateAccount } from '../../src/features/accounts/hooks';
-import { useCreateCategory } from '../../src/features/categories/hooks';
+import { useCreateAccount } from '../../src/hooks/accounts';
+import { useCreateCategory } from '../../src/hooks/categories';
 
 export default function OnboardingScreen() {
   const router = useRouter();

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, SafeAreaView, ActivityIndicator } from 'react-native';
 import { colors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
-import { useTransactions } from '../../src/features/transactions/hooks';
+import { useTransactions } from '../../src/hooks/transactions';
 import { Card } from '../../src/components/ui/Card';
 
 export default function TransactionsScreen() {

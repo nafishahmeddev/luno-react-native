@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../../theme/colors';
-import { typography } from '../../../theme/typography';
-import { Input } from '../../../components/ui/Input';
-import { Button } from '../../../components/ui/Button';
-import { useCreateCategory, useUpdateCategory } from '../hooks';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { Input } from '../ui/Input';
+import { Button } from '../ui/Button';
+import { useCreateCategory, useUpdateCategory } from '../../hooks/categories';
 
-import { Category } from '../api';
+import { Category } from '../../api/categories';
 
 export type CategoryFormModalProps = {
   visible: boolean;

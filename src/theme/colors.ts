@@ -1,14 +1,15 @@
 export const colors = {
-  primary: '#7E22CE', // Vibrant Electric Violet
-  primaryLight: '#A855F7',
-  primaryDark: '#581C87',
-  background: '#0F172A', // Sleek Slate Dark Mode
-  card: '#1E293B',
-  surface: '#334155',
-  text: '#F8FAFC',
-  textMuted: '#94A3B8',
-  success: '#10B981', // Emerald
-  danger: '#EF4444',  // Rose
-  warning: '#F59E0B', // Amber
-  border: '#334155',
+  background: '#030303', // Pitch Black
+  card: 'rgba(255, 255, 255, 0.04)', // Frosted glass fallback
+  surface: 'rgba(255, 255, 255, 0.08)',
+  primary: '#00FFAA', // Neon Mint
+  primaryLight: '#5CFFC6',
+  primaryDark: '#00A870',
+  secondary: '#00F0FF', // Neon Cyan
+  text: '#FFFFFF',
+  textMuted: '#A0A0A0',
+  border: 'rgba(255, 255, 255, 0.12)',
+  success: '#39FF14', // Neon Green
+  danger: '#FF0055', // Neon Pink/Red
+  warning: '#FFD700',
 };

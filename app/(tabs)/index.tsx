@@ -4,8 +4,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
-import { useTransactions } from '../../src/features/transactions/hooks';
-import { useAccounts } from '../../src/features/accounts/hooks';
+import { useTransactions } from '../../src/hooks/transactions';
+import { useAccounts } from '../../src/hooks/accounts';
 import { Card } from '../../src/components/ui/Card';
 
 export default function DashboardScreen() {

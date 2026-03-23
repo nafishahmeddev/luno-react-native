@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 
@@ -24,16 +25,7 @@ export function Button({
   style,
   textStyle,
 }: ButtonProps) {
-  const getBackgroundColor = () => {
-    switch (variant) {
-      case 'primary': return colors.primary;
-      case 'secondary': return colors.surface;
-      case 'danger': return colors.danger;
-      case 'success': return colors.success;
-      case 'outline': return 'transparent';
-      default: return colors.primary;
-    }
-  };
+
 
   const getTextColor = () => {
     if (variant === 'outline') return colors.text;
@@ -54,10 +46,10 @@ export function Button({
       style={[
         styles.base,
         {
-          backgroundColor: getBackgroundColor(),
+          backgroundColor: variant === 'primary' ? colors.primary : variant === 'success' ? colors.success : variant === 'danger' ? colors.danger : 'transparent',
           height: getHeight(),
-          borderColor: variant === 'outline' ? colors.border : 'transparent',
-          borderWidth: variant === 'outline' ? 1 : 0,
+          borderColor: variant === 'outline' || variant === 'secondary' ? colors.border : 'transparent',
+          borderWidth: variant === 'outline' || variant === 'secondary' ? 1 : 0,
           opacity: disabled ? 0.6 : 1,
         },
         style,
@@ -66,6 +58,9 @@ export function Button({
       disabled={disabled || isLoading}
       activeOpacity={0.8}
     >
+      {(variant === 'outline' || variant === 'secondary') && (
+        <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFillObject} />
+      )}
       {isLoading ? (
         <ActivityIndicator color={getTextColor()} />
       ) : (
@@ -84,6 +79,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     paddingHorizontal: 16,
+    overflow: 'hidden',
   },
   text: {
     fontSize: typography.sizes.md,

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as api from './api';
+import * as api from '../api/transactions';
 
 export const TRANSACTIONS_KEYS = {
   all: ['transactions'] as const,
