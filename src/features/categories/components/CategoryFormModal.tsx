@@ -53,6 +53,8 @@ const COLORS = [
   '#10B981',
   '#3B82F6',
   '#64748B',
+  '#14B8A6',
+  '#F59E0B',
 ] as const;
 
 export function CategoryFormModal({ visible, onClose, category }: CategoryFormModalProps) {
