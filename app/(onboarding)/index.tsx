@@ -107,9 +107,9 @@ export default function OnboardingScreen() {
         await createCategory(cat);
       }
 
-      // 4. Conclude Context
+      // 4. Conclude    try {
       await completeOnboarding();
-      router.replace('/(tabs)');
+      router.replace('/(main)');
     } catch {
       alert("System failed to initialize profile environment.");
     }

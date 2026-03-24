@@ -1,57 +1,159 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Modal, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/providers/ThemeProvider';
 import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
 import { useTransactions } from '../../src/features/transactions/hooks/transactions';
-import { Card } from '../../src/components/ui/Card';
+import { useAccounts } from '../../src/features/accounts/hooks/accounts';
 import { MoneyText } from '../../src/components/ui/MoneyText';
+import { Header } from '../../src/components/ui/Header';
+import { Button } from '../../src/components/ui/Button';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
 
 export default function TransactionsScreen() {
   const { colors } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const { data: transactions, isLoading } = useTransactions();
+  const { data: accounts } = useAccounts();
+  
+  const params = useLocalSearchParams();
+  
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [activeAccountId, setActiveAccountId] = useState<number | null>(params.accountId ? Number(params.accountId) : null);
+  const [dateFilter, setDateFilter] = useState<'ALL' | 'THIS_MONTH' | 'LAST_MONTH'>('ALL');
+
+  const filteredTransactions = React.useMemo(() => {
+    if (!transactions) return [];
+    let result = transactions;
+
+    if (activeAccountId) {
+      result = result.filter(t => t.accountId === activeAccountId);
+    }
+
+    if (dateFilter !== 'ALL') {
+      const now = new Date();
+      result = result.filter(t => {
+        const d = new Date(t.datetime);
+        if (dateFilter === 'THIS_MONTH') {
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }
+        if (dateFilter === 'LAST_MONTH') {
+          const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          return d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear();
+        }
+        return true;
+      });
+    }
+
+    return result;
+  }, [transactions, activeAccountId, dateFilter]);
+
+  const renderFilterModal = () => (
+    <Modal visible={filterModalVisible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>FILTERS</Text>
+            <TouchableOpacity onPress={() => setFilterModalVisible(false)} style={styles.closeBtn}>
+              <Ionicons name="close" size={24} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalScroll}>
+            <Text style={styles.filterSectionTitle}>ACCOUNT</Text>
+            <View style={styles.pillContainer}>
+              <TouchableOpacity 
+                style={[styles.pill, !activeAccountId && styles.pillActive]} 
+                onPress={() => setActiveAccountId(null)}
+              >
+                <Text style={[styles.pillText, !activeAccountId && styles.pillTextActive]}>All Accounts</Text>
+              </TouchableOpacity>
+              {accounts?.map(acc => (
+                <TouchableOpacity 
+                  key={acc.id} 
+                  style={[styles.pill, activeAccountId === acc.id && styles.pillActive]} 
+                  onPress={() => setActiveAccountId(acc.id)}
+                >
+                  <Text style={[styles.pillText, activeAccountId === acc.id && styles.pillTextActive]}>{acc.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.filterSectionTitle}>DATE RANGE</Text>
+            <View style={styles.pillContainer}>
+              {(['ALL', 'THIS_MONTH', 'LAST_MONTH'] as const).map(dt => (
+                <TouchableOpacity 
+                  key={dt} 
+                  style={[styles.pill, dateFilter === dt && styles.pillActive]} 
+                  onPress={() => setDateFilter(dt)}
+                >
+                  <Text style={[styles.pillText, dateFilter === dt && styles.pillTextActive]}>
+                    {dt.replace('_', ' ')}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+
+          <Button title="APPLY FILTERS" onPress={() => setFilterModalVisible(false)} style={{ marginTop: 24 }} />
+        </View>
+      </View>
+    </Modal>
+  );
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.text} />
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>All Transactions</Text>
-      </View>
+      <Header 
+        title={activeAccountId ? 'Account Ledger' : 'All Activity'} 
+        showBack 
+        rightAction={
+          <TouchableOpacity onPress={() => setFilterModalVisible(true)} style={styles.filterTrigger}>
+            <Ionicons name="options-outline" size={24} color={colors.text} />
+            {(activeAccountId || dateFilter !== 'ALL') && <View style={styles.filterDot} />}
+          </TouchableOpacity>
+        }
+      />
 
       <FlatList
-        data={transactions}
+        data={filteredTransactions}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <Text style={styles.emptyText}>No transactions found.</Text>
         }
         renderItem={({ item: tx }) => (
-          <Card style={styles.txCard}>
-            <View style={styles.txRow}>
-              <View>
-                <Text style={styles.txTitle}>{tx.note || 'Untitled'}</Text>
+          <View style={styles.txRow}>
+            <View style={styles.txLeft}>
+              <View style={[styles.txIconBox, { backgroundColor: (tx.category.color ? '#' + tx.category.color.toString(16).padStart(6, '0') : colors.primary) + '20' }]}>
+                <Ionicons name={(tx.category.icon as any) || 'pricetag'} size={18} color={(tx.category.color ? '#' + tx.category.color.toString(16).padStart(6, '0') : colors.primary)} />
+              </View>
+              <View style={styles.txMeta}>
+                <Text style={styles.txTitle} numberOfLines={1}>{tx.note || 'Untitled'}</Text>
                 <Text style={styles.txSubtitle}>
                   {tx.category.name} • {new Date(tx.datetime).toLocaleDateString()}
                 </Text>
               </View>
-              <MoneyText 
-                amount={tx.amount} 
-                type={tx.type} 
-                style={styles.txAmount} 
-              />
             </View>
-          </Card>
+            <MoneyText 
+              amount={tx.amount} 
+              type={tx.type} 
+              style={styles.txAmount} 
+            />
+          </View>
         )}
       />
+
+      {renderFilterModal()}
     </SafeAreaView>
   );
 }
@@ -67,48 +169,148 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.background,
   },
-  header: {
-    padding: 20,
-    paddingBottom: 10,
-  },
-  title: {
-    // @ts-ignore
-    fontFamily: typography.fonts.heading,
-    color: colors.text,
-    fontSize: 32,
-    letterSpacing: -1,
-  },
   listContent: {
-    padding: 20,
-    paddingTop: 10,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 40,
   },
-  txCard: {
-    marginBottom: 12,
-  },
+  
   txRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 16,
+  },
+  txLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    paddingRight: 16,
+  },
+  txIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  txMeta: {
+    flex: 1,
   },
   txTitle: {
+    // @ts-ignore
+    fontFamily: typography.fonts.headingRegular,
     color: colors.text,
     fontSize: typography.sizes.md,
-    fontWeight: typography.weights.medium,
+    letterSpacing: -0.2,
   },
   txSubtitle: {
+    fontFamily: typography.fonts.regular,
     color: colors.textMuted,
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     marginTop: 4,
   },
   txAmount: {
     fontFamily: typography.fonts.monoBold,
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
+    fontSize: typography.sizes.md,
+    letterSpacing: -0.5,
   },
   emptyText: {
+    fontFamily: typography.fonts.mono,
     color: colors.textMuted,
     textAlign: 'center',
-    marginTop: 40,
-    fontSize: typography.sizes.md,
+    marginTop: 60,
+    fontSize: typography.sizes.sm,
+    textTransform: 'uppercase',
+  },
+
+  filterTrigger: {
+    position: 'relative',
+    padding: 8,
+  },
+  filterDot: {
+    position: 'absolute',
+    top: 6,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+    borderWidth: 2,
+    borderColor: colors.background,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  modalContent: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 24,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    // @ts-ignore
+    fontFamily: typography.fonts.heading,
+    fontSize: typography.sizes.xl,
+    color: colors.text,
+    letterSpacing: -0.5,
+  },
+  closeBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalScroll: {
+    marginBottom: 16,
+  },
+  filterSectionTitle: {
+    fontFamily: typography.fonts.mono,
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+    marginBottom: 12,
+    marginTop: 8,
+    letterSpacing: 1.5,
+  },
+  pillContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 24,
+    gap: 8,
+  },
+  pill: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  pillActive: {
+    backgroundColor: colors.text,
+    borderColor: colors.text,
+  },
+  pillText: {
+    fontFamily: typography.fonts.semibold,
+    fontSize: typography.sizes.sm,
+    color: colors.textMuted,
+  },
+  pillTextActive: {
+    color: colors.background,
+    fontFamily: typography.fonts.semibold,
   },
 });

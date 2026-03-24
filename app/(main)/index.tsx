@@ -31,20 +31,6 @@ export default function DashboardScreen() {
     }, {} as Record<string, number>) || {};
   }, [accounts]);
 
-  const incomeByCurrency = React.useMemo(() => {
-    return accounts?.reduce((acc, account) => {
-      acc[account.currency] = (acc[account.currency] || 0) + account.income;
-      return acc;
-    }, {} as Record<string, number>) || {};
-  }, [accounts]);
-
-  const expenseByCurrency = React.useMemo(() => {
-    return accounts?.reduce((acc, account) => {
-      acc[account.currency] = (acc[account.currency] || 0) + account.expense;
-      return acc;
-    }, {} as Record<string, number>) || {};
-  }, [accounts]);
-
   const currencyKeys = React.useMemo(() => {
     const keys = Object.keys(balancesByCurrency);
     return keys.length > 0 ? keys : [DEFAULT_CURRENCY];
@@ -139,6 +125,7 @@ export default function DashboardScreen() {
               <TouchableOpacity 
                 key={acc.id} 
                 style={[styles.accountCard, { borderTopWidth: 4, borderTopColor: accColor }]} 
+                onPress={() => router.push(`/transactions?accountId=${acc.id}`)}
                 onLongPress={() => handleAccountLongPress(acc)}
                 delayLongPress={250}
               >
@@ -185,19 +172,6 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </ScrollView>
 
-        {/* Minimalist Stat Row */}
-        <View style={styles.statsRow}>
-          <View style={styles.statColumnLeft}>
-            <Text style={styles.statHeading}>INFLOW</Text>
-            <MoneyText amount={incomeByCurrency[selectedCurrency] || 0} currency={selectedCurrency} style={styles.statValue} type="CR" weight="medium" />
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statColumnRight}>
-            <Text style={styles.statHeading}>OUTFLOW</Text>
-            <MoneyText amount={expenseByCurrency[selectedCurrency] || 0} currency={selectedCurrency} style={styles.statValue} type="DR" weight="medium" />
-          </View>
-        </View>
-
         {/* Editorial Activity List */}
         <View style={styles.activityHeader}>
           <Text style={styles.activityTitle}>LEDGER</Text>
@@ -207,26 +181,28 @@ export default function DashboardScreen() {
         </View>
 
         <View style={styles.txList}>
-          {transactions?.slice(0, 5).map((tx) => (
-            <View key={tx.id} style={styles.txRow}>
-              <View style={styles.txLeft}>
-                <View style={[styles.txIndicator, { backgroundColor: tx.type === 'CR' ? colors.success : colors.danger }]} />
-                <View>
-                  <Text style={styles.txTitle}>{tx.note || 'Untitled'}</Text>
-                  <Text style={styles.txCategory}>{tx.category?.name || 'Uncategorized'}</Text>
+          {transactions?.slice(0, 5).map(tx => {
+            const catColor = tx.category.color ? '#' + tx.category.color.toString(16).padStart(6, '0') : colors.primary;
+            return (
+              <View key={tx.id} style={styles.txRow}>
+                <View style={styles.txLeft}>
+                  <View style={[styles.txIconBox, { backgroundColor: catColor + '20' }]}>
+                    <Ionicons name={(tx.category.icon as any) || 'pricetag'} size={18} color={catColor} />
+                  </View>
+                  <View style={styles.txInfo}>
+                    <Text style={styles.txTitle} numberOfLines={1}>{tx.note || 'Untitled'}</Text>
+                    <Text style={styles.txCategory}>
+                      {tx.category.name} • {tx.account.name}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.txRight}>
+                  <MoneyText amount={tx.amount} currency={tx.account.currency} type={tx.type} style={styles.txAmount} weight="bold" />
+                  <Text style={styles.txDate}>{new Date(tx.datetime).toLocaleDateString()}</Text>
                 </View>
               </View>
-              <View style={styles.txRight}>
-                <MoneyText 
-                  amount={tx.amount} 
-                  currency={accounts?.find(a => a.id === tx.accountId)?.currency || DEFAULT_CURRENCY} 
-                  type={tx.type} 
-                  style={styles.txAmount} 
-                />
-                <Text style={styles.txDate}>{new Date(tx.datetime).toLocaleDateString()}</Text>
-              </View>
-            </View>
-          ))}
+            );
+          })}
 
           {(!transactions || transactions.length === 0) && (
             <View style={styles.emptyCard}>
@@ -417,38 +393,6 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     fontSize: typography.sizes.xs,
   },
 
-  statsRow: {
-    flexDirection: 'row',
-    marginBottom: 32,
-    paddingHorizontal: 24,
-  },
-  statColumnLeft: {
-    flex: 1,
-    paddingRight: 16,
-  },
-  statColumnRight: {
-    flex: 1,
-    paddingLeft: 16,
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: colors.border,
-    opacity: 0.5,
-  },
-  statHeading: {
-    fontFamily: typography.fonts.regular,
-    color: colors.textMuted,
-    fontSize: typography.sizes.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 8,
-  },
-  statValue: {
-    fontFamily: typography.fonts.mono,
-    fontSize: typography.sizes.lg,
-    marginBottom: 4,
-  },
-
   fab: {
     position: 'absolute',
     bottom: 32,
@@ -492,46 +436,56 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
 
   txList: {
+    marginTop: 8,
     paddingHorizontal: 24,
   },
   txRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
   },
   txLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    paddingRight: 16,
   },
-  txIndicator: {
-    width: 4,
-    height: 32,
-    borderRadius: 2,
+  txIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 16,
   },
+  txInfo: {
+    flex: 1,
+  },
   txTitle: {
-    fontFamily: typography.fonts.semibold,
+    fontFamily: typography.fonts.headingRegular,
     color: colors.text,
-    fontSize: typography.sizes.sm,
-    marginBottom: 4,
+    fontSize: typography.sizes.md,
+    letterSpacing: -0.2,
   },
   txCategory: {
     fontFamily: typography.fonts.regular,
     color: colors.textMuted,
     fontSize: typography.sizes.xs,
+    marginTop: 6,
   },
   txRight: {
     alignItems: 'flex-end',
   },
   txAmount: {
-    fontSize: typography.sizes.sm,
-    marginBottom: 4,
+    fontFamily: typography.fonts.monoBold,
+    fontSize: typography.sizes.md,
   },
   txDate: {
     fontFamily: typography.fonts.mono,
     color: colors.textMuted,
     fontSize: typography.sizes.xs,
+    marginTop: 4,
   },
   
   emptyCard: {

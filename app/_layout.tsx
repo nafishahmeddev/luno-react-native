@@ -43,7 +43,7 @@ const customizeText = () => {
 };
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: '(main)',
 };
 
 export default function RootLayout() {
@@ -78,9 +78,9 @@ export default function RootLayout() {
           <OnboardingProvider>
             <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <CustomThemeProvider>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(main)" />
+                <Stack.Screen name="(onboarding)" />
               </Stack>
               <StatusBar style="auto" />
             </CustomThemeProvider>
