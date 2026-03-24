@@ -1,9 +1,8 @@
 import React from 'react';
-import { Tabs, Redirect } from 'expo-router';
+import { Stack, Redirect } from 'expo-router';
 import { useOnboarding } from '../../src/providers/OnboardingProvider';
-import { CustomTabBar } from '../../src/components/ui/CustomTabBar';
 
-export default function TabLayout() {
+export default function StackLayout() {
   const { hasOnboarded } = useOnboarding();
 
   if (!hasOnboarded) {
@@ -11,10 +10,10 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
-      <Tabs.Screen name="index" options={{ title: 'Home' }} />
-      <Tabs.Screen name="categories" options={{ title: 'Categories' }} />
-      <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
-    </Tabs>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="categories" />
+      <Stack.Screen name="settings" />
+    </Stack>
   );
 }

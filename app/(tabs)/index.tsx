@@ -24,6 +24,35 @@ export default function DashboardScreen() {
   const [showAccountForm, setShowAccountForm] = React.useState(false);
   const [editingAccount, setEditingAccount] = React.useState<any>(undefined);
 
+  const balancesByCurrency = React.useMemo(() => {
+    return accounts?.reduce((acc, account) => {
+      acc[account.currency] = (acc[account.currency] || 0) + account.balance;
+      return acc;
+    }, {} as Record<string, number>) || {};
+  }, [accounts]);
+
+  const incomeByCurrency = React.useMemo(() => {
+    return accounts?.reduce((acc, account) => {
+      acc[account.currency] = (acc[account.currency] || 0) + account.income;
+      return acc;
+    }, {} as Record<string, number>) || {};
+  }, [accounts]);
+
+  const expenseByCurrency = React.useMemo(() => {
+    return accounts?.reduce((acc, account) => {
+      acc[account.currency] = (acc[account.currency] || 0) + account.expense;
+      return acc;
+    }, {} as Record<string, number>) || {};
+  }, [accounts]);
+
+  const currencyKeys = Object.keys(balancesByCurrency);
+  if (currencyKeys.length === 0) {
+    currencyKeys.push(DEFAULT_CURRENCY);
+    balancesByCurrency[DEFAULT_CURRENCY] = 0;
+    incomeByCurrency[DEFAULT_CURRENCY] = 0;
+    expenseByCurrency[DEFAULT_CURRENCY] = 0;
+  }
+
   const handleAccountLongPress = (acc: any) => {
     Alert.alert(
       "Manage Account",
@@ -41,10 +70,6 @@ export default function DashboardScreen() {
     );
   };
 
-  const totalBalance = accounts?.reduce((sum, acc) => sum + acc.balance, 0) || 0;
-  const totalIncome = accounts?.reduce((sum, acc) => sum + acc.income, 0) || 0;
-  const totalExpense = accounts?.reduce((sum, acc) => sum + acc.expense, 0) || 0;
-
   if (txLoading || accountsLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -59,14 +84,29 @@ export default function DashboardScreen() {
         
         {/* Refined Header */}
         <View style={styles.header}>
-          <Text style={styles.editorialTitle}>FINTRACKER.</Text>
-          <Text style={styles.editorialSubtitle}>Your tactical financial overview</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.editorialTitle}>FINTRACKER.</Text>
+            <Text style={styles.editorialSubtitle}>Your tactical financial overview</Text>
+          </View>
+          <TouchableOpacity style={styles.settingsBtn} onPress={() => router.push('/settings')}>
+            <Ionicons name="options" size={20} color={colors.text} />
+          </TouchableOpacity>
         </View>
 
         {/* Global Balance */}
         <View style={styles.balanceSection}>
-          <Text style={styles.balanceLabel}>TOTAL ASSETS (MIXED)</Text>
-          <MoneyText amount={totalBalance} currency={DEFAULT_CURRENCY} style={styles.balanceHuge} weight="bold" />
+          <Text style={styles.balanceLabel}>TOTAL ASSETS</Text>
+          {currencyKeys.length === 1 ? (
+            <MoneyText amount={balancesByCurrency[currencyKeys[0]]} currency={currencyKeys[0]} style={styles.balanceHuge} weight="bold" />
+          ) : (
+            <View style={styles.multiBalanceContainer}>
+              {currencyKeys.map((curr, idx) => (
+                <View key={curr} style={[styles.multiBalanceRow, idx > 0 && { marginTop: 8 }]}>
+                  <MoneyText amount={balancesByCurrency[curr]} currency={curr} style={styles.multiBalanceAmount} weight="bold" />
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Accounts Carousel */}
@@ -118,25 +158,21 @@ export default function DashboardScreen() {
         </ScrollView>
 
         {/* Minimalist Stat Row */}
-        <View style={styles.statsRow}>
-          <View style={styles.statColumnLeft}>
-            <Text style={styles.statHeading}>INFLOW</Text>
-            <MoneyText amount={totalIncome} currency={DEFAULT_CURRENCY} style={styles.statValue} type="CR" weight="medium" />
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statColumnRight}>
-            <Text style={styles.statHeading}>OUTFLOW</Text>
-            <MoneyText amount={totalExpense} currency={DEFAULT_CURRENCY} style={styles.statValue} type="DR" weight="medium" />
-          </View>
+        <View style={styles.statsContainer}>
+          {currencyKeys.map((curr, idx) => (
+            <View key={curr} style={[styles.statsRowItem, idx === currencyKeys.length - 1 && { borderBottomWidth: 0 }]}>
+              <View style={styles.statColumnLeft}>
+                <Text style={styles.statHeading}>INFLOW • {curr}</Text>
+                <MoneyText amount={incomeByCurrency[curr]} currency={curr} style={styles.statValue} type="CR" weight="medium" />
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statColumnRight}>
+                <Text style={styles.statHeading}>OUTFLOW • {curr}</Text>
+                <MoneyText amount={expenseByCurrency[curr]} currency={curr} style={styles.statValue} type="DR" weight="medium" />
+              </View>
+            </View>
+          ))}
         </View>
-
-        {/* Hyper-Sleek Action Button */}
-        <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/add-transaction')}>
-          <View style={styles.actionBtnInner}>
-            <Ionicons name="add" size={20} color={colors.background} />
-            <Text style={styles.actionText}>NEW ENTRY</Text>
-          </View>
-        </TouchableOpacity>
 
         {/* Editorial Activity List */}
         <View style={styles.activityHeader}>
@@ -177,6 +213,10 @@ export default function DashboardScreen() {
 
       </ScrollView>
 
+      <TouchableOpacity style={styles.fab} onPress={() => router.push('/add-transaction')}>
+        <Ionicons name="add" size={28} color="#000" />
+      </TouchableOpacity>
+
       <AccountFormModal 
         visible={showAccountForm} 
         onClose={() => setShowAccountForm(false)} 
@@ -199,13 +239,26 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   content: {
     paddingTop: 24,
-    paddingBottom: 140, 
+    paddingBottom: 100, 
   },
   
   header: {
     marginTop: 10,
     marginBottom: 24,
     paddingHorizontal: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  settingsBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   // @ts-ignore
   editorialTitle: {
@@ -235,10 +288,23 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   balanceHuge: {
     fontFamily: typography.fonts.monoBold,
+    fontSize: typography.sizes.xxxl, 
     color: colors.text,
-    fontSize: 48,
-    letterSpacing: -2,
+    letterSpacing: -1.5,
     lineHeight: 56,
+  },
+  multiBalanceContainer: {
+    marginTop: 4,
+  },
+  multiBalanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  multiBalanceAmount: {
+    fontFamily: typography.fonts.monoBold,
+    fontSize: typography.sizes.xxl, 
+    color: colors.text,
+    letterSpacing: -1,
   },
 
   accountsScroll: {
@@ -253,7 +319,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     marginRight: 12,
-    minWidth: 160,
+    minWidth: 220,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -297,14 +363,22 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  statsRow: {
+  statsContainer: {
+    marginBottom: 40,
+    marginHorizontal: 24,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+  },
+  statsRowItem: {
     flexDirection: 'row',
-    marginBottom: 32,
-    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
   },
   statColumnLeft: {
     flex: 1,
-    paddingRight: 16,
+    paddingLeft: 16,
   },
   statColumnRight: {
     flex: 1,
@@ -321,34 +395,29 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     fontSize: typography.sizes.xs,
     textTransform: 'uppercase',
     letterSpacing: 1,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   statValue: {
     fontFamily: typography.fonts.mono,
     fontSize: typography.sizes.lg,
+    marginBottom: 4,
   },
 
-  actionBtn: {
-    marginBottom: 40,
-    paddingHorizontal: 24,
-  },
-  actionBtnInner: {
+  fab: {
+    position: 'absolute',
+    bottom: 32,
+    right: 24,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'flex-start',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 100,
-  },
-  actionText: {
-    // @ts-ignore
-    fontFamily: typography.fonts.heading,
-    color: colors.background,
-    fontSize: typography.sizes.sm,
-    marginLeft: 8,
-    marginTop: 2, 
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
 
   activityHeader: {

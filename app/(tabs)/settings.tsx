@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../src/providers/ThemeProvider';
 import { ThemeColors } from '../../src/theme/colors';
@@ -13,6 +14,7 @@ import { payments, accounts, categories } from '../../src/db/schema';
 export default function SettingsScreen() {
   const { colors } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const router = useRouter();
 
   const handleResetData = () => {
     Alert.alert("Factory Reset", "Warning: This will permanently delete ALL data (accounts, categories, transactions) and restart the application.", [
@@ -32,45 +34,51 @@ export default function SettingsScreen() {
   };
 
   type OptionRowProps = { icon: any; title: string; subtitle?: string; onPress: () => void; color?: string; };
-  const OptionRow = ({ icon, title, subtitle, onPress, color = colors.primary }: OptionRowProps) => (
+  const OptionRow = ({ icon, title, subtitle, onPress, color = colors.text }: OptionRowProps) => (
     <TouchableOpacity style={styles.row} onPress={onPress}>
-      <View style={[styles.iconBox, { backgroundColor: color + '20' }]}>
-        <Ionicons name={icon} size={22} color={color} />
+      <View style={[styles.iconBox, { backgroundColor: color + '15' }]}>
+        <Ionicons name={icon} size={20} color={color} />
       </View>
       <View style={styles.textContainer}>
-        <Text style={styles.rowTitle}>{title}</Text>
+        <Text style={[styles.rowTitle, { color }]}>{title}</Text>
         {subtitle && <Text style={styles.rowSubtitle}>{subtitle}</Text>}
       </View>
-      <Ionicons name="chevron-forward" size={20} color={colors.border} />
+      <Ionicons name="arrow-forward" size={18} color={colors.textMuted} />
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Settings" />
+      <Header title="Preferences" showBack />
       
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>General</Text>
+          <Text style={styles.sectionTitle}>CONFIGURATION</Text>
           <View style={styles.card}>
-            <OptionRow icon="color-palette" title="Appearance" subtitle="System Default" onPress={() => {}} />
+            <OptionRow 
+              icon="grid" 
+              title="Manage Categories" 
+              subtitle="Add or modify transaction tags" 
+              color={colors.primary}
+              onPress={() => router.push('/categories')} 
+            />
             <View style={styles.divider} />
-            <OptionRow icon="globe" title="Currency" subtitle="USD ($)" onPress={() => {}} />
+            <OptionRow icon="color-palette" title="Appearance" subtitle="Following System Theme" onPress={() => {}} />
             <View style={styles.divider} />
-            <OptionRow icon="notifications" title="Notifications" onPress={() => {}} />
+            <OptionRow icon="globe" title="Default Currency" subtitle="USD ($)" onPress={() => {}} />
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data & Privacy</Text>
+          <Text style={styles.sectionTitle}>SYSTEM OPERATIONS</Text>
           <View style={styles.card}>
-            <OptionRow icon="cloud-download" title="Export Data" subtitle="CSV / JSON" color={colors.success} onPress={() => {}} />
+            <OptionRow icon="cloud-download" title="Export Ledger" subtitle="Extract to CSV/JSON format" color={colors.success} onPress={() => {}} />
             <View style={styles.divider} />
-            <OptionRow icon="warning" title="Factory Reset" subtitle="Delete all data & start over" color={colors.danger} onPress={handleResetData} />
+            <OptionRow icon="warning" title="Factory Reset" subtitle="Purge all local SQLite records permanently" color={colors.danger} onPress={handleResetData} />
           </View>
         </View>
 
-        <Text style={styles.version}>Version 1.0.0 (Expo SQLite)</Text>
+        <Text style={styles.version}>v1.0.0 — Edgeless Stack Architecture</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -82,36 +90,37 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    padding: 16,
+    padding: 24,
     paddingBottom: 40,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
+    fontFamily: typography.fonts.mono,
+    fontSize: typography.sizes.xs,
     color: colors.textMuted,
     textTransform: 'uppercase',
-    marginBottom: 8,
-    marginLeft: 4,
+    letterSpacing: 2,
+    marginBottom: 12,
   },
   card: {
-    backgroundColor: colors.card,
-    borderRadius: 24,
-    borderWidth: 0,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
     overflow: 'hidden',
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 24,
+    padding: 20,
     backgroundColor: 'transparent',
   },
   iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -120,24 +129,30 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     flex: 1,
   },
   rowTitle: {
+    // @ts-ignore
+    fontFamily: typography.fonts.headingRegular,
     fontSize: typography.sizes.md,
-    fontWeight: typography.weights.medium,
-    color: colors.text,
+    letterSpacing: -0.2,
   },
   rowSubtitle: {
+    fontFamily: typography.fonts.regular,
     fontSize: typography.sizes.sm,
     color: colors.textMuted,
-    marginTop: 2,
+    marginTop: 4,
   },
   divider: {
     height: 1,
     backgroundColor: colors.border,
-    marginLeft: 72,
+    marginLeft: 80,
+    opacity: 0.5,
   },
   version: {
+    fontFamily: typography.fonts.mono,
     textAlign: 'center',
     color: colors.textMuted,
-    fontSize: typography.sizes.sm,
-    marginTop: 16,
+    fontSize: typography.sizes.xs,
+    marginTop: 24,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   }
 });

@@ -112,7 +112,10 @@ export default function CategoriesScreen() {
 
 const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  listContent: { padding: 16 },
+  listContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
   
   card: {
     backgroundColor: colors.card,
