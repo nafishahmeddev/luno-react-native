@@ -1,5 +1,5 @@
+import { Redirect, Stack } from 'expo-router'; // Refreshing layout resolution
 import React from 'react';
-import { Stack, Redirect } from 'expo-router'; // Refreshing layout resolution
 import { useOnboarding } from '../../src/providers/OnboardingProvider';
 
 export default function StackLayout() {
@@ -12,6 +12,7 @@ export default function StackLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
+      <Stack.Screen name="stats" />
       <Stack.Screen name="categories" />
       <Stack.Screen name="settings" />
     </Stack>

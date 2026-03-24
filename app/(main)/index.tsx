@@ -117,9 +117,14 @@ export default function DashboardScreen() {
             <Text style={styles.greeting}>{getGreeting()}</Text>
             <Text style={styles.brandName}>FINTRACKER.</Text>
           </View>
-          <TouchableOpacity style={styles.settingsBtn} onPress={() => router.push('/settings')} activeOpacity={0.85}>
-            <Ionicons name="settings-outline" size={19} color={colors.text} />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/(main)/stats')} activeOpacity={0.85}>
+              <Ionicons name="stats-chart-outline" size={18} color={colors.text} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/settings')} activeOpacity={0.85}>
+              <Ionicons name="settings-outline" size={19} color={colors.text} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* ── Hero balance card ── */}
@@ -377,7 +382,12 @@ const createStyles = (colors: ThemeColors, screenWidth: number) => StyleSheet.cr
     fontSize: 34,
     letterSpacing: -1.2,
   },
-  settingsBtn: {
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  iconButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
