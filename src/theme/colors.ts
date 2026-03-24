@@ -16,8 +16,8 @@ export type ThemePalette = {
 
 export const darkTheme: ThemePalette = {
   background: '#000100',
-  card: 'rgba(107, 212, 152, 0.08)',
-  surface: 'rgba(107, 212, 152, 0.12)',
+  card: 'rgba(255, 255, 255, 0.02)', // Extremely subtle phantom bounds
+  surface: 'rgba(255, 255, 255, 0.05)',
   primary: '#B8D641',
   primaryLight: '#cae560',
   primaryDark: '#a0c119',
@@ -32,8 +32,8 @@ export const darkTheme: ThemePalette = {
 
 export const lightTheme: ThemePalette = {
   background: '#F6FFF9',
-  card: 'rgba(107, 212, 152, 0.08)', 
-  surface: 'rgba(107, 212, 152, 0.12)',
+  card: 'rgba(0, 0, 0, 0.02)', 
+  surface: 'rgba(0, 0, 0, 0.05)',
   primary: '#B8D641',
   primaryLight: '#cae560',
   primaryDark: '#a0c119',

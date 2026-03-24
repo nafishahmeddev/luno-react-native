@@ -10,18 +10,18 @@ export type TypographyScale = {
 
 export type TypographyWeight = {
   regular: '400';
-  medium: '400';
-  semibold: '500';
-  bold: '500';
+  medium: '500';
+  semibold: '600';
+  bold: '700';
 };
 
 export type TypographyFonts = {
   heading: 'BricolageGrotesque_700Bold';
   headingRegular: 'BricolageGrotesque_400Regular';
-  regular: 'Inter_400Regular';
-  medium: 'Inter_500Medium';
-  semibold: 'Inter_600SemiBold';
-  bold: 'Inter_700Bold';
+  regular: 'BricolageGrotesque_400Regular';
+  medium: 'BricolageGrotesque_500Medium';
+  semibold: 'BricolageGrotesque_600SemiBold';
+  bold: 'BricolageGrotesque_700Bold';
   amountRegular: 'JetBrainsMono_400Regular';
   amountBold: 'JetBrainsMono_700Bold';
 };
@@ -44,17 +44,17 @@ export const typography: TypographyTheme = {
   },
   weights: {
     regular: '400',
-    medium: '400',
-    semibold: '500',
-    bold: '500',
+    medium: '500',
+    semibold: '600',
+    bold: '700',
   },
   fonts: {
     heading: 'BricolageGrotesque_700Bold',
     headingRegular: 'BricolageGrotesque_400Regular',
-    regular: 'Inter_400Regular',
-    medium: 'Inter_500Medium',
-    semibold: 'Inter_600SemiBold',
-    bold: 'Inter_700Bold',
+    regular: 'BricolageGrotesque_400Regular',
+    medium: 'BricolageGrotesque_500Medium',
+    semibold: 'BricolageGrotesque_600SemiBold',
+    bold: 'BricolageGrotesque_700Bold',
     amountRegular: 'JetBrainsMono_400Regular',
     amountBold: 'JetBrainsMono_700Bold',
   },

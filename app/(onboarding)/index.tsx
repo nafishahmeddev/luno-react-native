@@ -100,6 +100,8 @@ export default function OnboardingScreen() {
   const [openingBalance, setOpeningBalance] = React.useState('0');
   const [accountIcon, setAccountIcon] = React.useState<string>(ACCOUNT_ICONS[0]);
   const [accountColor, setAccountColor] = React.useState<string>(ACCOUNT_COLORS[0]);
+  const accountPreviewLabel = accountName.trim() || 'Main Wallet';
+  const accountHolderLabel = accountHolder.trim() || name.trim() || 'Account Holder';
 
   React.useEffect(() => {
     if (!accountHolder.trim() && name.trim()) {
@@ -217,78 +219,121 @@ export default function OnboardingScreen() {
 
   const renderProfile = () => (
     <View style={styles.formStack}>
-      <Input label="Full Name" placeholder="Ahmed Khan" value={name} onChangeText={setName} />
-      <Input label="Email" placeholder="Optional" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
-      <Input label="Phone" placeholder="Optional" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+      <View style={styles.formSectionCard}>
+        <Text style={styles.formSectionEyebrow}>IDENTITY</Text>
+        <Input label="Full Name" placeholder="Ahmed Khan" value={name} onChangeText={setName} />
+      </View>
+
+      <View style={styles.formSectionCard}>
+        <Text style={styles.formSectionEyebrow}>CONTACT</Text>
+        <Input label="Email" placeholder="Optional" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+        <View style={styles.formFieldSpacer} />
+        <Input label="Phone" placeholder="Optional" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+      </View>
+
+      <View style={styles.infoStrip}>
+        <Ionicons name="person-circle-outline" size={18} color={colors.primary} />
+        <Text style={styles.infoStripText}>This name is used to prefill your first account holder.</Text>
+      </View>
     </View>
   );
 
   const renderCurrency = () => (
-    <View style={styles.currencyWrap}>
-      {CURRENCIES.map((currency) => {
-        const selected = currency === defaultCurrency;
-        return (
-          <TouchableOpacity
-            key={currency}
-            style={[styles.currencyChip, selected && styles.currencyChipActive]}
-            onPress={() => setDefaultCurrency(currency)}
-            activeOpacity={0.9}
-          >
-            <Text style={[styles.currencyChipText, selected && styles.currencyChipTextActive]}>{currency}</Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-
-  const renderAccount = () => (
     <View style={styles.formStack}>
-      <Input label="Account Name" placeholder="Main Wallet" value={accountName} onChangeText={setAccountName} />
-      <Input label="Holder Name" placeholder="Account holder" value={accountHolder} onChangeText={setAccountHolder} />
-      <Input label="Account Number" placeholder="IBAN / Last 4 / Wallet ID" value={accountNumber} onChangeText={setAccountNumber} />
-      <Input
-        label={`Opening Balance (${defaultCurrency})`}
-        placeholder="0.00"
-        value={openingBalance}
-        onChangeText={setOpeningBalance}
-        keyboardType="decimal-pad"
-      />
+      <View style={styles.selectionHero}>
+        <Text style={styles.selectionHeroLabel}>SELECTED DEFAULT</Text>
+        <Text style={styles.selectionHeroValue}>{defaultCurrency}</Text>
+        <Text style={styles.selectionHeroSubtext}>Used for new accounts and as the initial transaction currency.</Text>
+      </View>
 
-      <View style={styles.selectorSection}>
-        <Text style={styles.selectorLabel}>ACCOUNT ICON</Text>
-        <View style={styles.iconWrap}>
-          {ACCOUNT_ICONS.map((iconName) => {
-            const selected = accountIcon === iconName;
+      <View style={styles.formSectionCard}>
+        <Text style={styles.formSectionEyebrow}>CURRENCY LIST</Text>
+        <View style={styles.currencyWrap}>
+          {CURRENCIES.map((currency) => {
+            const selected = currency === defaultCurrency;
             return (
               <TouchableOpacity
-                key={iconName}
-                style={[styles.iconChip, selected && styles.iconChipActive]}
-                onPress={() => setAccountIcon(iconName)}
+                key={currency}
+                style={[styles.currencyChip, selected && styles.currencyChipActive]}
+                onPress={() => setDefaultCurrency(currency)}
                 activeOpacity={0.9}
               >
-                <Ionicons name={iconName} size={18} color={selected ? colors.background : colors.text} />
+                <Text style={[styles.currencyChipText, selected && styles.currencyChipTextActive]}>{currency}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
       </View>
+    </View>
+  );
 
-      <View style={styles.selectorSection}>
-        <Text style={styles.selectorLabel}>ACCOUNT COLOR</Text>
-        <View style={styles.colorWrap}>
-          {ACCOUNT_COLORS.map((swatch) => {
-            const selected = accountColor === swatch;
-            return (
-              <TouchableOpacity
-                key={swatch}
-                style={[styles.colorChip, { backgroundColor: swatch }, selected && styles.colorChipActive]}
-                onPress={() => setAccountColor(swatch)}
-                activeOpacity={0.9}
-              >
-                {selected ? <Ionicons name="checkmark" size={14} color="#000100" /> : null}
-              </TouchableOpacity>
-            );
-          })}
+  const renderAccount = () => (
+    <View style={styles.formStack}>
+      <View style={[styles.accountPreviewCard, { borderColor: accountColor + '55' }] }>
+        <View style={[styles.accountPreviewIconWrap, { backgroundColor: accountColor + '24' }]}>
+          <Ionicons name={accountIcon as any} size={20} color={accountColor} />
+        </View>
+        <View style={styles.accountPreviewCopy}>
+          <Text style={styles.accountPreviewName}>{accountPreviewLabel}</Text>
+          <Text style={styles.accountPreviewMeta}>{accountHolderLabel} • {defaultCurrency}</Text>
+        </View>
+        <Text style={styles.accountPreviewBalance}>{parseAmount(openingBalance).toFixed(2)}</Text>
+      </View>
+
+      <View style={styles.formSectionCard}>
+        <Text style={styles.formSectionEyebrow}>ACCOUNT DETAILS</Text>
+        <Input label="Account Name" placeholder="Main Wallet" value={accountName} onChangeText={setAccountName} />
+        <View style={styles.formFieldSpacer} />
+        <Input label="Holder Name" placeholder="Account holder" value={accountHolder} onChangeText={setAccountHolder} />
+        <View style={styles.formFieldSpacer} />
+        <Input label="Account Number" placeholder="IBAN / Last 4 / Wallet ID" value={accountNumber} onChangeText={setAccountNumber} />
+        <View style={styles.formFieldSpacer} />
+        <Input
+          label={`Opening Balance (${defaultCurrency})`}
+          placeholder="0.00"
+          value={openingBalance}
+          onChangeText={setOpeningBalance}
+          keyboardType="decimal-pad"
+        />
+      </View>
+
+      <View style={styles.formSectionCard}>
+        <View style={styles.selectorSection}>
+          <Text style={styles.selectorLabel}>ACCOUNT ICON</Text>
+          <View style={styles.iconWrap}>
+            {ACCOUNT_ICONS.map((iconName) => {
+              const selected = accountIcon === iconName;
+              return (
+                <TouchableOpacity
+                  key={iconName}
+                  style={[styles.iconChip, selected && styles.iconChipActive]}
+                  onPress={() => setAccountIcon(iconName)}
+                  activeOpacity={0.9}
+                >
+                  <Ionicons name={iconName} size={18} color={selected ? colors.background : colors.text} />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.selectorSection}>
+          <Text style={styles.selectorLabel}>ACCOUNT COLOR</Text>
+          <View style={styles.colorWrap}>
+            {ACCOUNT_COLORS.map((swatch) => {
+              const selected = accountColor === swatch;
+              return (
+                <TouchableOpacity
+                  key={swatch}
+                  style={[styles.colorChip, { backgroundColor: swatch }, selected && styles.colorChipActive]}
+                  onPress={() => setAccountColor(swatch)}
+                  activeOpacity={0.9}
+                >
+                  {selected ? <Ionicons name="checkmark" size={14} color="#000100" /> : null}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
       </View>
     </View>
@@ -328,7 +373,22 @@ export default function OnboardingScreen() {
 
       <KeyboardAvoidingView style={styles.keyboardWrap} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.header}>
-          <Text style={styles.brand}>FINTRACKER.</Text>
+          <View style={styles.headerTopRow}>
+            {stepIndex > 0 ? (
+              <TouchableOpacity style={styles.headerBackButton} onPress={() => setStepIndex((current) => current - 1)} activeOpacity={0.9}>
+                <Ionicons name="chevron-back" size={18} color={colors.text} />
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.headerBackPlaceholder} />
+            )}
+
+            <Text style={styles.brand}>FINTRACKER.</Text>
+
+            <View style={styles.stepPill}>
+              <Text style={styles.stepPillText}>{stepIndex + 1}/{STEPS.length}</Text>
+            </View>
+          </View>
+
           <View style={styles.progressTrack}>
             {STEPS.map((step, index) => (
               <View key={step.id} style={[styles.progressDot, index <= stepIndex && styles.progressDotActive]} />
@@ -347,15 +407,6 @@ export default function OnboardingScreen() {
         </ScrollView>
 
         <View style={styles.footer}>
-          {stepIndex > 0 ? (
-            <TouchableOpacity style={styles.backButton} onPress={() => setStepIndex((current) => current - 1)} activeOpacity={0.9}>
-              <Ionicons name="chevron-back" size={16} color={colors.text} />
-              <Text style={styles.backButtonText}>Back</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.backButtonPlaceholder} />
-          )}
-
           <Button
             title={stepIndex === STEPS.length - 1 ? 'Launch Fintracker' : 'Continue'}
             onPress={handleContinue}
@@ -388,11 +439,48 @@ const createStyles = (colors: ThemeColors) =>
       paddingTop: 12,
       gap: 14,
     },
+    headerTopRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    headerBackButton: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.primary + '22',
+    },
+    headerBackPlaceholder: {
+      width: 42,
+      height: 42,
+    },
     brand: {
       fontFamily: typography.fonts.heading,
       fontSize: 30,
       color: colors.text,
       letterSpacing: -1,
+      textAlign: 'center',
+    },
+    stepPill: {
+      minWidth: 42,
+      height: 42,
+      borderRadius: 21,
+      paddingHorizontal: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.primary + '22',
+    },
+    stepPillText: {
+      fontFamily: typography.fonts.semibold,
+      fontSize: 11,
+      color: colors.text,
+      letterSpacing: 0.4,
     },
     progressTrack: {
       flexDirection: 'row',
@@ -440,7 +528,7 @@ const createStyles = (colors: ThemeColors) =>
     },
     contentCard: {
       borderRadius: 24,
-      padding: 18,
+      padding: 16,
       backgroundColor: Platform.OS === 'android' ? colors.background + 'D8' : colors.surface,
       borderWidth: 1,
       borderColor: Platform.OS === 'android' ? colors.primary + '20' : colors.text + '12',
@@ -517,6 +605,69 @@ const createStyles = (colors: ThemeColors) =>
     formStack: {
       gap: 14,
     },
+    formSectionCard: {
+      borderRadius: 18,
+      padding: 14,
+      backgroundColor: colors.background + 'B8',
+      borderWidth: 1,
+      borderColor: colors.primary + '16',
+    },
+    formSectionEyebrow: {
+      fontFamily: typography.fonts.semibold,
+      fontSize: 10,
+      color: colors.textMuted,
+      letterSpacing: 1.2,
+      marginBottom: 12,
+    },
+    formFieldSpacer: {
+      height: 12,
+    },
+    infoStrip: {
+      minHeight: 46,
+      borderRadius: 16,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      backgroundColor: colors.primary + '12',
+      borderWidth: 1,
+      borderColor: colors.primary + '26',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    infoStripText: {
+      flex: 1,
+      fontFamily: typography.fonts.regular,
+      fontSize: 12,
+      lineHeight: 18,
+      color: colors.text,
+    },
+    selectionHero: {
+      borderRadius: 18,
+      padding: 16,
+      backgroundColor: colors.primary + '16',
+      borderWidth: 1,
+      borderColor: colors.primary + '30',
+    },
+    selectionHeroLabel: {
+      fontFamily: typography.fonts.semibold,
+      fontSize: 10,
+      color: colors.textMuted,
+      letterSpacing: 1.2,
+      marginBottom: 8,
+    },
+    selectionHeroValue: {
+      fontFamily: typography.fonts.heading,
+      fontSize: 30,
+      color: colors.text,
+      letterSpacing: -0.8,
+    },
+    selectionHeroSubtext: {
+      marginTop: 6,
+      fontFamily: typography.fonts.regular,
+      fontSize: 12,
+      lineHeight: 18,
+      color: colors.textMuted,
+    },
     currencyWrap: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -546,7 +697,7 @@ const createStyles = (colors: ThemeColors) =>
       color: colors.background,
     },
     selectorSection: {
-      marginTop: 6,
+      marginTop: 2,
     },
     selectorLabel: {
       fontFamily: typography.fonts.semibold,
@@ -559,36 +710,52 @@ const createStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 10,
+    accountPreviewCard: {
+      minHeight: 86,
+      borderRadius: 20,
+      padding: 14,
+      backgroundColor: colors.background + 'CC',
+      borderWidth: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    accountPreviewIconWrap: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+    accountPreviewCopy: {
+      flex: 1,
+      paddingRight: 10,
+    },
+    accountPreviewName: {
+      fontFamily: typography.fonts.headingRegular,
+      fontSize: 18,
+      color: colors.text,
+      letterSpacing: -0.3,
+    },
+    accountPreviewMeta: {
+      marginTop: 4,
+      fontFamily: typography.fonts.regular,
+      fontSize: 12,
+      color: colors.textMuted,
+    },
+    accountPreviewBalance: {
+      fontFamily: typography.fonts.amountBold,
+      fontSize: 16,
+      color: colors.text,
+    },
     },
     iconChip: {
       width: 46,
       height: 46,
-      borderRadius: 16,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.background + 'B8',
-      borderWidth: 1,
-      borderColor: colors.text + '10',
     },
-    iconChipActive: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    colorWrap: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 12,
-    },
-    colorChip: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
-      alignItems: 'center',
-      justifyContent: 'center',
+    primaryAction: {
+      width: '100%',
       borderWidth: 2,
-      borderColor: 'transparent',
-    },
-    colorChipActive: {
       borderColor: colors.text,
       transform: [{ scale: 1.08 }],
     },

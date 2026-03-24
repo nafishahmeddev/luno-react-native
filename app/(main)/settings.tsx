@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button } from '../../src/components/ui/Button';
 import { db } from '../../src/db/client';
 import { accounts, categories, payments } from '../../src/db/schema';
 import { useSettings } from '../../src/providers/SettingsProvider';
@@ -214,9 +215,7 @@ export default function SettingsScreen() {
               })}
             </View>
 
-            <TouchableOpacity style={styles.dialogCloseBtn} onPress={() => setShowAppearanceDialog(false)}>
-              <Text style={styles.dialogCloseBtnText}>Close</Text>
-            </TouchableOpacity>
+            <Button title="Close" variant="secondary" onPress={() => setShowAppearanceDialog(false)} style={styles.dialogCloseButton} />
           </View>
         </View>
       </Modal>
@@ -254,9 +253,7 @@ export default function SettingsScreen() {
               })}
             </View>
 
-            <TouchableOpacity style={styles.dialogCloseBtn} onPress={() => setShowCurrencyDialog(false)}>
-              <Text style={styles.dialogCloseBtnText}>Close</Text>
-            </TouchableOpacity>
+            <Button title="Close" variant="secondary" onPress={() => setShowCurrencyDialog(false)} style={styles.dialogCloseButton} />
           </View>
         </View>
       </Modal>
@@ -530,20 +527,9 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   currencyDialogChipTextActive: {
     color: colors.background,
   },
-  dialogCloseBtn: {
+  dialogCloseButton: {
     marginTop: 6,
     height: 42,
     borderRadius: 12,
-    backgroundColor: colors.primary,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dialogCloseBtnText: {
-    fontFamily: typography.fonts.heading,
-    fontSize: 13,
-    color: '#FFFFFF',
-    letterSpacing: 0.2,
   },
 });

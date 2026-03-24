@@ -1,6 +1,6 @@
 import { BlurView } from '@sbaiahmed1/react-native-blur';
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextStyle, TouchableOpacity, ViewStyle, Platform } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, Text, TextStyle, TouchableOpacity, ViewStyle } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
 import { ThemeColors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -31,7 +31,7 @@ export function Button({
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const getTextColor = () => {
-    if (variant === 'outline') return colors.text;
+    if (variant === 'outline' || variant === 'secondary') return colors.text;
     return '#FFFFFF';
   };
 
@@ -51,7 +51,7 @@ export function Button({
         {
           backgroundColor: variant === 'primary' ? colors.primary : variant === 'success' ? colors.success : variant === 'danger' ? colors.danger : 'transparent',
           height: getHeight(),
-          borderColor: variant === 'outline' || variant === 'secondary' ? colors.border : 'transparent',
+          borderColor: variant === 'outline' || variant === 'secondary' ? colors.primary + '22' : 'transparent',
           borderWidth: variant === 'outline' || variant === 'secondary' ? 1 : 0,
           opacity: disabled ? 0.6 : 1,
         },
@@ -90,6 +90,8 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   text: {
     fontSize: typography.sizes.md,
+    fontFamily: typography.fonts.semibold,
     fontWeight: typography.weights.semibold,
+    letterSpacing: -0.2,
   },
 });
