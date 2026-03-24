@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import React from 'react';
-import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TextInputProps, View, Platform } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
 import { ThemeColors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -18,7 +18,11 @@ export function Input({ label, error, style, ...props }: InputProps) {
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
       <View style={[styles.inputContainer, error ? styles.inputError : null]}>
-        <BlurView intensity={15} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFillObject} />
+        <BlurView 
+          intensity={Platform.OS === 'ios' ? 15 : 0} 
+          tint={isDark ? "dark" : "light"} 
+          style={[StyleSheet.absoluteFillObject, { backgroundColor: Platform.OS === 'android' ? colors.surface : 'transparent' }]} 
+        />
         <TextInput
           style={[
             styles.input,

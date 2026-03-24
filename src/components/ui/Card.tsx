@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import React from 'react';
-import { StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, ViewStyle, Platform } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
 import { ThemeColors } from '../../theme/colors';
 
@@ -14,7 +14,11 @@ export function Card({ children, style }: CardProps) {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <BlurView intensity={25} tint={isDark ? "dark" : "light"} style={[styles.card, style]}>
+    <BlurView 
+      intensity={Platform.OS === 'ios' ? 25 : 0} 
+      tint={isDark ? "dark" : "light"} 
+      style={[styles.card, style, { backgroundColor: Platform.OS === 'android' ? colors.card : 'transparent' }]}
+    >
       {children}
     </BlurView>
   );

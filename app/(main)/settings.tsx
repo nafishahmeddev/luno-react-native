@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -13,7 +14,7 @@ import { payments, accounts, categories } from '../../src/db/schema';
 import { useSettings } from '../../src/providers/SettingsProvider';
 
 export default function SettingsScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { profile, updateProfile } = useSettings();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
@@ -85,11 +86,25 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Background Decorative Circles */}
+      <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+        <View style={[styles.bgCircle, { top: -50, right: -50, width: 300, height: 300, backgroundColor: colors.primary + '10' }]} />
+        <View style={[styles.bgCircle, { bottom: 100, left: -100, width: 400, height: 400, backgroundColor: colors.text + '03' }]} />
+      </View>
+
+      {/* Frosted Glass Overlay */}
+      <BlurView            intensity={Platform.OS === 'ios' ? 60 : 90} 
+            tint={isDark ? 'dark' : 'light'} 
+            experimentalBlurMethod={"dimezisBlurViewSdk31Plus" as any}
+            style={StyleSheet.absoluteFillObject} 
+      />
+      {Platform.OS === 'android' && <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background + '60' }]} pointerEvents="none" />}
+
       <Header title="Preferences" showBack />
       
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.heroSection}>
-          <Text style={styles.heroBrand}>FINTRACKER</Text>
+          <Text style={styles.heroBrand}>FINTRACKER.</Text>
           <Text style={styles.heroSub}>EDGLESS STACK V1.0</Text>
         </View>
 
@@ -142,6 +157,11 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    overflow: 'hidden',
+  },
+  bgCircle: {
+    position: 'absolute',
+    borderRadius: 999,
   },
   scrollContent: {
     paddingBottom: 60,

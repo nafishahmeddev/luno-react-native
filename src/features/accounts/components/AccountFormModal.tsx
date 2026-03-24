@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import React, { useEffect, useState } from 'react';
+import { Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Button } from '../../../components/ui/Button';
+import { Input } from '../../../components/ui/Input';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { ThemeColors } from '../../../theme/colors';
 import { typography } from '../../../theme/typography';
-import { Input } from '../../../components/ui/Input';
-import { Button } from '../../../components/ui/Button';
-import { useCreateAccount, useUpdateAccount } from '../hooks/accounts';
-import { useCreateTransaction } from '../../transactions/hooks/transactions';
 import { useCategories } from '../../categories/hooks/categories';
+import { useCreateTransaction } from '../../transactions/hooks/transactions';
+import { useCreateAccount, useUpdateAccount } from '../hooks/accounts';
 
 import { Account } from '../api/accounts';
 
@@ -24,7 +24,7 @@ const ICONS = ['wallet', 'card', 'cash', 'pie-chart', 'stats-chart', 'cart', 'ca
 const COLORS = ['#00FFAA', '#00F0FF', '#8B5CF6', '#EC4899', '#F43F5E', '#EAB308', '#F97316', '#10B981', '#3B82F6', '#64748B'];
 
 export function AccountFormModal({ visible, onClose, account }: AccountFormModalProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const isEditing = !!account;
   const { mutateAsync: createAccount, isPending: creating } = useCreateAccount();
@@ -49,7 +49,7 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
       setCurrency(account.currency || 'USD');
       setIcon(typeof account.icon === 'string' ? account.icon : 'wallet');
       const hex = '#' + account.color.toString(16).padStart(6, '0').toUpperCase();
-      setColorHex(COLORS.includes(hex) ? hex : hex); // Fallback to raw hex if not in presets
+      setColorHex(COLORS.includes(hex) ? hex : hex);
     } else if (visible) {
       setName('');
       setHolderName('');
@@ -116,90 +116,145 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
   const isPending = creating || updating;
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={styles.modalContainer}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color={colors.text} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{isEditing ? 'Edit Account' : 'New Account'}</Text>
-          <View style={{ width: 24 }} />
-        </View>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <View style={styles.overlay}>
+        <TouchableOpacity style={styles.dismissArea} onPress={onClose} activeOpacity={1} />
+        <View style={styles.sheet}>
+          <BlurView
+            intensity={Platform.OS === 'ios' ? 60 : 90}
+            tint={isDark ? 'dark' : 'light'}
+            experimentalBlurMethod="dimezisBlurView"
+            style={StyleSheet.absoluteFillObject}
+          />
+          {Platform.OS === 'android' && <View style={[StyleSheet.absoluteFillObject, { backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)' }]} pointerEvents="none" />}
 
-        <ScrollView contentContainerStyle={styles.formContainer}>
-          <Input label="Account Name" value={name} onChangeText={setName} placeholder="e.g. Wallet, Bank" />
-          <Input label="Holder Name" value={holderName} onChangeText={setHolderName} placeholder="e.g. John Doe" />
-          <Input label="Account Number" value={accountNumber} onChangeText={setAccountNumber} placeholder="e.g. XXXX-XXXX" />
-          {!isEditing && (
-            <Input 
-              label="Opening Balance" 
-              value={balance} 
-              onChangeText={setBalance} 
-              placeholder="0.00" 
-              keyboardType="decimal-pad" 
-            />
-          )}
-          
-          <Text style={styles.sectionLabel}>Select Currency</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pickerScroll} contentContainerStyle={styles.pickerContent}>
-            {CURRENCIES.map((c) => (
-              <TouchableOpacity key={c} style={[styles.pickerItem, currency === c && styles.pickerSelected]} onPress={() => setCurrency(c)}>
-                <Text style={[styles.pickerText, currency === c && styles.pickerSelectedText]}>{c}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          <View style={styles.handle} />
 
-          <Text style={styles.sectionLabel}>Select Icon</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pickerScroll} contentContainerStyle={styles.pickerContent}>
-            {ICONS.map((i) => (
-              <TouchableOpacity key={i} style={[styles.pickerItem, icon === i && styles.pickerSelected]} onPress={() => setIcon(i)}>
-                <Ionicons name={i as any} size={24} color={icon === i ? colors.primary : colors.textMuted} />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>{isEditing ? 'Edit Account' : 'New Account'}</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Ionicons name="close-circle" size={28} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
 
-          <Text style={styles.sectionLabel}>Select Color</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pickerScroll} contentContainerStyle={styles.pickerContent}>
-            {COLORS.map((c) => (
-              <TouchableOpacity 
-                key={c} 
-                style={[styles.colorItem, { backgroundColor: c }, colorHex === c && styles.colorSelected]} 
-                onPress={() => setColorHex(c)}
+          <ScrollView contentContainerStyle={styles.formContainer} showsVerticalScrollIndicator={false}>
+            <Input label="Account Name" value={name} onChangeText={setName} placeholder="e.g. Wallet, Bank" />
+            <Input label="Holder Name" value={holderName} onChangeText={setHolderName} placeholder="e.g. John Doe" />
+            <Input label="Account Number" value={accountNumber} onChangeText={setAccountNumber} placeholder="e.g. XXXX-XXXX" />
+            {!isEditing && (
+              <Input
+                label="Opening Balance"
+                value={balance}
+                onChangeText={setBalance}
+                placeholder="0.00"
+                keyboardType="decimal-pad"
               />
-            ))}
-          </ScrollView>
-        </ScrollView>
+            )}
 
-        <View style={styles.footer}>
-          <Button title="Save Account" onPress={handleSave} isLoading={isPending} style={{ width: '100%' }} />
+            <Text style={styles.sectionLabel}>Select Currency</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pickerScroll} contentContainerStyle={styles.pickerContent}>
+              {CURRENCIES.map((c) => (
+                <TouchableOpacity key={c} style={[styles.pickerItem, currency === c && styles.pickerSelected]} onPress={() => setCurrency(c)}>
+                  <Text style={[styles.pickerText, currency === c && styles.pickerSelectedText]}>{c}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <Text style={styles.sectionLabel}>Select Icon</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pickerScroll} contentContainerStyle={styles.pickerContent}>
+              {ICONS.map((i) => (
+                <TouchableOpacity key={i} style={[styles.pickerItem, icon === i && styles.pickerSelected]} onPress={() => setIcon(i)}>
+                  <Ionicons name={i as any} size={24} color={icon === i ? colors.primary : colors.textMuted} />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <Text style={styles.sectionLabel}>Select Color</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pickerScroll} contentContainerStyle={styles.pickerContent}>
+              {COLORS.map((c) => (
+                <TouchableOpacity
+                  key={c}
+                  style={[styles.colorItem, { backgroundColor: c }, colorHex === c && styles.colorSelected]}
+                  onPress={() => setColorHex(c)}
+                />
+              ))}
+            </ScrollView>
+
+            <View style={{ height: 40 }} />
+          </ScrollView>
+
+          <View style={styles.footer}>
+            <Button title="Save Account" onPress={handleSave} isLoading={isPending} style={{ width: '100%' }} />
+          </View>
         </View>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 }
 
 const createStyles = (colors: ThemeColors) => StyleSheet.create({
-  modalContainer: { flex: 1, backgroundColor: colors.background },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  dismissArea: {
+    flex: 1,
+  },
+  sheet: {
+    backgroundColor: colors.background === '#000000' ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.8)',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    maxHeight: '85%',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingTop: 12,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    backgroundColor: colors.border,
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 8,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   closeButton: { padding: 4 },
-  headerTitle: { fontSize: typography.sizes.lg, fontWeight: typography.weights.bold, color: colors.text },
+  headerTitle: {
+    fontFamily: typography.fonts.heading,
+    fontSize: 24,
+    color: colors.text,
+    letterSpacing: -0.5,
+  },
   formContainer: { padding: 24 },
-  sectionLabel: { fontSize: typography.sizes.sm, fontWeight: typography.weights.bold, color: colors.textMuted, marginTop: 16, marginBottom: 8 },
+  sectionLabel: {
+    fontFamily: typography.fonts.monoBold,
+    fontSize: 10,
+    color: colors.textMuted,
+    marginTop: 20,
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    opacity: 0.6,
+  },
   pickerScroll: { marginBottom: 8 },
   pickerContent: { paddingRight: 20 },
-  pickerItem: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: 'transparent', paddingVertical: 12, paddingHorizontal: 16, marginRight: 8, minWidth: 64 },
+  pickerItem: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface + '80', borderRadius: 16, borderWidth: 1, borderColor: colors.border, paddingVertical: 12, paddingHorizontal: 16, marginRight: 12, minWidth: 64 },
   pickerSelected: { borderColor: colors.primary, backgroundColor: colors.primary + '15' },
   pickerSelectedText: { color: colors.primary, fontWeight: typography.weights.bold },
   pickerText: { color: colors.text, fontSize: typography.sizes.sm },
   colorItem: { width: 44, height: 44, borderRadius: 22, marginRight: 12, borderWidth: 2, borderColor: 'transparent' },
   colorSelected: { borderColor: colors.text, transform: [{ scale: 1.1 }] },
-  footer: { padding: 24, paddingBottom: 48 },
+  footer: {
+    padding: 24,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    backgroundColor: 'transparent',
+  },
 });

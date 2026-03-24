@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MoneyText } from '../../src/components/ui/MoneyText';
 import { DEFAULT_CURRENCY } from '../../src/constants/currency';
@@ -14,7 +14,7 @@ import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
 
 export default function DashboardScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
 
@@ -83,7 +83,14 @@ export default function DashboardScreen() {
       </View>
 
       {/* Frosted Glass Overlay */}
-      <BlurView intensity={80} tint={colors.background === '#000000' ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
+      <BlurView 
+        intensity={Platform.OS === 'ios' ? 80 : 95} 
+        tint={isDark ? 'dark' : 'light'} 
+        experimentalBlurMethod={"dimezisBlurView" as any}
+        style={StyleSheet.absoluteFillObject} 
+      />
+      {/* Subtle Tint Layer for Android */}
+      {Platform.OS === 'android' && <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background + '60' }]} pointerEvents="none" />}
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 

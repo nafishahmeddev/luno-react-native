@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextStyle, TouchableOpacity, ViewStyle } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TextStyle, TouchableOpacity, ViewStyle, Platform } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
 import { ThemeColors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -62,7 +62,11 @@ export function Button({
       activeOpacity={0.8}
     >
       {(variant === 'outline' || variant === 'secondary') && (
-        <BlurView intensity={20} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFillObject} />
+        <BlurView 
+          intensity={Platform.OS === 'ios' ? 20 : 0} 
+          tint={isDark ? "dark" : "light"} 
+          style={[StyleSheet.absoluteFillObject, { backgroundColor: Platform.OS === 'android' ? colors.surface : 'transparent' }]} 
+        />
       )}
       {isLoading ? (
         <ActivityIndicator color={getTextColor()} />
