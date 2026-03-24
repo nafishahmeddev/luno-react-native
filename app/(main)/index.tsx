@@ -252,6 +252,23 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             );
           })}
+
+          <TouchableOpacity
+            style={styles.accountPlaceholderCard}
+            onPress={() => {
+              setEditingAccount(undefined);
+              setShowAccountForm(true);
+            }}
+            activeOpacity={0.88}
+          >
+            <View style={styles.accountPlaceholderInner}>
+              <View style={styles.accountPlaceholderIcon}>
+                <Ionicons name="add" size={22} color={colors.text} />
+              </View>
+              <Text style={styles.accountPlaceholderTitle}>New Account</Text>
+              <Text style={styles.accountPlaceholderText}>Add another wallet, bank, or cash account.</Text>
+            </View>
+          </TouchableOpacity>
         </ScrollView>
 
         {/* ── Recent activity ── */}
@@ -555,6 +572,45 @@ const createStyles = (colors: ThemeColors, screenWidth: number) => StyleSheet.cr
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
+  },
+  accountPlaceholderCard: {
+    width: screenWidth * 0.7,
+    minHeight: 160,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    overflow: 'hidden',
+  },
+  accountPlaceholderInner: {
+    flex: 1,
+    minHeight: 157,
+    padding: 18,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  accountPlaceholderIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: colors.background + '88',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  accountPlaceholderTitle: {
+    fontFamily: typography.fonts.semibold,
+    color: colors.text,
+    fontSize: 16,
+    marginBottom: 6,
+  },
+  accountPlaceholderText: {
+    fontFamily: typography.fonts.regular,
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+    maxWidth: 180,
   },
   accountAccentBar: {
     height: 3,
