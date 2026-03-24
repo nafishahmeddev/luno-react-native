@@ -85,85 +85,92 @@ export default function SettingsScreen() {
     );
   };
 
+  const activeTheme = (profile.theme || 'system').toUpperCase();
+
   return (
     <SafeAreaView style={styles.container}>
       <BlurBackground />
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
+          <Ionicons name="chevron-back" size={21} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerCopy}>
-          <Text style={styles.headerTitle}>FINTRACKER.</Text>
-          <Text style={styles.headerSubtitle}>Preferences And Control Center</Text>
+          <Text style={styles.headerKicker}>CONTROL CENTER</Text>
+          <Text style={styles.headerTitle}>Settings</Text>
         </View>
         <View style={styles.headerBtnPlaceholder} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.heroPanel}>
-          <Text style={styles.heroPanelKicker}>PROFILE</Text>
-          <Text style={styles.heroPanelTitle}>Current Defaults</Text>
-          <View style={styles.heroPillsRow}>
-            <View style={styles.heroPill}>
-              <Text style={styles.heroPillLabel}>THEME</Text>
-              <Text style={styles.heroPillValue}>{(profile.theme || 'system').toUpperCase()}</Text>
+          <View style={styles.heroTopRow}>
+            <Text style={styles.heroPanelKicker}>PROFILE DEFAULTS</Text>
+            <View style={styles.heroStatusPill}>
+              <View style={styles.heroStatusDot} />
+              <Text style={styles.heroStatusText}>SYNCED</Text>
             </View>
-            <View style={styles.heroPill}>
-              <Text style={styles.heroPillLabel}>CURRENCY</Text>
-              <Text style={styles.heroPillValue}>{profile.defaultCurrency}</Text>
+          </View>
+          <Text style={styles.heroPanelTitle}>Your app behavior at a glance</Text>
+
+          <View style={styles.heroStatGrid}>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatLabel}>THEME</Text>
+              <Text style={styles.heroStatValue}>{activeTheme}</Text>
+            </View>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatLabel}>CURRENCY</Text>
+              <Text style={styles.heroStatValue}>{profile.defaultCurrency}</Text>
+            </View>
+            <View style={styles.heroStatItem}>
+              <Text style={styles.heroStatLabel}>STORAGE</Text>
+              <Text style={styles.heroStatValue}>LOCAL</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.sectionWrap}>
-          <Text style={styles.sectionLabel}>FINANCE STRUCTURE</Text>
-          <View style={styles.sectionCard}>
-            <PreferenceRow
-              icon="grid-outline"
-              title="Categories"
-              subtitle="Manage your income and expense taxonomy"
-              onPress={() => router.push('/categories')}
-            />
-          </View>
-        </View>
-
-        <View style={styles.sectionWrap}>
-          <Text style={styles.sectionLabel}>APPEARANCE & REGION</Text>
+          <Text style={styles.sectionLabel}>PREFERENCES</Text>
           <View style={styles.sectionCard}>
             <PreferenceRow
               icon="contrast-outline"
               title="Appearance"
-              value={(profile.theme || 'system').toUpperCase()}
-              subtitle="Light, dark, or follow device"
+              value={activeTheme}
+              subtitle="Light, dark, or system color mode"
               onPress={handleThemeChange}
             />
             <PreferenceRow
               icon="cash-outline"
               title="Primary Currency"
               value={profile.defaultCurrency}
-              subtitle="Default used in new records"
+              subtitle="Default currency for new records"
               onPress={handleCurrencyChange}
+            />
+            <PreferenceRow
+              icon="grid-outline"
+              title="Categories"
+              subtitle="Manage transaction classification"
+              onPress={() => router.push('/categories')}
             />
           </View>
         </View>
 
         <View style={styles.sectionWrap}>
-          <Text style={styles.sectionLabel}>RISK OPERATIONS</Text>
+          <Text style={styles.sectionLabel}>DANGER ZONE</Text>
           <View style={styles.sectionCard}>
             <PreferenceRow
               icon="trash-bin-outline"
               title="Factory Reset"
               destructive
-              subtitle="Wipe local SQLite database and app storage"
+              subtitle="Erase local database and app state permanently"
               onPress={handleResetData}
             />
           </View>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>BUILT FOR PERFORMANCE</Text>
           <Text style={styles.footerText}>LOCAL-FIRST. PRIVATE. FAST.</Text>
+          <Text style={styles.footerText}>ALL DATA STAYS ON DEVICE UNLESS YOU EXPORT.</Text>
         </View>
       </ScrollView>
 
@@ -179,7 +186,7 @@ export default function SettingsScreen() {
           <TouchableOpacity style={StyleSheet.absoluteFillObject} activeOpacity={1} onPress={() => setShowAppearanceDialog(false)} />
           <View style={styles.dialogCard}>
             <Text style={styles.dialogTitle}>Appearance</Text>
-            <Text style={styles.dialogSubtitle}>Select your preferred theme</Text>
+            <Text style={styles.dialogSubtitle}>Choose how FinTracker should look</Text>
 
             <View style={styles.dialogOptionsWrap}>
               {themeOptions.map((option) => {
@@ -231,10 +238,10 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   header: {
     marginTop: 12,
-    marginBottom: 20,
+    marginBottom: 18,
     paddingHorizontal: 24,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
   headerBtn: {
     width: 44,
@@ -251,58 +258,101 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   headerCopy: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
+  },
+  headerKicker: {
+    fontFamily: typography.fonts.semibold,
+    fontSize: 10,
+    color: colors.textMuted,
+    letterSpacing: 1.5,
+    marginBottom: 4,
   },
   headerTitle: {
-    fontFamily: typography.fonts.heading,
-    fontSize: 26,
+    fontFamily: typography.fonts.headingRegular,
+    fontSize: 30,
     color: colors.text,
-    letterSpacing: -0.8,
-    lineHeight: 30,
-  },
-  headerSubtitle: {
-    fontFamily: typography.fonts.regular,
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 2,
+    letterSpacing: -0.9,
+    lineHeight: 34,
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 48,
   },
   heroPanel: {
-    borderRadius: 18,
-    padding: 18,
+    borderRadius: 22,
+    padding: 20,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: 24,
+  },
+  heroTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
   heroPanelKicker: {
     fontFamily: typography.fonts.semibold,
     fontSize: 10,
     color: colors.textMuted,
     letterSpacing: 1.5,
-    marginBottom: 6,
+  },
+  heroStatusPill: {
+    height: 24,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    backgroundColor: colors.background + 'BF',
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  heroStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.success,
+  },
+  heroStatusText: {
+    fontFamily: typography.fonts.semibold,
+    fontSize: 10,
+    letterSpacing: 1,
+    color: colors.textMuted,
   },
   heroPanelTitle: {
     fontFamily: typography.fonts.headingRegular,
-    fontSize: 20,
+    fontSize: 22,
     color: colors.text,
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
+    lineHeight: 27,
+    marginBottom: 14,
   },
-  heroPillsRow: {
+  heroStatGrid: {
     flexDirection: 'row',
-    marginTop: 14,
-    gap: 12,
+    gap: 10,
   },
-  heroPill: {
+  heroStatItem: {
     flex: 1,
-    borderRadius: 12,
-    backgroundColor: colors.background + 'A6',
-    padding: 12,
+    borderRadius: 14,
+    backgroundColor: colors.background + 'B3',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  heroStatLabel: {
+    fontFamily: typography.fonts.medium,
+    fontSize: 9,
+    color: colors.textMuted,
+    letterSpacing: 1,
+    marginBottom: 5,
+  },
+  heroStatValue: {
+    fontFamily: typography.fonts.semibold,
+    fontSize: 13,
+    color: colors.text,
   },
   sectionWrap: {
     marginBottom: 20,
@@ -315,7 +365,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     marginBottom: 10,
   },
   sectionCard: {
-    borderRadius: 16,
+    borderRadius: 18,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -324,15 +374,15 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   iconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -343,7 +393,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   rowTitle: {
     fontFamily: typography.fonts.headingRegular,
-    fontSize: typography.sizes.md + 1,
+    fontSize: 17,
     color: colors.text,
     letterSpacing: -0.2,
   },
@@ -355,25 +405,13 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   rowValue: {
     fontFamily: typography.fonts.semibold,
-    fontSize: 11,
-    color: colors.textMuted,
-    marginRight: 8,
-    letterSpacing: 1,
-  },
-  heroPillLabel: {
-    fontFamily: typography.fonts.medium,
     fontSize: 10,
-    color: colors.textMuted,
+    color: colors.primary,
+    marginRight: 7,
     letterSpacing: 1,
-  },
-  heroPillValue: {
-    fontFamily: typography.fonts.semibold,
-    fontSize: 14,
-    color: colors.text,
-    marginTop: 6,
   },
   footer: {
-    marginTop: 14,
+    marginTop: 16,
     alignItems: 'center',
   },
   footerText: {
@@ -381,22 +419,24 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     fontSize: 9,
     color: colors.textMuted,
     letterSpacing: 1,
-    opacity: 0.65,
+    opacity: 0.72,
     marginBottom: 2,
+    textAlign: 'center',
   },
   dialogOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.52)',
+    justifyContent: 'flex-end',
     paddingHorizontal: 24,
+    paddingBottom: 42,
   },
   dialogCard: {
     alignSelf: 'stretch',
-    borderRadius: 18,
+    borderRadius: 22,
     backgroundColor: Platform.OS === 'ios' ? colors.background + 'F2' : colors.background,
     borderWidth: 1,
-    borderColor: colors.text + '14',
-    padding: 16,
+    borderColor: colors.text + '18',
+    padding: 18,
     shadowColor: '#000000',
     shadowOpacity: 0.22,
     shadowRadius: 24,
@@ -404,24 +444,24 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     elevation: 10,
   },
   dialogTitle: {
-    fontFamily: typography.fonts.heading,
-    fontSize: 22,
+    fontFamily: typography.fonts.headingRegular,
+    fontSize: 24,
     color: colors.text,
-    letterSpacing: -0.5,
+    letterSpacing: -0.6,
   },
   dialogSubtitle: {
     fontFamily: typography.fonts.regular,
     fontSize: 12,
     color: colors.textMuted,
     marginTop: 4,
-    marginBottom: 14,
+    marginBottom: 16,
   },
   dialogOptionsWrap: {
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: 'hidden',
   },
   dialogOptionRow: {
-    height: 46,
+    height: 48,
     borderRadius: 12,
     marginBottom: 8,
     backgroundColor: colors.surface,
@@ -457,8 +497,8 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     color: colors.background,
   },
   dialogCloseButton: {
-    marginTop: 6,
-    height: 42,
+    marginTop: 8,
+    height: 44,
     borderRadius: 12,
   },
 });

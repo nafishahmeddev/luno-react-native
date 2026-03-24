@@ -21,9 +21,9 @@ export const darkTheme: ThemePalette = {
   primary: '#B8D641',
   primaryLight: '#cae560',
   primaryDark: '#a0c119',
-  secondary: '#F3FFF8',
-  text: '#F3FFF8',
-  textMuted: '#8AB7A0',
+  secondary: '#f9fff3',
+  text: '#fbfff3',
+  textMuted: '#b2bb8b',
   border: 'transparent', // Edgeless UI implies no literal borders
   success: '#6BD498',
   danger: '#EF4444', // Red
@@ -39,7 +39,7 @@ export const lightTheme: ThemePalette = {
   primaryDark: '#a0c119',
   secondary: '#000100',
   text: '#000100', 
-  textMuted: '#5F7A6B', 
+  textMuted: '#737a5f', 
   border: 'transparent',
   success: '#43B875', 
   danger: '#DC2626', 
