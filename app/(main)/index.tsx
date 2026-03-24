@@ -1,22 +1,23 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MoneyText } from '../../src/components/ui/MoneyText';
+import { DEFAULT_CURRENCY } from '../../src/constants/currency';
+import { AccountFormModal } from '../../src/features/accounts/components/AccountFormModal';
+import { useAccounts, useDeleteAccount } from '../../src/features/accounts/hooks/accounts';
+import { useTransactions } from '../../src/features/transactions/hooks/transactions';
 import { useTheme } from '../../src/providers/ThemeProvider';
 import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
-import { useTransactions } from '../../src/features/transactions/hooks/transactions';
-import { useAccounts, useDeleteAccount } from '../../src/features/accounts/hooks/accounts';
-import { AccountFormModal } from '../../src/features/accounts/components/AccountFormModal';
-import { MoneyText } from '../../src/components/ui/MoneyText';
-import { DEFAULT_CURRENCY } from '../../src/constants/currency';
 
 export default function DashboardScreen() {
   const { colors } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
-  
+
   const { data: transactions, isLoading: txLoading } = useTransactions();
   const { data: accounts, isLoading: accountsLoading } = useAccounts();
   const { mutateAsync: deleteAccount } = useDeleteAccount();
@@ -38,10 +39,6 @@ export default function DashboardScreen() {
 
   const [selectedCurrency, setSelectedCurrency] = React.useState<string>(currencyKeys[0]);
 
-  const getOutlineIcon = (iconName: string | undefined | null, defaultIcon: string) => {
-    const base = iconName || defaultIcon;
-    return base.endsWith('-outline') ? base : `${base}-outline`;
-  };
 
   React.useEffect(() => {
     if (!currencyKeys.includes(selectedCurrency)) {
@@ -56,12 +53,14 @@ export default function DashboardScreen() {
       [
         { text: "Cancel", style: "cancel" },
         { text: "Edit", onPress: () => { setEditingAccount(acc); setShowAccountForm(true); } },
-        { text: "Delete", style: "destructive", onPress: () => {
-          Alert.alert("Confirm Delete", `Are you sure you want to delete ${acc.name}?`, [
-            { text: "Cancel", style: "cancel" },
-            { text: "Delete", style: "destructive", onPress: () => deleteAccount(acc.id) }
-          ]);
-        }}
+        {
+          text: "Delete", style: "destructive", onPress: () => {
+            Alert.alert("Confirm Delete", `Are you sure you want to delete ${acc.name}?`, [
+              { text: "Cancel", style: "cancel" },
+              { text: "Delete", style: "destructive", onPress: () => deleteAccount(acc.id) }
+            ]);
+          }
+        }
       ]
     );
   };
@@ -76,8 +75,18 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Background Decorative Circles */}
+      <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+        <View style={[styles.bgCircle, { top: -50, left: -50, width: 300, height: 300, backgroundColor: colors.primary + '30' }]} />
+        <View style={[styles.bgCircle, { top: 200, right: -100, width: 400, height: 400, backgroundColor: colors.text + '10' }]} />
+        <View style={[styles.bgCircle, { bottom: -100, left: 50, width: 350, height: 350, backgroundColor: colors.primary + '20' }]} />
+      </View>
+
+      {/* Frosted Glass Overlay */}
+      <BlurView intensity={80} tint={colors.background === '#000000' ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
+
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        
+
         {/* Refined Header */}
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
@@ -93,8 +102,8 @@ export default function DashboardScreen() {
         {currencyKeys.length > 1 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.currencyTabsContent}>
             {currencyKeys.map(curr => (
-              <TouchableOpacity 
-                key={curr} 
+              <TouchableOpacity
+                key={curr}
                 style={[styles.currencyTab, selectedCurrency === curr && styles.currencyTabActive]}
                 onPress={() => setSelectedCurrency(curr)}
               >
@@ -109,34 +118,34 @@ export default function DashboardScreen() {
         {/* Global Balance */}
         <View style={styles.balanceSection}>
           <Text style={styles.balanceLabel}>TOTAL ASSETS</Text>
-          <MoneyText 
-            amount={balancesByCurrency[selectedCurrency] || 0} 
-            currency={selectedCurrency} 
-            style={styles.balanceHuge} 
-            weight="bold" 
+          <MoneyText
+            amount={balancesByCurrency[selectedCurrency] || 0}
+            currency={selectedCurrency}
+            style={styles.balanceHuge}
+            weight="bold"
           />
         </View>
 
         {/* Accounts Carousel */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          style={styles.accountsScroll} 
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.accountsScroll}
           contentContainerStyle={styles.accountsScrollContent}
         >
           {accounts?.map(acc => {
             const accColor = '#' + acc.color.toString(16).padStart(6, '0');
             return (
-              <TouchableOpacity 
-                key={acc.id} 
-                style={[styles.accountCard, { borderTopWidth: 4, borderTopColor: accColor }]} 
+              <TouchableOpacity
+                key={acc.id}
+                style={[styles.accountCard, { borderTopWidth: 4, borderTopColor: accColor }]}
                 onPress={() => router.push(`/transactions?accountId=${acc.id}`)}
                 onLongPress={() => handleAccountLongPress(acc)}
                 delayLongPress={250}
               >
                 <View style={styles.accountCardHeader}>
                   <View style={[styles.accountIconBox, { backgroundColor: accColor + '15' }]}>
-                    <Ionicons name={getOutlineIcon(acc.icon, 'wallet') as any} size={20} color={accColor} />
+                    <Ionicons name={acc.icon as any || "wallet-outline"} size={20} color={accColor} />
                   </View>
                   <View style={styles.accountCardMeta}>
                     <Text style={styles.accountCardName}>{acc.name}</Text>
@@ -145,11 +154,11 @@ export default function DashboardScreen() {
                     )}
                   </View>
                 </View>
-                <MoneyText 
-                  amount={acc.balance} 
-                  currency={acc.currency} 
-                  style={styles.accountCardBalance} 
-                  weight="bold" 
+                <MoneyText
+                  amount={acc.balance}
+                  currency={acc.currency}
+                  style={styles.accountCardBalance}
+                  weight="bold"
                 />
                 {acc.holderName && acc.holderName !== 'N/A' && (
                   <Text style={styles.accountCardHolder}>{acc.holderName}</Text>
@@ -168,7 +177,7 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             );
           })}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.accountCard, { borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', minHeight: 70 }]}
             onPress={() => { setEditingAccount(undefined); setShowAccountForm(true); }}
           >
@@ -192,7 +201,7 @@ export default function DashboardScreen() {
               <View key={tx.id} style={styles.activityRow}>
                 <View style={styles.txLeft}>
                   <View style={[styles.activityIconBox, { backgroundColor: catColor + '15' }]}>
-                    <Ionicons name={getOutlineIcon(tx.category.icon, 'pricetag') as any} size={22} color={catColor} />
+                    <Ionicons name={tx.category.icon as any || 'pricetag'} size={22} color={catColor} />
                   </View>
                   <View style={styles.txInfo}>
                     <Text style={styles.txTitle} numberOfLines={1}>{tx.note || 'Untitled'}</Text>
@@ -222,10 +231,10 @@ export default function DashboardScreen() {
         <Ionicons name="add" size={28} color="#000" />
       </TouchableOpacity>
 
-      <AccountFormModal 
-        visible={showAccountForm} 
-        onClose={() => setShowAccountForm(false)} 
-        account={editingAccount} 
+      <AccountFormModal
+        visible={showAccountForm}
+        onClose={() => setShowAccountForm(false)}
+        account={editingAccount}
       />
     </SafeAreaView>
   );
@@ -235,6 +244,11 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    overflow: 'hidden',
+  },
+  bgCircle: {
+    position: 'absolute',
+    borderRadius: 999,
   },
   loadingContainer: {
     flex: 1,
@@ -244,9 +258,9 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   content: {
     paddingTop: 24,
-    paddingBottom: 100, 
+    paddingBottom: 100,
   },
-  
+
   header: {
     marginTop: 10,
     marginBottom: 24,
@@ -316,7 +330,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
 
   balanceHuge: {
     fontFamily: typography.fonts.monoBold,
-    fontSize: typography.sizes.xxxl, 
+    fontSize: typography.sizes.xxxl,
     color: colors.text,
     letterSpacing: -1.5,
   },
@@ -389,7 +403,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   accountCardStatLabel: {
     fontFamily: typography.fonts.mono,
-    fontSize: 9, 
+    fontSize: 9,
     color: colors.textMuted,
     marginBottom: 2,
     letterSpacing: 0.5,
@@ -493,7 +507,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     fontSize: typography.sizes.xs,
     marginTop: 4,
   },
-  
+
   emptyCard: {
     paddingVertical: 32,
     alignItems: 'flex-start',

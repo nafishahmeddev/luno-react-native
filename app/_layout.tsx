@@ -42,9 +42,7 @@ const customizeText = () => {
   if (TextInput.defaultProps) { TextInput.defaultProps.style = customTextProps.style; } else { TextInput.defaultProps = customTextProps; }
 };
 
-export const unstable_settings = {
-  anchor: '(main)',
-};
+// Removed unstable_settings anchor to prevent naming collisions with physical folders during path resolution
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -79,8 +77,7 @@ export default function RootLayout() {
             <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <CustomThemeProvider>
               <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(main)" />
-                <Stack.Screen name="(onboarding)" />
+                {/* Rely on auto-resolution for groups */}
               </Stack>
               <StatusBar style="auto" />
             </CustomThemeProvider>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Redirect } from 'expo-router';
+import { Stack, Redirect } from 'expo-router'; // Refreshing layout resolution
 import { useOnboarding } from '../../src/providers/OnboardingProvider';
 
 export default function StackLayout() {

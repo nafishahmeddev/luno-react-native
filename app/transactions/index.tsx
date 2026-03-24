@@ -1,29 +1,25 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Modal, ScrollView, Platform } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button } from '../../src/components/ui/Button';
+import { Header } from '../../src/components/ui/Header';
+import { MoneyText } from '../../src/components/ui/MoneyText';
+import { useAccounts } from '../../src/features/accounts/hooks/accounts';
+import { useTransactions } from '../../src/features/transactions/hooks/transactions';
 import { useTheme } from '../../src/providers/ThemeProvider';
 import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
-import { useTransactions } from '../../src/features/transactions/hooks/transactions';
-import { useAccounts } from '../../src/features/accounts/hooks/accounts';
-import { MoneyText } from '../../src/components/ui/MoneyText';
-import { Header } from '../../src/components/ui/Header';
-import { Button } from '../../src/components/ui/Button';
-import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
 
 export default function TransactionsScreen() {
   const { colors } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const { data: transactions, isLoading } = useTransactions();
   const { data: accounts } = useAccounts();
-  
+
   const params = useLocalSearchParams();
-  
-  const getOutlineIcon = (iconName: string | undefined | null, defaultIcon: string) => {
-    const base = iconName || defaultIcon;
-    return base.endsWith('-outline') ? base : `${base}-outline`;
-  };
+
 
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [activeAccountId, setActiveAccountId] = useState<number | null>(params.accountId ? Number(params.accountId) : null);
@@ -69,16 +65,16 @@ export default function TransactionsScreen() {
           <ScrollView style={styles.modalScroll}>
             <Text style={styles.filterSectionTitle}>ACCOUNT</Text>
             <View style={styles.pillContainer}>
-              <TouchableOpacity 
-                style={[styles.pill, !activeAccountId && styles.pillActive]} 
+              <TouchableOpacity
+                style={[styles.pill, !activeAccountId && styles.pillActive]}
                 onPress={() => setActiveAccountId(null)}
               >
                 <Text style={[styles.pillText, !activeAccountId && styles.pillTextActive]}>All Accounts</Text>
               </TouchableOpacity>
               {accounts?.map(acc => (
-                <TouchableOpacity 
-                  key={acc.id} 
-                  style={[styles.pill, activeAccountId === acc.id && styles.pillActive]} 
+                <TouchableOpacity
+                  key={acc.id}
+                  style={[styles.pill, activeAccountId === acc.id && styles.pillActive]}
                   onPress={() => setActiveAccountId(acc.id)}
                 >
                   <Text style={[styles.pillText, activeAccountId === acc.id && styles.pillTextActive]}>{acc.name}</Text>
@@ -89,9 +85,9 @@ export default function TransactionsScreen() {
             <Text style={styles.filterSectionTitle}>DATE RANGE</Text>
             <View style={styles.pillContainer}>
               {(['ALL', 'THIS_MONTH', 'LAST_MONTH'] as const).map(dt => (
-                <TouchableOpacity 
-                  key={dt} 
-                  style={[styles.pill, dateFilter === dt && styles.pillActive]} 
+                <TouchableOpacity
+                  key={dt}
+                  style={[styles.pill, dateFilter === dt && styles.pillActive]}
                   onPress={() => setDateFilter(dt)}
                 >
                   <Text style={[styles.pillText, dateFilter === dt && styles.pillTextActive]}>
@@ -118,9 +114,9 @@ export default function TransactionsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header 
-        title={activeAccountId ? 'Account Ledger' : 'All Activity'} 
-        showBack 
+      <Header
+        title={activeAccountId ? 'Account Ledger' : 'All Activity'}
+        showBack
         rightAction={
           <TouchableOpacity onPress={() => setFilterModalVisible(true)} style={styles.filterTrigger}>
             <Ionicons name="options-outline" size={24} color={colors.text} />
@@ -142,7 +138,7 @@ export default function TransactionsScreen() {
             <View style={styles.txRow}>
               <View style={styles.txLeft}>
                 <View style={[styles.txIconBox, { backgroundColor: catColor + '15' }]}>
-                  <Ionicons name={getOutlineIcon(tx.category.icon, 'pricetag') as any} size={22} color={catColor} />
+                  <Ionicons name={tx.category.icon as any || 'pricetag'} size={22} color={catColor} />
                 </View>
                 <View style={styles.txMeta}>
                   <Text style={styles.txTitle} numberOfLines={1}>{tx.note || 'Untitled'}</Text>
@@ -151,10 +147,10 @@ export default function TransactionsScreen() {
                   </Text>
                 </View>
               </View>
-              <MoneyText 
-                amount={tx.amount} 
-                type={tx.type} 
-                style={styles.txAmount} 
+              <MoneyText
+                amount={tx.amount}
+                type={tx.type}
+                style={styles.txAmount}
               />
             </View>
           );
@@ -182,7 +178,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 40,
   },
-  
+
   txRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
