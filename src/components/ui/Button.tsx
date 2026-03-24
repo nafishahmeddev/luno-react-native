@@ -77,7 +77,7 @@ export function Button({
 
 const createStyles = (colors: ThemeColors) => StyleSheet.create({
   base: {
-    borderRadius: 12,
+    borderRadius: 100, // Seamless round layout
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',

@@ -42,9 +42,9 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   inputContainer: {
     backgroundColor: colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 16,
+    borderWidth: 0,
+    borderColor: 'transparent',
     overflow: 'hidden',
   },
   inputError: {
@@ -52,9 +52,9 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   input: {
     color: colors.text,
-    fontSize: typography.sizes.md,
+    fontSize: typography.sizes.lg,
     paddingHorizontal: 16,
-    height: 48,
+    height: 64,
   },
   errorText: {
     color: colors.danger,

@@ -23,10 +23,10 @@ export function Card({ children, style }: CardProps) {
 const createStyles = (colors: ThemeColors) => StyleSheet.create({
   card: {
     backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 0,
+    borderColor: 'transparent',
     overflow: 'hidden',
   },
 });

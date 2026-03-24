@@ -7,17 +7,26 @@ import { useTheme } from '../../src/providers/ThemeProvider';
 import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
 import { Header } from '../../src/components/ui/Header';
+import { db } from '../../src/db/client';
+import { payments, accounts, categories } from '../../src/db/schema';
 
 export default function SettingsScreen() {
   const { colors } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
-  const handleResetOnboarding = () => {
-    Alert.alert("Reset App", "Warning: This clears your onboarding flags and forces you to re-enter setup.", [
+  const handleResetData = () => {
+    Alert.alert("Factory Reset", "Warning: This will permanently delete ALL data (accounts, categories, transactions) and restart the application.", [
       { text: "Cancel", style: "cancel" },
-      { text: "Reset", style: "destructive", onPress: async () => {
-        await AsyncStorage.removeItem('@fintracker_onboarded');
-        alert("Reset complete. Restart app to see changes.");
+      { text: "Delete Everything", style: "destructive", onPress: async () => {
+        try {
+          await db.delete(payments);
+          await db.delete(categories);
+          await db.delete(accounts);
+          await AsyncStorage.clear();
+          alert("Data wiped successfully. Please hard restart the App.");
+        } catch {
+          alert("Critical failure wiping device storage.");
+        }
       }}
     ]);
   };
@@ -57,7 +66,7 @@ export default function SettingsScreen() {
           <View style={styles.card}>
             <OptionRow icon="cloud-download" title="Export Data" subtitle="CSV / JSON" color={colors.success} onPress={() => {}} />
             <View style={styles.divider} />
-            <OptionRow icon="refresh-circle" title="Reset Onboarding" subtitle="Return to setup screen" color={colors.danger} onPress={handleResetOnboarding} />
+            <OptionRow icon="warning" title="Factory Reset" subtitle="Delete all data & start over" color={colors.danger} onPress={handleResetData} />
           </View>
         </View>
 
@@ -89,16 +98,15 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   card: {
     backgroundColor: colors.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 24,
+    borderWidth: 0,
     overflow: 'hidden',
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: colors.card,
+    padding: 24,
+    backgroundColor: 'transparent',
   },
   iconBox: {
     width: 40,

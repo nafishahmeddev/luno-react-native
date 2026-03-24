@@ -1,33 +1,33 @@
 export const darkTheme = {
-  background: '#030303', // Pitch Black
-  card: 'rgba(255, 255, 255, 0.04)', // Frosted glass fallback
-  surface: 'rgba(255, 255, 255, 0.08)',
-  primary: '#00FFAA', // Neon Mint
-  primaryLight: '#5CFFC6',
-  primaryDark: '#00A870',
-  secondary: '#00F0FF', // Neon Cyan
+  background: '#000000', // Pitch OLED Black
+  card: 'rgba(255, 255, 255, 0.02)', // Extremely subtle phantom bounds
+  surface: 'rgba(255, 255, 255, 0.05)',
+  primary: '#8B5CF6', // Electric Violet
+  primaryLight: '#A78BFA',
+  primaryDark: '#6D28D9',
+  secondary: '#FFFFFF', // Pure White Action
   text: '#FFFFFF',
-  textMuted: '#A0A0A0',
-  border: 'rgba(255, 255, 255, 0.12)',
-  success: '#39FF14', // Neon Green
-  danger: '#FF0055', // Neon Pink/Red
-  warning: '#FFD700',
+  textMuted: '#71717A', // Deep Slate
+  border: 'transparent', // Edgeless UI implies no literal borders
+  success: '#10B981', // Emerald
+  danger: '#EF4444', // Red
+  warning: '#F59E0B',
 };
 
 export const lightTheme = {
-  background: '#F9FAFB', 
-  card: 'rgba(0, 0, 0, 0.03)', 
+  background: '#FFFFFF', // Pure White
+  card: 'rgba(0, 0, 0, 0.02)', 
   surface: 'rgba(0, 0, 0, 0.05)',
-  primary: '#00C885', // Darker Mint
-  primaryLight: '#5CFFC6',
-  primaryDark: '#00A870',
-  secondary: '#00C2CE', 
-  text: '#111827', // Slate Black
-  textMuted: '#6B7280', 
-  border: 'rgba(0, 0, 0, 0.1)',
-  success: '#2EBA13', 
-  danger: '#DE004C', 
-  warning: '#D4AF37',
+  primary: '#7C3AED', // Deeper Violet for light mode contrast
+  primaryLight: '#8B5CF6',
+  primaryDark: '#5B21B6',
+  secondary: '#000000', // Pure Black Action
+  text: '#09090B', 
+  textMuted: '#A1A1AA', 
+  border: 'transparent',
+  success: '#059669', 
+  danger: '#DC2626', 
+  warning: '#D97706',
 };
 
 export type ThemeColors = typeof darkTheme;
