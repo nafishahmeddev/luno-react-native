@@ -366,8 +366,8 @@ const createStyles = (colors: ThemeColors) =>
       alignItems: 'center',
     },
     header: {
-      marginTop: 8,
-      marginBottom: 12,
+      marginTop: 12,
+      marginBottom: 20,
       paddingHorizontal: 24,
       flexDirection: 'row',
       alignItems: 'center',
@@ -420,7 +420,7 @@ const createStyles = (colors: ThemeColors) =>
     content: {
       paddingHorizontal: 24,
       paddingBottom: 120,
-      gap: 16,
+      gap: 20,
     },
     kpiPanel: {
       borderRadius: 18,
@@ -472,8 +472,8 @@ const createStyles = (colors: ThemeColors) =>
     },
     txRow: {
       minHeight: 72,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -555,8 +555,8 @@ const createStyles = (colors: ThemeColors) =>
     },
     fab: {
       position: 'absolute',
-      right: 20,
-      bottom: 20,
+      right: 24,
+      bottom: 24,
       width: 58,
       height: 58,
       borderRadius: 29,
@@ -574,8 +574,8 @@ const createStyles = (colors: ThemeColors) =>
     sheetCard: {
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
-      paddingHorizontal: 20,
-      paddingTop: 18,
+      paddingHorizontal: 24,
+      paddingTop: 20,
       paddingBottom: 28,
       backgroundColor: colors.background,
       borderTopWidth: 1,

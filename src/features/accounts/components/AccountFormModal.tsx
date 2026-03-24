@@ -12,6 +12,7 @@ import {
     useWindowDimensions,
     View,
 } from 'react-native';
+import { CurrencyPickerModal } from '../../../components/ui/CurrencyPickerModal';
 import { Input } from '../../../components/ui/Input';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { ThemeColors } from '../../../theme/colors';
@@ -24,8 +25,6 @@ export type AccountFormModalProps = {
   onClose: () => void;
   account?: Account;
 };
-
-const CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'INR', 'SAR', 'AED', 'BTC'] as const;
 
 const COLORS = [
   '#00FFAA',
@@ -56,7 +55,8 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
   const [holderName, setHolderName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [balance, setBalance] = useState('');
-  const [currency, setCurrency] = useState<string>(CURRENCIES[0]);
+  const [currency, setCurrency] = useState<string>('USD');
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [colorHex, setColorHex] = useState<string>(COLORS[0]);
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
     setHolderName('');
     setAccountNumber('');
     setBalance('');
-    setCurrency(CURRENCIES[0]);
+    setCurrency('USD');
     setColorHex(COLORS[0]);
   }, [account, visible]);
 
@@ -161,18 +161,19 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
 
             <View style={styles.section}>
               <Text style={styles.label}>Currency</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.currencyRow}>
-                {CURRENCIES.map((item) => (
-                  <TouchableOpacity
-                    key={item}
-                    activeOpacity={0.9}
-                    onPress={() => setCurrency(item)}
-                    style={[styles.currencyChip, currency === item && styles.currencyChipActive]}
-                  >
-                    <Text style={[styles.currencyChipText, currency === item && styles.currencyChipTextActive]}>{item}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+              <TouchableOpacity
+                style={styles.currencySelector}
+                onPress={() => setShowCurrencyPicker(true)}
+                activeOpacity={0.85}
+              >
+                <View style={styles.currencySelectorLeft}>
+                  <View style={styles.currencyCodeWrap}>
+                    <Text style={styles.currencyCodeText}>{currency}</Text>
+                  </View>
+                  <Text style={styles.currencySelectorValue}>{currency}</Text>
+                </View>
+                <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
+              </TouchableOpacity>
             </View>
 
             <View style={[styles.section, styles.sectionLast]}>
@@ -209,6 +210,13 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <CurrencyPickerModal
+        visible={showCurrencyPicker}
+        onClose={() => setShowCurrencyPicker(false)}
+        value={currency}
+        onChange={(code) => setCurrency(code)}
+      />
     </Modal>
   );
 }
@@ -304,31 +312,42 @@ const createStyles = (colors: ThemeColors) =>
     formInput: {
       height: 58,
     },
-    currencyRow: {
-      paddingRight: 6,
-    },
-    currencyChip: {
-      height: 36,
-      paddingHorizontal: 12,
-      borderRadius: 999,
+    currencySelector: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      height: 48,
+      paddingHorizontal: 14,
+      borderRadius: 14,
+      backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.border,
-      backgroundColor: colors.background + 'AA',
+    },
+    currencySelectorLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    currencyCodeWrap: {
+      height: 28,
+      paddingHorizontal: 8,
+      borderRadius: 8,
+      backgroundColor: colors.primary + '20',
+      borderWidth: 1,
+      borderColor: colors.primary + '40',
+      alignItems: 'center',
       justifyContent: 'center',
-      marginRight: 8,
     },
-    currencyChipActive: {
-      borderColor: colors.text,
-      backgroundColor: colors.text,
-    },
-    currencyChipText: {
+    currencyCodeText: {
       fontFamily: typography.fonts.semibold,
       fontSize: 11,
-      color: colors.textMuted,
-      letterSpacing: 0.4,
+      color: colors.primary,
+      letterSpacing: 0.5,
     },
-    currencyChipTextActive: {
-      color: colors.background,
+    currencySelectorValue: {
+      fontFamily: typography.fonts.semibold,
+      fontSize: 14,
+      color: colors.text,
     },
     colorGrid: {
       flexDirection: 'row',

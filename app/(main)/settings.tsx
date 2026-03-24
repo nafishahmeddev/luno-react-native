@@ -6,6 +6,7 @@ import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurBackground } from '../../src/components/ui/BlurBackground';
 import { Button } from '../../src/components/ui/Button';
+import { CurrencyPickerModal } from '../../src/components/ui/CurrencyPickerModal';
 import { db } from '../../src/db/client';
 import { accounts, categories, payments } from '../../src/db/schema';
 import { useSettings } from '../../src/providers/SettingsProvider';
@@ -19,15 +20,13 @@ export default function SettingsScreen() {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const [showAppearanceDialog, setShowAppearanceDialog] = React.useState(false);
-  const [showCurrencyDialog, setShowCurrencyDialog] = React.useState(false);
+  const [showCurrencyPicker, setShowCurrencyPicker] = React.useState(false);
 
   const themeOptions: { label: string; value: 'light' | 'dark' | 'system'; icon: keyof typeof Ionicons.glyphMap }[] = [
     { label: 'Light Mode', value: 'light', icon: 'sunny-outline' },
     { label: 'Dark Mode', value: 'dark', icon: 'moon-outline' },
     { label: 'Follow System', value: 'system', icon: 'phone-portrait-outline' },
   ];
-
-  const currencyOptions = ['USD', 'EUR', 'GBP', 'JPY', 'INR', 'AED', 'BTC'] as const;
 
   const handleResetData = () => {
     Alert.alert(
@@ -56,7 +55,7 @@ export default function SettingsScreen() {
   };
 
   const handleThemeChange = () => setShowAppearanceDialog(true);
-  const handleCurrencyChange = () => setShowCurrencyDialog(true);
+  const handleCurrencyChange = () => setShowCurrencyPicker(true);
 
   type PreferenceRowProps = {
     icon: any;
@@ -210,43 +209,12 @@ export default function SettingsScreen() {
         </View>
       </Modal>
 
-      <Modal
-        visible={showCurrencyDialog}
-        transparent
-        animationType="fade"
-        presentationStyle="overFullScreen"
-        statusBarTranslucent
-        onRequestClose={() => setShowCurrencyDialog(false)}
-      >
-        <View style={styles.dialogOverlay}>
-          <TouchableOpacity style={StyleSheet.absoluteFillObject} activeOpacity={1} onPress={() => setShowCurrencyDialog(false)} />
-          <View style={styles.dialogCard}>
-            <Text style={styles.dialogTitle}>Default Currency</Text>
-            <Text style={styles.dialogSubtitle}>Set application-wide standard</Text>
-
-            <View style={styles.currencyDialogGrid}>
-              {currencyOptions.map((option) => {
-                const selected = profile.defaultCurrency === option;
-                return (
-                  <TouchableOpacity
-                    key={option}
-                    style={[styles.currencyDialogChip, selected && styles.currencyDialogChipActive]}
-                    onPress={() => {
-                      updateProfile({ defaultCurrency: option });
-                      setShowCurrencyDialog(false);
-                    }}
-                    activeOpacity={0.9}
-                  >
-                    <Text style={[styles.currencyDialogChipText, selected && styles.currencyDialogChipTextActive]}>{option}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <Button title="Close" variant="secondary" onPress={() => setShowCurrencyDialog(false)} style={styles.dialogCloseButton} />
-          </View>
-        </View>
-      </Modal>
+      <CurrencyPickerModal
+        visible={showCurrencyPicker}
+        onClose={() => setShowCurrencyPicker(false)}
+        value={profile.defaultCurrency}
+        onChange={(code) => updateProfile({ defaultCurrency: code })}
+      />
     </SafeAreaView>
   );
 }
@@ -262,8 +230,8 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     borderRadius: 999,
   },
   header: {
-    marginTop: 10,
-    marginBottom: 12,
+    marginTop: 12,
+    marginBottom: 20,
     paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
@@ -300,7 +268,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 42,
+    paddingBottom: 40,
   },
   heroPanel: {
     borderRadius: 18,
@@ -326,6 +294,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   heroPillsRow: {
     flexDirection: 'row',
     marginTop: 14,
+    gap: 12,
   },
   heroPill: {
     flex: 1,
@@ -343,7 +312,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     fontSize: 10,
     color: colors.textMuted,
     letterSpacing: 1.5,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   sectionCard: {
     borderRadius: 16,
@@ -355,7 +324,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -485,36 +454,6 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     color: colors.text,
   },
   dialogOptionTextActive: {
-    color: colors.background,
-  },
-  currencyDialogGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  currencyDialogChip: {
-    width: '31%',
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.text + '10',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  currencyDialogChipActive: {
-    backgroundColor: colors.text,
-    borderColor: colors.text,
-  },
-  currencyDialogChipText: {
-    fontFamily: typography.fonts.semibold,
-    fontSize: 12,
-    color: colors.text,
-    letterSpacing: 0.4,
-  },
-  currencyDialogChipTextActive: {
     color: colors.background,
   },
   dialogCloseButton: {

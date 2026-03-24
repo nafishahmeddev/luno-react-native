@@ -79,19 +79,19 @@ export const createOnboardingStyles = (colors: ThemeColors) =>
     },
     scrollContent: {
       paddingHorizontal: 24,
-      paddingTop: 18,
+      paddingTop: 20,
       paddingBottom: 24,
       flexGrow: 1,
     },
     stepMeta: {
-      marginBottom: 18,
+      marginBottom: 20,
     },
     eyebrow: {
       fontFamily: typography.fonts.semibold,
       fontSize: 11,
       color: colors.primary,
       letterSpacing: 1.5,
-      marginBottom: 10,
+      marginBottom: 12,
     },
     stepTitle: {
       fontFamily: typography.fonts.heading,

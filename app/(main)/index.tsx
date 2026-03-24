@@ -394,12 +394,12 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingTop: 24,
+    paddingTop: 0,
     paddingBottom: 100,
   },
 
   header: {
-    marginTop: 10,
+    marginTop: 12,
     marginBottom: 24,
     paddingHorizontal: 24,
     flexDirection: 'row',
@@ -474,7 +474,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
 
   accountsScroll: {
     paddingLeft: 24,
-    marginBottom: 32,
+    marginBottom: 24,
   },
   accountsScrollContent: {
     paddingRight: 48,
@@ -593,7 +593,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
 
   activityList: {
-    marginTop: 8,
+    marginTop: 10,
     paddingHorizontal: 24,
   },
   activityRow: {

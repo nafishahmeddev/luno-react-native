@@ -218,14 +218,14 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     borderRadius: 999,
   },
   listContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingTop: 8,
     paddingBottom: 100,
   },
   heroWrap: {
-    marginHorizontal: 20,
-    marginTop: 8,
-    marginBottom: 10,
+    marginHorizontal: 24,
+    marginTop: 10,
+    marginBottom: 16,
     borderRadius: 16,
     padding: 14,
     backgroundColor: colors.surface,
@@ -265,9 +265,9 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
 
   segmentedControl: {
     flexDirection: 'row',
-    marginHorizontal: 20,
-    marginTop: 4,
-    marginBottom: 8,
+    marginHorizontal: 24,
+    marginTop: 8,
+    marginBottom: 12,
     height: 48,
     backgroundColor: colors.surface,
     borderRadius: 12,

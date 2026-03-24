@@ -345,11 +345,11 @@ const createStyles = (colors: ThemeColors) =>
       borderRadius: 999,
     },
     header: {
-      marginTop: 8,
+      marginTop: 12,
       paddingHorizontal: 24,
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 14,
+      marginBottom: 20,
     },
     headerButton: {
       width: 44,
@@ -384,7 +384,7 @@ const createStyles = (colors: ThemeColors) =>
     content: {
       paddingHorizontal: 24,
       paddingBottom: 140,
-      gap: 18,
+      gap: 20,
     },
     amountPanel: {
       borderRadius: 18,
@@ -459,7 +459,7 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: 12,
     },
     sectionWrap: {
-      gap: 10,
+      gap: 12,
     },
     sectionLabel: {
       fontFamily: typography.fonts.semibold,
