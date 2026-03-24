@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BlurView } from 'expo-blur';
+import { BlurView } from '@sbaiahmed1/react-native-blur';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -93,9 +93,8 @@ export default function SettingsScreen() {
         <View style={[styles.bgCircle, { bottom: -90, left: 40, width: 320, height: 320, backgroundColor: colors.primary + '1C' }]} />
       </View>
 
-      <BlurView intensity={Platform.OS === 'ios' ? 80 : 96}
-        tint={isDark ? 'dark' : 'light'}
-        experimentalBlurMethod={"dimezisBlurView"}
+      <BlurView blurAmount={Platform.OS === 'ios' ? 80 : 96}
+        blurType={isDark ? 'dark' : 'light'}
         style={StyleSheet.absoluteFillObject}
       />
       {Platform.OS === 'android' && <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background + '60' }]} pointerEvents="none" />}

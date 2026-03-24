@@ -1,4 +1,4 @@
-import { BlurView } from 'expo-blur';
+import { BlurView } from '@sbaiahmed1/react-native-blur';
 import React from 'react';
 import { StyleSheet, ViewStyle, Platform } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
@@ -15,8 +15,8 @@ export function Card({ children, style }: CardProps) {
 
   return (
     <BlurView 
-      intensity={Platform.OS === 'ios' ? 25 : 0} 
-      tint={isDark ? "dark" : "light"} 
+      blurAmount={Platform.OS === 'ios' ? 25 : 0} 
+      blurType={isDark ? "dark" : "light"} 
       style={[styles.card, style, { backgroundColor: Platform.OS === 'android' ? colors.card : 'transparent' }]}
     >
       {children}

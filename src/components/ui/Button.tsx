@@ -1,4 +1,4 @@
-import { BlurView } from 'expo-blur';
+import { BlurView } from '@sbaiahmed1/react-native-blur';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextStyle, TouchableOpacity, ViewStyle, Platform } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
@@ -63,8 +63,8 @@ export function Button({
     >
       {(variant === 'outline' || variant === 'secondary') && (
         <BlurView 
-          intensity={Platform.OS === 'ios' ? 20 : 0} 
-          tint={isDark ? "dark" : "light"} 
+          blurAmount={Platform.OS === 'ios' ? 20 : 0} 
+          blurType={isDark ? "dark" : "light"} 
           style={[StyleSheet.absoluteFillObject, { backgroundColor: Platform.OS === 'android' ? colors.surface : 'transparent' }]} 
         />
       )}

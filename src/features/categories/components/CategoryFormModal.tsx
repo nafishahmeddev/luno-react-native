@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
+import { BlurView } from '@sbaiahmed1/react-native-blur';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
     KeyboardAvoidingView,
@@ -129,9 +129,8 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
           </View>
 
           <BlurView
-            intensity={Platform.OS === 'ios' ? 80 : 96}
-            tint={isDark ? 'dark' : 'light'}
-            experimentalBlurMethod={'dimezisBlurView' as any}
+            blurAmount={Platform.OS === 'ios' ? 80 : 96}
+            blurType={isDark ? 'dark' : 'light'}
             style={StyleSheet.absoluteFillObject}
           />
 

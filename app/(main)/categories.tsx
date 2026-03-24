@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
+import { BlurView } from '@sbaiahmed1/react-native-blur';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -139,9 +139,8 @@ export default function CategoriesScreen() {
       </View>
 
       <BlurView
-        intensity={Platform.OS === 'ios' ? 80 : 96}
-        tint={isDark ? 'dark' : 'light'}
-        experimentalBlurMethod={'dimezisBlurView'}
+        blurAmount={Platform.OS === 'ios' ? 80 : 96}
+        blurType={isDark ? 'dark' : 'light'}
         style={StyleSheet.absoluteFillObject}
       />
       {Platform.OS === 'android' && <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background + '60' }]} pointerEvents="none" />}

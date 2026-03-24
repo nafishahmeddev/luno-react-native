@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
+import { BlurView } from '@sbaiahmed1/react-native-blur';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -84,9 +84,8 @@ export default function DashboardScreen() {
 
       {/* Frosted Glass Overlay */}
       <BlurView
-        intensity={Platform.OS === 'ios' ? 80 : 95}
-        tint={isDark ? 'dark' : 'light'}
-        experimentalBlurMethod={"dimezisBlurView"}
+        blurAmount={Platform.OS === 'ios' ? 80 : 95}
+        blurType={isDark ? 'dark' : 'light'}
         style={StyleSheet.absoluteFillObject}
       />
       {/* Subtle Tint Layer for Android */}
