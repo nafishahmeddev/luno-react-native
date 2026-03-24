@@ -1,11 +1,12 @@
 import React from 'react';
 import { Tabs, Redirect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../src/theme/colors';
+import { useTheme } from '../../src/providers/ThemeProvider';
 import { useOnboarding } from '../../src/providers/OnboardingProvider';
 
 export default function TabLayout() {
   const { hasOnboarded } = useOnboarding();
+  const { colors } = useTheme();
 
   if (!hasOnboarded) {
     return <Redirect href="/(onboarding)" />;

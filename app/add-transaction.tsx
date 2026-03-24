@@ -4,7 +4,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { colors } from '../src/theme/colors';
+import { useTheme } from '../src/providers/ThemeProvider';
+import { ThemeColors } from '../src/theme/colors';
 import { typography } from '../src/theme/typography';
 import { Input } from '../src/components/ui/Input';
 import { Button } from '../src/components/ui/Button';
@@ -17,6 +18,8 @@ import { AccountFormModal } from '../src/components/modals/AccountFormModal';
 import { CategoryFormModal } from '../src/components/modals/CategoryFormModal';
 
 export default function AddTransactionScreen() {
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { mutateAsync: createTransaction, isPending: isSaving } = useCreateTransaction();
   const { data: accounts } = useAccounts();
@@ -164,7 +167,7 @@ export default function AddTransactionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: 20, paddingBottom: 60 },
   headerTitle: { fontSize: typography.sizes.xxl, fontWeight: typography.weights.bold, color: colors.text, marginBottom: 24 },

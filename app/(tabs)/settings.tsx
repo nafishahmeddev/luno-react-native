@@ -3,10 +3,14 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors } from '../../src/theme/colors';
+import { useTheme } from '../../src/providers/ThemeProvider';
+import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
 
 export default function SettingsScreen() {
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const handleResetOnboarding = () => {
     Alert.alert("Reset App", "Warning: This clears your onboarding flags and forces you to re-enter setup.", [
       { text: "Cancel", style: "cancel" },
@@ -64,7 +68,7 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

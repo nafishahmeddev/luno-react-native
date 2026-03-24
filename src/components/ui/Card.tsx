@@ -1,7 +1,8 @@
 import React from 'react';
 import { StyleSheet, ViewStyle } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../providers/ThemeProvider';
+import { ThemeColors } from '../../theme/colors';
 
 type CardProps = {
   children: React.ReactNode;
@@ -9,14 +10,17 @@ type CardProps = {
 };
 
 export function Card({ children, style }: CardProps) {
+  const { colors, isDark } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   return (
-    <BlurView intensity={25} tint="dark" style={[styles.card, style]}>
+    <BlurView intensity={25} tint={isDark ? "dark" : "light"} style={[styles.card, style]}>
       {children}
     </BlurView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   card: {
     backgroundColor: colors.card,
     borderRadius: 16,

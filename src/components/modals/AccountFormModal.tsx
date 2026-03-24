@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../providers/ThemeProvider';
+import { ThemeColors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
@@ -17,6 +18,8 @@ export type AccountFormModalProps = {
 };
 
 export function AccountFormModal({ visible, onClose, account }: AccountFormModalProps) {
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const isEditing = !!account;
   const { mutateAsync: createAccount, isPending: creating } = useCreateAccount();
   const { mutateAsync: updateAccount, isPending: updating } = useUpdateAccount();
@@ -101,7 +104,7 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   modalContainer: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',

@@ -1,12 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors } from '../../src/theme/colors';
+import { useTheme } from '../../src/providers/ThemeProvider';
+import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
 import { useTransactions } from '../../src/hooks/transactions';
 import { Card } from '../../src/components/ui/Card';
 
 export default function TransactionsScreen() {
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const { data: transactions, isLoading } = useTransactions();
 
   if (isLoading) {
@@ -55,7 +58,7 @@ export default function TransactionsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

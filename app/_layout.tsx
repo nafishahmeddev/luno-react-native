@@ -7,6 +7,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { DatabaseProvider } from '@/src/providers/DatabaseProvider';
 import { QueryProvider } from '@/src/providers/QueryProvider';
 import { OnboardingProvider } from '@/src/providers/OnboardingProvider';
+import { ThemeProvider as CustomThemeProvider } from '@/src/providers/ThemeProvider';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 
 export const unstable_settings = {
@@ -29,11 +30,13 @@ export default function RootLayout() {
       <DatabaseProvider>
         <OnboardingProvider>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-            </Stack>
-            <StatusBar style="auto" />
+            <CustomThemeProvider>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+              </Stack>
+              <StatusBar style="auto" />
+            </CustomThemeProvider>
           </ThemeProvider>
         </OnboardingProvider>
       </DatabaseProvider>

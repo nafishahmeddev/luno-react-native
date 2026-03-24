@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../src/theme/colors';
+import { useTheme } from '../../src/providers/ThemeProvider';
+import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
 import { useCategories, useDeleteCategory } from '../../src/hooks/categories';
 import { Category } from '../../src/api/categories';
 import { CategoryFormModal } from '../../src/components/modals/CategoryFormModal';
 
 export default function CategoriesScreen() {
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const { data: categories, isLoading } = useCategories();
   const { mutateAsync: deleteCategory } = useDeleteCategory();
 
@@ -107,7 +110,7 @@ export default function CategoriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { padding: 16, paddingHorizontal: 20 },
   title: { color: colors.text, fontSize: typography.sizes.xl, fontWeight: typography.weights.bold },

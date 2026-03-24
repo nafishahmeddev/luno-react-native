@@ -4,12 +4,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { colors } from '../../src/theme/colors';
+import { useTheme } from '../../src/providers/ThemeProvider';
+import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
 import { useTransactions } from '../../src/hooks/transactions';
 import { useAccounts } from '../../src/hooks/accounts';
 
 export default function DashboardScreen() {
+  const { colors, isDark } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { data: transactions, isLoading: txLoading } = useTransactions();
   const { data: accounts, isLoading: accountsLoading } = useAccounts();
@@ -76,7 +79,7 @@ export default function DashboardScreen() {
 
         <View style={styles.txList}>
           {transactions?.slice(0, 5).map((tx, index) => (
-            <BlurView intensity={20} tint="dark" key={tx.id} style={[styles.txRow, index === 4 && { borderBottomWidth: 0 }]}>
+            <BlurView intensity={20} tint={isDark ? "dark" : "light"} key={tx.id} style={[styles.txRow, index === 4 && { borderBottomWidth: 0 }]}>
               <View style={styles.txLeft}>
                 <View style={[styles.txIconBox, { backgroundColor: tx.type === 'CR' ? colors.success + '15' : colors.danger + '15' }]}>
                   <Ionicons name={tx.type === 'CR' ? 'arrow-down' : 'arrow-up'} size={18} color={tx.type === 'CR' ? colors.success : colors.danger} />
@@ -101,7 +104,7 @@ export default function DashboardScreen() {
           ))}
           
           {(!transactions || transactions.length === 0) && (
-            <BlurView intensity={10} tint="dark" style={styles.emptyCard}>
+            <BlurView intensity={10} tint={isDark ? "dark" : "light"} style={styles.emptyCard}>
               <Ionicons name="receipt-outline" size={48} color={colors.textMuted} />
               <Text style={styles.emptyText}>No recent activity.</Text>
             </BlurView>
@@ -113,7 +116,7 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

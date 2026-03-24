@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { colors } from '../../src/theme/colors';
+import { useTheme } from '../../src/providers/ThemeProvider';
+import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
 import { Button } from '../../src/components/ui/Button';
 import { Input } from '../../src/components/ui/Input';
@@ -11,6 +12,8 @@ import { useCreateAccount } from '../../src/hooks/accounts';
 import { useCreateCategory } from '../../src/hooks/categories';
 
 export default function OnboardingScreen() {
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { completeOnboarding } = useOnboarding();
   const { mutateAsync: createAccount, isPending: loadingAccount } = useCreateAccount();
@@ -102,7 +105,7 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

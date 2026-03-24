@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../providers/ThemeProvider';
+import { ThemeColors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
@@ -17,6 +18,8 @@ export type CategoryFormModalProps = {
 };
 
 export function CategoryFormModal({ visible, onClose, category }: CategoryFormModalProps) {
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const isEditing = !!category;
   const { mutateAsync: createCategory, isPending: creating } = useCreateCategory();
   const { mutateAsync: updateCategory, isPending: updating } = useUpdateCategory();
@@ -87,7 +90,7 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   modalContainer: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',

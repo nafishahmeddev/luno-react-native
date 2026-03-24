@@ -1,7 +1,8 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../providers/ThemeProvider';
+import { ThemeColors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 
 type ButtonProps = {
@@ -26,6 +27,8 @@ export function Button({
   textStyle,
 }: ButtonProps) {
 
+  const { colors, isDark } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const getTextColor = () => {
     if (variant === 'outline') return colors.text;
@@ -59,7 +62,7 @@ export function Button({
       activeOpacity={0.8}
     >
       {(variant === 'outline' || variant === 'secondary') && (
-        <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFillObject} />
+        <BlurView intensity={20} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFillObject} />
       )}
       {isLoading ? (
         <ActivityIndicator color={getTextColor()} />
@@ -72,7 +75,7 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   base: {
     borderRadius: 12,
     justifyContent: 'center',

@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../src/theme/colors';
+import { useTheme } from '../../src/providers/ThemeProvider';
+import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
 import { useAccounts, useDeleteAccount } from '../../src/hooks/accounts';
 import { Account } from '../../src/api/accounts';
 import { AccountFormModal } from '../../src/components/modals/AccountFormModal';
 
 export default function AccountsScreen() {
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const { data: accounts, isLoading } = useAccounts();
   const { mutateAsync: deleteAccount } = useDeleteAccount();
 
@@ -104,7 +107,7 @@ export default function AccountsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { padding: 16, paddingHorizontal: 20 },
   title: { color: colors.text, fontSize: typography.sizes.xl, fontWeight: typography.weights.bold },
