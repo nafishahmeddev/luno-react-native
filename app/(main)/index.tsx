@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from '@sbaiahmed1/react-native-blur';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, Alert, Animated, Easing, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MoneyText } from '../../src/components/ui/MoneyText';
 import { DEFAULT_CURRENCY } from '../../src/constants/currency';
@@ -25,14 +25,6 @@ export default function DashboardScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const styles = React.useMemo(() => createStyles(colors, screenWidth), [colors, screenWidth]);
   const router = useRouter();
-
-  // Animated circles
-  const circleOneAnim = React.useRef(new Animated.Value(0)).current;
-  const circleTwoAnim = React.useRef(new Animated.Value(0)).current;
-  const circleThreeAnim = React.useRef(new Animated.Value(0)).current;
-  const circleOneOpac = React.useRef(new Animated.Value(0)).current;
-  const circleTwoOpac = React.useRef(new Animated.Value(0)).current;
-  const circleThreeOpac = React.useRef(new Animated.Value(0)).current;
 
   const { data: transactions, isLoading: txLoading } = useTransactions();
   const { data: accounts, isLoading: accountsLoading } = useAccounts();
@@ -77,60 +69,6 @@ export default function DashboardScreen() {
     );
   }, [transactions, accounts, selectedCurrency]);
 
-  React.useEffect(() => {
-    const createLoop = (
-      animatedValue: Animated.Value,
-      duration: number,
-      toValue: number
-    ) => Animated.loop(
-      Animated.sequence([
-        Animated.timing(animatedValue, { toValue, duration, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.timing(animatedValue, { toValue: 0, duration, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-      ])
-    );
-    const animations = [
-      createLoop(circleOneAnim, 9000, 1),
-      createLoop(circleTwoAnim, 12000, 1),
-      createLoop(circleThreeAnim, 10500, 1),
-      createLoop(circleOneOpac, 7000, 1),
-      createLoop(circleTwoOpac, 11000, 1),
-      createLoop(circleThreeOpac, 8500, 1),
-    ];
-    animations.forEach(a => a.start());
-    return () => {
-      animations.forEach(a => a.stop());
-      [circleOneAnim, circleTwoAnim, circleThreeAnim, circleOneOpac, circleTwoOpac, circleThreeOpac]
-        .forEach(v => v.stopAnimation());
-    };
-  }, [circleOneAnim, circleTwoAnim, circleThreeAnim, circleOneOpac, circleTwoOpac, circleThreeOpac]);
-
-  const circleOneStyle = React.useMemo(() => ({
-    opacity: circleOneOpac.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0.9] }),
-    transform: [
-      { translateX: circleOneAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 36] }) },
-      { translateY: circleOneAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 28] }) },
-      { scale: circleOneAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.22] }) },
-    ],
-  }), [circleOneAnim, circleOneOpac]);
-
-  const circleTwoStyle = React.useMemo(() => ({
-    opacity: circleTwoOpac.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0.75] }),
-    transform: [
-      { translateX: circleTwoAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -44] }) },
-      { translateY: circleTwoAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 32] }) },
-      { scale: circleTwoAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.16] }) },
-    ],
-  }), [circleTwoAnim, circleTwoOpac]);
-
-  const circleThreeStyle = React.useMemo(() => ({
-    opacity: circleThreeOpac.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0.85] }),
-    transform: [
-      { translateX: circleThreeAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 28] }) },
-      { translateY: circleThreeAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -30] }) },
-      { scale: circleThreeAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.18] }) },
-    ],
-  }), [circleThreeAnim, circleThreeOpac]);
-
   const handleAccountLongPress = (acc: any) => {
     Alert.alert('Manage Account', acc.name, [
       { text: 'Cancel', style: 'cancel' },
@@ -160,11 +98,11 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Animated background circles */}
+      {/* Static background circles */}
       <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-        <Animated.View style={[styles.bgCircle, { top: -60, left: -60, width: 340, height: 340, backgroundColor: colors.primary }, circleOneStyle]} />
-        <Animated.View style={[styles.bgCircle, { top: 180, right: -110, width: 440, height: 440, backgroundColor: colors.primaryDark }, circleTwoStyle]} />
-        <Animated.View style={[styles.bgCircle, { bottom: -110, left: 40, width: 380, height: 380, backgroundColor: colors.primary }, circleThreeStyle]} />
+        <View style={[styles.bgCircle, { top: -60, left: -60, width: 340, height: 340, backgroundColor: colors.primary, opacity: 0.72 }]} />
+        <View style={[styles.bgCircle, { top: 180, right: -110, width: 440, height: 440, backgroundColor: colors.primaryDark, opacity: 0.52 }]} />
+        <View style={[styles.bgCircle, { bottom: -110, left: 40, width: 380, height: 380, backgroundColor: colors.primary, opacity: 0.6 }]} />
       </View>
       <BlurView blurAmount={Platform.OS === 'ios' ? 80 : 95} blurType={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
       {Platform.OS === 'android' && (
@@ -274,22 +212,29 @@ export default function DashboardScreen() {
                 delayLongPress={250}
                 activeOpacity={0.88}
               >
-                {/* Accent top bar */}
                 <View style={[styles.accountAccentBar, { backgroundColor: accColor }]} />
 
                 <View style={styles.accountCardInner}>
                   <View style={styles.accountCardTop}>
-                    <View style={[styles.accountIconBox, { backgroundColor: accColor + '20' }]}>
-                      <Ionicons name={(acc.icon as any) || 'wallet-outline'} size={18} color={accColor} />
+                    <View style={styles.accountCardLead}>
+                      <View style={[styles.accountIconBox, { backgroundColor: accColor + '20' }]}>
+                        <Ionicons name={(acc.icon as any) || 'wallet-outline'} size={18} color={accColor} />
+                      </View>
+                      <View style={styles.accountCardMeta}>
+                        <Text style={styles.accountCardName} numberOfLines={1}>{acc.name}</Text>
+                        <Text style={styles.accountCardHint}>
+                          {acc.accountNumber && acc.accountNumber !== 'N/A'
+                            ? `•••• ${acc.accountNumber.slice(-4)}`
+                            : 'Tap to view activity'}
+                        </Text>
+                      </View>
                     </View>
-                    <View style={styles.accountCardMeta}>
-                      <Text style={styles.accountCardName} numberOfLines={1}>{acc.name}</Text>
-                      {acc.accountNumber && acc.accountNumber !== 'N/A' && (
-                        <Text style={styles.accountCardNumber}>•••• {acc.accountNumber.slice(-4)}</Text>
-                      )}
+                    <View style={styles.accountCurrencyBadge}>
+                      <Text style={[styles.accountCurrencyText, { color: accColor }]}>{acc.currency}</Text>
                     </View>
                   </View>
 
+                  <Text style={styles.accountBalanceLabel}>AVAILABLE</Text>
                   <MoneyText amount={acc.balance} currency={acc.currency} style={styles.accountCardBalance} weight="bold" />
 
                   <View style={styles.accountCardStats}>
@@ -603,7 +548,8 @@ const createStyles = (colors: ThemeColors, screenWidth: number) => StyleSheet.cr
     gap: 12,
   },
   accountCard: {
-    width: screenWidth * 0.68,
+    width: screenWidth * 0.7,
+    minHeight: 160,
     borderRadius: 20,
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -620,7 +566,14 @@ const createStyles = (colors: ThemeColors, screenWidth: number) => StyleSheet.cr
   accountCardTop: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 12,
+    gap: 10,
+  },
+  accountCardLead: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
   },
   accountIconBox: {
@@ -638,29 +591,53 @@ const createStyles = (colors: ThemeColors, screenWidth: number) => StyleSheet.cr
     color: colors.text,
     fontSize: 14,
   },
-  accountCardNumber: {
+  accountCardHint: {
     fontFamily: typography.fonts.regular,
     color: colors.textMuted,
     fontSize: 11,
     marginTop: 2,
   },
+  accountCurrencyBadge: {
+    height: 24,
+    minWidth: 48,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background + '80',
+  },
+  accountCurrencyText: {
+    fontFamily: typography.fonts.semibold,
+    fontSize: 10,
+    letterSpacing: 0.8,
+  },
+  accountBalanceLabel: {
+    fontFamily: typography.fonts.semibold,
+    fontSize: 9,
+    color: colors.textMuted,
+    letterSpacing: 1.2,
+    marginBottom: 6,
+  },
   accountCardBalance: {
     fontSize: 22,
-    lineHeight: 24,
+    lineHeight: 25,
     marginBottom: 12,
   },
   accountCardStats: {
     flexDirection: 'row',
+    alignItems: 'center',
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    gap: 0,
   },
-  accountCardStatCol: { flex: 1 },
+  accountCardStatCol: {
+    flex: 1,
+  },
   accountCardStatDivider: {
     width: 1,
-    marginHorizontal: 10,
+    height: 28,
     backgroundColor: colors.border,
+    marginHorizontal: 10,
   },
   accountCardStatLabel: {
     fontFamily: typography.fonts.semibold,
