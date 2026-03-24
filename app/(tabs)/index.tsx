@@ -45,13 +45,18 @@ export default function DashboardScreen() {
     }, {} as Record<string, number>) || {};
   }, [accounts]);
 
-  const currencyKeys = Object.keys(balancesByCurrency);
-  if (currencyKeys.length === 0) {
-    currencyKeys.push(DEFAULT_CURRENCY);
-    balancesByCurrency[DEFAULT_CURRENCY] = 0;
-    incomeByCurrency[DEFAULT_CURRENCY] = 0;
-    expenseByCurrency[DEFAULT_CURRENCY] = 0;
-  }
+  const currencyKeys = React.useMemo(() => {
+    const keys = Object.keys(balancesByCurrency);
+    return keys.length > 0 ? keys : [DEFAULT_CURRENCY];
+  }, [balancesByCurrency]);
+
+  const [selectedCurrency, setSelectedCurrency] = React.useState<string>(currencyKeys[0]);
+
+  React.useEffect(() => {
+    if (!currencyKeys.includes(selectedCurrency)) {
+      setSelectedCurrency(currencyKeys[0]);
+    }
+  }, [currencyKeys, selectedCurrency]);
 
   const handleAccountLongPress = (acc: any) => {
     Alert.alert(
@@ -93,20 +98,32 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Brutalist Typographic Currency Switcher */}
+        {currencyKeys.length > 1 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.currencyTabsContent}>
+            {currencyKeys.map(curr => (
+              <TouchableOpacity 
+                key={curr} 
+                style={[styles.currencyTab, selectedCurrency === curr && styles.currencyTabActive]}
+                onPress={() => setSelectedCurrency(curr)}
+              >
+                <Text style={[styles.currencyTabText, selectedCurrency === curr && styles.currencyTabTextActive]}>
+                  {curr}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+
         {/* Global Balance */}
         <View style={styles.balanceSection}>
           <Text style={styles.balanceLabel}>TOTAL ASSETS</Text>
-          {currencyKeys.length === 1 ? (
-            <MoneyText amount={balancesByCurrency[currencyKeys[0]]} currency={currencyKeys[0]} style={styles.balanceHuge} weight="bold" />
-          ) : (
-            <View style={styles.multiBalanceContainer}>
-              {currencyKeys.map((curr, idx) => (
-                <View key={curr} style={[styles.multiBalanceRow, idx > 0 && { marginTop: 8 }]}>
-                  <MoneyText amount={balancesByCurrency[curr]} currency={curr} style={styles.multiBalanceAmount} weight="bold" />
-                </View>
-              ))}
-            </View>
-          )}
+          <MoneyText 
+            amount={balancesByCurrency[selectedCurrency] || 0} 
+            currency={selectedCurrency} 
+            style={styles.balanceHuge} 
+            weight="bold" 
+          />
         </View>
 
         {/* Accounts Carousel */}
@@ -145,6 +162,17 @@ export default function DashboardScreen() {
                 {acc.holderName && acc.holderName !== 'N/A' && (
                   <Text style={styles.accountCardHolder}>{acc.holderName}</Text>
                 )}
+
+                <View style={styles.accountCardStats}>
+                  <View style={styles.accountCardStatCol}>
+                    <Text style={styles.accountCardStatLabel}>IN</Text>
+                    <MoneyText amount={acc.income} currency={acc.currency} style={styles.accountCardStatValue} type="CR" />
+                  </View>
+                  <View style={styles.accountCardStatCol}>
+                    <Text style={styles.accountCardStatLabel}>OUT</Text>
+                    <MoneyText amount={acc.expense} currency={acc.currency} style={styles.accountCardStatValue} type="DR" />
+                  </View>
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -158,20 +186,16 @@ export default function DashboardScreen() {
         </ScrollView>
 
         {/* Minimalist Stat Row */}
-        <View style={styles.statsContainer}>
-          {currencyKeys.map((curr, idx) => (
-            <View key={curr} style={[styles.statsRowItem, idx === currencyKeys.length - 1 && { borderBottomWidth: 0 }]}>
-              <View style={styles.statColumnLeft}>
-                <Text style={styles.statHeading}>INFLOW • {curr}</Text>
-                <MoneyText amount={incomeByCurrency[curr]} currency={curr} style={styles.statValue} type="CR" weight="medium" />
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statColumnRight}>
-                <Text style={styles.statHeading}>OUTFLOW • {curr}</Text>
-                <MoneyText amount={expenseByCurrency[curr]} currency={curr} style={styles.statValue} type="DR" weight="medium" />
-              </View>
-            </View>
-          ))}
+        <View style={styles.statsRow}>
+          <View style={styles.statColumnLeft}>
+            <Text style={styles.statHeading}>INFLOW</Text>
+            <MoneyText amount={incomeByCurrency[selectedCurrency] || 0} currency={selectedCurrency} style={styles.statValue} type="CR" weight="medium" />
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statColumnRight}>
+            <Text style={styles.statHeading}>OUTFLOW</Text>
+            <MoneyText amount={expenseByCurrency[selectedCurrency] || 0} currency={selectedCurrency} style={styles.statValue} type="DR" weight="medium" />
+          </View>
         </View>
 
         {/* Editorial Activity List */}
@@ -286,25 +310,34 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 8,
   },
+  currencyTabsContent: {
+    paddingHorizontal: 24,
+    marginBottom: 8,
+    flexDirection: 'row',
+  },
+  currencyTab: {
+    marginRight: 24,
+    paddingBottom: 4,
+    borderBottomWidth: 2,
+    borderColor: 'transparent',
+  },
+  currencyTabActive: {
+    borderColor: colors.text,
+  },
+  currencyTabText: {
+    fontFamily: typography.fonts.monoBold,
+    color: colors.textMuted,
+    fontSize: typography.sizes.lg,
+  },
+  currencyTabTextActive: {
+    color: colors.text,
+  },
+
   balanceHuge: {
     fontFamily: typography.fonts.monoBold,
     fontSize: typography.sizes.xxxl, 
     color: colors.text,
     letterSpacing: -1.5,
-    lineHeight: 56,
-  },
-  multiBalanceContainer: {
-    marginTop: 4,
-  },
-  multiBalanceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  multiBalanceAmount: {
-    fontFamily: typography.fonts.monoBold,
-    fontSize: typography.sizes.xxl, 
-    color: colors.text,
-    letterSpacing: -1,
   },
 
   accountsScroll: {
@@ -362,23 +395,36 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-
-  statsContainer: {
-    marginBottom: 40,
-    marginHorizontal: 24,
+  accountCardStats: {
+    flexDirection: 'row',
+    marginTop: 16,
+    paddingTop: 12,
     borderTopWidth: 1,
-    borderBottomWidth: 1,
     borderColor: colors.border,
   },
-  statsRowItem: {
+  accountCardStatCol: {
+    flex: 1,
+  },
+  accountCardStatLabel: {
+    fontFamily: typography.fonts.mono,
+    fontSize: 9, 
+    color: colors.textMuted,
+    marginBottom: 2,
+    letterSpacing: 0.5,
+  },
+  accountCardStatValue: {
+    fontFamily: typography.fonts.mono,
+    fontSize: typography.sizes.xs,
+  },
+
+  statsRow: {
     flexDirection: 'row',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderColor: colors.border,
+    marginBottom: 32,
+    paddingHorizontal: 24,
   },
   statColumnLeft: {
     flex: 1,
-    paddingLeft: 16,
+    paddingRight: 16,
   },
   statColumnRight: {
     flex: 1,
