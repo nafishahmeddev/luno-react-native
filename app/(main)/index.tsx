@@ -186,8 +186,8 @@ export default function DashboardScreen() {
             return (
               <View key={tx.id} style={styles.txRow}>
                 <View style={styles.txLeft}>
-                  <View style={[styles.txIconBox, { backgroundColor: catColor + '20' }]}>
-                    <Ionicons name={(tx.category.icon as any) || 'pricetag'} size={18} color={catColor} />
+                  <View style={[styles.txIconBox, { borderColor: catColor }]}>
+                    <Ionicons name={(tx.category.icon as any) || 'pricetag'} size={20} color={catColor} />
                   </View>
                   <View style={styles.txInfo}>
                     <Text style={styles.txTitle} numberOfLines={1}>{tx.note || 'Untitled'}</Text>
@@ -452,12 +452,14 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     paddingRight: 16,
   },
   txIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22, // stark geometric circle
+    borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
+    backgroundColor: 'transparent',
   },
   txInfo: {
     flex: 1,

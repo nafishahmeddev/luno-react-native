@@ -134,8 +134,8 @@ export default function TransactionsScreen() {
         renderItem={({ item: tx }) => (
           <View style={styles.txRow}>
             <View style={styles.txLeft}>
-              <View style={[styles.txIconBox, { backgroundColor: (tx.category.color ? '#' + tx.category.color.toString(16).padStart(6, '0') : colors.primary) + '20' }]}>
-                <Ionicons name={(tx.category.icon as any) || 'pricetag'} size={18} color={(tx.category.color ? '#' + tx.category.color.toString(16).padStart(6, '0') : colors.primary)} />
+              <View style={[styles.txIconBox, { borderColor: (tx.category.color ? '#' + tx.category.color.toString(16).padStart(6, '0') : colors.primary) }]}>
+                <Ionicons name={(tx.category.icon as any) || 'pricetag'} size={20} color={(tx.category.color ? '#' + tx.category.color.toString(16).padStart(6, '0') : colors.primary)} />
               </View>
               <View style={styles.txMeta}>
                 <Text style={styles.txTitle} numberOfLines={1}>{tx.note || 'Untitled'}</Text>
@@ -190,10 +190,12 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   txIconBox: {
     width: 44,
     height: 44,
-    borderRadius: 14,
+    borderRadius: 22,
+    borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
+    backgroundColor: 'transparent',
   },
   txMeta: {
     flex: 1,
