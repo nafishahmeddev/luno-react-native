@@ -15,33 +15,33 @@ export type ThemePalette = {
 };
 
 export const darkTheme: ThemePalette = {
-  background: '#000000', // Pitch OLED Black
-  card: 'rgba(255, 255, 255, 0.02)', // Extremely subtle phantom bounds
-  surface: 'rgba(255, 255, 255, 0.05)',
-  primary: '#8B5CF6', // Electric Violet
-  primaryLight: '#A78BFA',
-  primaryDark: '#6D28D9',
-  secondary: '#FFFFFF', // Pure White Action
-  text: '#FFFFFF',
-  textMuted: '#71717A', // Deep Slate
+  background: '#000100',
+  card: 'rgba(107, 212, 152, 0.08)',
+  surface: 'rgba(107, 212, 152, 0.12)',
+  primary: '#B8D641',
+  primaryLight: '#cae560',
+  primaryDark: '#a0c119',
+  secondary: '#F3FFF8',
+  text: '#F3FFF8',
+  textMuted: '#8AB7A0',
   border: 'transparent', // Edgeless UI implies no literal borders
-  success: '#10B981', // Emerald
+  success: '#6BD498',
   danger: '#EF4444', // Red
   warning: '#F59E0B',
 };
 
 export const lightTheme: ThemePalette = {
-  background: '#FFFFFF', // Pure White
-  card: 'rgba(0, 0, 0, 0.02)', 
-  surface: 'rgba(0, 0, 0, 0.05)',
-  primary: '#7C3AED', // Deeper Violet for light mode contrast
-  primaryLight: '#8B5CF6',
-  primaryDark: '#5B21B6',
-  secondary: '#000000', // Pure Black Action
-  text: '#09090B', 
-  textMuted: '#A1A1AA', 
+  background: '#F6FFF9',
+  card: 'rgba(107, 212, 152, 0.08)', 
+  surface: 'rgba(107, 212, 152, 0.12)',
+  primary: '#B8D641',
+  primaryLight: '#cae560',
+  primaryDark: '#a0c119',
+  secondary: '#000100',
+  text: '#000100', 
+  textMuted: '#5F7A6B', 
   border: 'transparent',
-  success: '#059669', 
+  success: '#43B875', 
   danger: '#DC2626', 
   warning: '#D97706',
 };

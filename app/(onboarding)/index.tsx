@@ -1,340 +1,625 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, useWindowDimensions, KeyboardAvoidingView, Platform, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from '@sbaiahmed1/react-native-blur';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import {
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button } from '../../src/components/ui/Button';
+import { Input } from '../../src/components/ui/Input';
+import { useCreateAccount } from '../../src/features/accounts/hooks/accounts';
+import { useCreateCategory } from '../../src/features/categories/hooks/categories';
+import { useOnboarding } from '../../src/providers/OnboardingProvider';
+import { useSettings } from '../../src/providers/SettingsProvider';
 import { useTheme } from '../../src/providers/ThemeProvider';
 import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
-import { Button } from '../../src/components/ui/Button';
-import { Input } from '../../src/components/ui/Input';
-import { useOnboarding } from '../../src/providers/OnboardingProvider';
-import { useSettings } from '../../src/providers/SettingsProvider';
-import { useCreateAccount } from '../../src/features/accounts/hooks/accounts';
-import { useCreateCategory } from '../../src/features/categories/hooks/categories';
 
-const ONBOARDING_SLIDES = [
-  { id: '1', type: 'info', title: 'Track Your Finances', subtitle: 'Premium tools to manage your wealth and expenses seamlessly.', image: require('../../assets/images/onboarding/finance.png') },
-  { id: '2', type: 'info', title: 'Smart Categories', subtitle: 'Organize your income and expenses precisely with intelligent budgeting.', image: require('../../assets/images/onboarding/categories.png') },
-  { id: '3', type: 'info', title: 'Multi-Currency', subtitle: 'Travel the world without losing track of your global portfolio.', image: require('../../assets/images/onboarding/currency.png') },
-  { id: '4', type: 'profile', title: 'Who are you?', subtitle: 'Let us personalize your dashboard.' },
-  { id: '5', type: 'currency', title: 'Default Currency', subtitle: 'What is your primary operating currency?' },
-  { id: '6', type: 'account', title: 'First Account', subtitle: 'Set up your primary wallet to get started.' },
+type StepId = 'welcome' | 'profile' | 'currency' | 'account';
+
+type StepDefinition = {
+  id: StepId;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+};
+
+const STEPS: StepDefinition[] = [
+  {
+    id: 'welcome',
+    eyebrow: 'FINTRACKER SETUP',
+    title: 'Build your finance cockpit.',
+    subtitle: 'A tighter onboarding, cleaner defaults, and a first account that is actually complete.',
+  },
+  {
+    id: 'profile',
+    eyebrow: 'PROFILE',
+    title: 'Who is driving this ledger?',
+    subtitle: 'Your name anchors account ownership and personal defaults across the app.',
+  },
+  {
+    id: 'currency',
+    eyebrow: 'REGION',
+    title: 'Choose your operating currency.',
+    subtitle: 'This becomes the default in new accounts and transactions until you override it.',
+  },
+  {
+    id: 'account',
+    eyebrow: 'FIRST ACCOUNT',
+    title: 'Create a real starting account.',
+    subtitle: 'Name, holder, account number, color, and opening balance are all captured here.',
+  },
 ];
 
-const CURRENCIES = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'JPY', 'INR', 'BGN'];
+const CURRENCIES = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'JPY', 'INR', 'AED'] as const;
+const ACCOUNT_ICONS = [
+  'wallet-outline',
+  'card-outline',
+  'cash-outline',
+  'business-outline',
+  'server-outline',
+  'diamond-outline',
+] as const;
+const ACCOUNT_COLORS = ['#6BD498', '#8DECB8', '#3FBF7F', '#F5C451', '#63A4FF', '#FF8A65'] as const;
+
+const toDbColor = (value: string) => Number.parseInt(value.replace('#', ''), 16);
+
+const parseAmount = (value: string) => {
+  const normalized = value.replace(',', '.').replace(/[^0-9.]/g, '');
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
 
 export default function OnboardingScreen() {
-  const { colors } = useTheme();
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const listRef = useRef<FlatList>(null);
-  
+  const { colors, isDark } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const { completeOnboarding } = useOnboarding();
   const { updateProfile } = useSettings();
-  const { mutateAsync: createAccount, isPending: loadingAccount } = useCreateAccount();
-  const { mutateAsync: createCategory, isPending: loadingCategory } = useCreateCategory();
+  const { mutateAsync: createAccount, isPending: accountPending } = useCreateAccount();
+  const { mutateAsync: createCategory, isPending: categoryPending } = useCreateCategory();
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  
-  // Form State
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [defaultCurrency, setDefaultCurrency] = useState('USD');
-  const [accountName, setAccountName] = useState('Main Wallet');
-  const [balance, setBalance] = useState('0');
+  const [stepIndex, setStepIndex] = React.useState(0);
+  const currentStep = STEPS[stepIndex];
 
-  const handleNext = async () => {
-    // Validation Overrides
-    if (currentIndex === 3 && !name.trim()) {
-      alert("Please provide your name.");
-      return;
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [phone, setPhone] = React.useState('');
+  const [defaultCurrency, setDefaultCurrency] = React.useState<string>('USD');
+  const [accountName, setAccountName] = React.useState('Main Wallet');
+  const [accountHolder, setAccountHolder] = React.useState('');
+  const [accountNumber, setAccountNumber] = React.useState('');
+  const [openingBalance, setOpeningBalance] = React.useState('0');
+  const [accountIcon, setAccountIcon] = React.useState<string>(ACCOUNT_ICONS[0]);
+  const [accountColor, setAccountColor] = React.useState<string>(ACCOUNT_COLORS[0]);
+
+  React.useEffect(() => {
+    if (!accountHolder.trim() && name.trim()) {
+      setAccountHolder(name.trim());
     }
-    if (currentIndex === 5) {
-      if (!accountName.trim() || !balance.trim()) {
-        alert("Please provide valid account initialization details.");
-        return;
+  }, [name, accountHolder]);
+
+  const isPending = accountPending || categoryPending;
+
+  const validateStep = () => {
+    if (currentStep.id === 'profile' && !name.trim()) {
+      Alert.alert('Missing name', 'Enter your name to continue.');
+      return false;
+    }
+
+    if (currentStep.id === 'account') {
+      if (!accountName.trim()) {
+        Alert.alert('Missing account name', 'Enter a name for your first account.');
+        return false;
       }
-      return finalizeSetup();
+      if (!accountHolder.trim()) {
+        Alert.alert('Missing holder name', 'Enter the holder name for this account.');
+        return false;
+      }
+      if (!accountNumber.trim()) {
+        Alert.alert('Missing account number', 'Enter an account number or identifier.');
+        return false;
+      }
     }
 
-    // Progress Iteration
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < ONBOARDING_SLIDES.length) {
-      listRef.current?.scrollToIndex({ index: nextIndex, animated: true });
-      setCurrentIndex(nextIndex);
-    }
+    return true;
   };
 
-  const handleBack = () => {
-    if (currentIndex > 0) {
-      const prevIndex = currentIndex - 1;
-      listRef.current?.scrollToIndex({ index: prevIndex, animated: true });
-      setCurrentIndex(prevIndex);
+  const seedCategories = async () => {
+    const defaults = [
+      { name: 'Salary', icon: 'cash-outline', color: toDbColor(colors.success), type: 'CR' as const, budget: 0, expense: 0 },
+      { name: 'Freelance', icon: 'sparkles-outline', color: toDbColor(colors.primary), type: 'CR' as const, budget: 0, expense: 0 },
+      { name: 'Groceries', icon: 'basket-outline', color: toDbColor('#F5C451'), type: 'DR' as const, budget: 0, expense: 0 },
+      { name: 'Transport', icon: 'car-outline', color: toDbColor('#63A4FF'), type: 'DR' as const, budget: 0, expense: 0 },
+      { name: 'Bills', icon: 'receipt-outline', color: toDbColor('#FF8A65'), type: 'DR' as const, budget: 0, expense: 0 },
+    ];
+
+    for (const category of defaults) {
+      await createCategory(category);
     }
   };
 
   const finalizeSetup = async () => {
     try {
-      // 1. Commit Profile asynchronously
-      await updateProfile({ name, email, phone, defaultCurrency });
+      await updateProfile({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        defaultCurrency,
+      });
 
-      // 2. Initialize Core Account
       await createAccount({
-        name: accountName,
-        holderName: name,
-        accountNumber: 'N/A',
-        icon: 'wallet',
-        color: parseInt(colors.primary.replace('#', '0x')),
+        name: accountName.trim(),
+        holderName: accountHolder.trim(),
+        accountNumber: accountNumber.trim(),
+        icon: accountIcon.replace('-outline', ''),
+        color: toDbColor(accountColor),
         isDefault: true,
         currency: defaultCurrency,
-        balance: parseFloat(balance),
+        balance: parseAmount(openingBalance),
         income: 0,
         expense: 0,
       });
 
-      // 3. Seed Default Categories
-      const standardCategories = [
-        { name: 'Salary', icon: 'cash', color: parseInt(colors.success.replace('#', '0x')), type: 'CR' as const, budget: 0, expense: 0 },
-        { name: 'Groceries', icon: 'cart', color: parseInt(colors.warning.replace('#', '0x')), type: 'DR' as const, budget: 0, expense: 0 },
-        { name: 'Transport', icon: 'car', color: parseInt(colors.primary.replace('#', '0x')), type: 'DR' as const, budget: 0, expense: 0 },
-        { name: 'Entertainment', icon: 'film', color: parseInt(colors.danger.replace('#', '0x')), type: 'DR' as const, budget: 0, expense: 0 },
-      ];
-
-      for (const cat of standardCategories) {
-        await createCategory(cat);
-      }
-
-      // 4. Conclude    try {
+      await seedCategories();
       await completeOnboarding();
       router.replace('/(main)');
     } catch {
-      alert("System failed to initialize profile environment.");
+      Alert.alert('Setup failed', 'Could not initialize your workspace. Please try again.');
     }
   };
 
-  const renderSlide = ({ item, index }: { item: typeof ONBOARDING_SLIDES[0], index: number }) => {
-    return (
-      <View style={[styles.slide, { width }]}>
-        {item.type === 'info' && (
-          <View style={styles.centerContent}>
-            <View style={styles.imageWrapper}>
-              <Image source={item.image} style={styles.heroImage} resizeMode="contain" />
-            </View>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.subtitle}>{item.subtitle}</Text>
-          </View>
-        )}
+  const handleContinue = async () => {
+    if (!validateStep()) {
+      return;
+    }
 
-        {item.type === 'profile' && (
-          <View style={styles.formContent}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.subtitle}>{item.subtitle}</Text>
-            <View style={styles.inputGroup}>
-              <Input label="Full Name" placeholder="John Doe" value={name} onChangeText={setName} />
-              <Input label="Email Address" placeholder="john@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-              <Input label="Phone Number (Optional)" placeholder="+1 234 567 890" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-            </View>
-          </View>
-        )}
+    if (stepIndex === STEPS.length - 1) {
+      await finalizeSetup();
+      return;
+    }
 
-        {item.type === 'currency' && (
-          <View style={styles.formContent}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.subtitle}>{item.subtitle}</Text>
-            <View style={styles.currencyGrid}>
-              {CURRENCIES.map((cur) => {
-                const isSelected = defaultCurrency === cur;
-                return (
-                  <TouchableOpacity 
-                    key={cur} 
-                    style={[styles.currencyBox, isSelected && { borderColor: colors.primary, backgroundColor: colors.primary + '15' }]}
-                    onPress={() => setDefaultCurrency(cur)}
-                  >
-                    <Text style={[styles.currencyText, isSelected && { color: colors.primary, fontWeight: typography.weights.bold }]}>{cur}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        )}
-
-        {item.type === 'account' && (
-          <View style={styles.formContent}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.subtitle}>{item.subtitle}</Text>
-            <View style={styles.inputGroup}>
-              <Input label="Wallet Name" placeholder="e.g. Checking Account" value={accountName} onChangeText={setAccountName} />
-              <Input label={`Starting Balance (${defaultCurrency})`} placeholder="0.00" value={balance} onChangeText={setBalance} keyboardType="decimal-pad" />
-            </View>
-          </View>
-        )}
-      </View>
-    );
+    setStepIndex((current) => current + 1);
   };
 
-  const isPending = loadingAccount || loadingCategory;
+  const renderWelcome = () => (
+    <View style={styles.heroPanel}>
+      <View style={styles.heroBadge}>
+        <Ionicons name="sparkles-outline" size={16} color={colors.background} />
+        <Text style={styles.heroBadgeText}>LOCAL-FIRST MONEY OS</Text>
+      </View>
+
+      <Text style={styles.heroTitle}>FINTRACKER.</Text>
+      <Text style={styles.heroBody}>
+        Clean structure, fast capture, and a calm ledger. This setup keeps the first-run flow aligned with the rest of the app instead of feeling like a separate product.
+      </Text>
+
+      <View style={styles.heroStatsRow}>
+        <View style={styles.heroStatCard}>
+          <Text style={styles.heroStatLabel}>DEFAULTS</Text>
+          <Text style={styles.heroStatValue}>PROFILE + CURRENCY</Text>
+        </View>
+        <View style={styles.heroStatCard}>
+          <Text style={styles.heroStatLabel}>BOOTSTRAP</Text>
+          <Text style={styles.heroStatValue}>ACCOUNT + CATEGORIES</Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderProfile = () => (
+    <View style={styles.formStack}>
+      <Input label="Full Name" placeholder="Ahmed Khan" value={name} onChangeText={setName} />
+      <Input label="Email" placeholder="Optional" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+      <Input label="Phone" placeholder="Optional" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+    </View>
+  );
+
+  const renderCurrency = () => (
+    <View style={styles.currencyWrap}>
+      {CURRENCIES.map((currency) => {
+        const selected = currency === defaultCurrency;
+        return (
+          <TouchableOpacity
+            key={currency}
+            style={[styles.currencyChip, selected && styles.currencyChipActive]}
+            onPress={() => setDefaultCurrency(currency)}
+            activeOpacity={0.9}
+          >
+            <Text style={[styles.currencyChipText, selected && styles.currencyChipTextActive]}>{currency}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+
+  const renderAccount = () => (
+    <View style={styles.formStack}>
+      <Input label="Account Name" placeholder="Main Wallet" value={accountName} onChangeText={setAccountName} />
+      <Input label="Holder Name" placeholder="Account holder" value={accountHolder} onChangeText={setAccountHolder} />
+      <Input label="Account Number" placeholder="IBAN / Last 4 / Wallet ID" value={accountNumber} onChangeText={setAccountNumber} />
+      <Input
+        label={`Opening Balance (${defaultCurrency})`}
+        placeholder="0.00"
+        value={openingBalance}
+        onChangeText={setOpeningBalance}
+        keyboardType="decimal-pad"
+      />
+
+      <View style={styles.selectorSection}>
+        <Text style={styles.selectorLabel}>ACCOUNT ICON</Text>
+        <View style={styles.iconWrap}>
+          {ACCOUNT_ICONS.map((iconName) => {
+            const selected = accountIcon === iconName;
+            return (
+              <TouchableOpacity
+                key={iconName}
+                style={[styles.iconChip, selected && styles.iconChipActive]}
+                onPress={() => setAccountIcon(iconName)}
+                activeOpacity={0.9}
+              >
+                <Ionicons name={iconName} size={18} color={selected ? colors.background : colors.text} />
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.selectorSection}>
+        <Text style={styles.selectorLabel}>ACCOUNT COLOR</Text>
+        <View style={styles.colorWrap}>
+          {ACCOUNT_COLORS.map((swatch) => {
+            const selected = accountColor === swatch;
+            return (
+              <TouchableOpacity
+                key={swatch}
+                style={[styles.colorChip, { backgroundColor: swatch }, selected && styles.colorChipActive]}
+                onPress={() => setAccountColor(swatch)}
+                activeOpacity={0.9}
+              >
+                {selected ? <Ionicons name="checkmark" size={14} color="#000100" /> : null}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderStepContent = () => {
+    switch (currentStep.id) {
+      case 'welcome':
+        return renderWelcome();
+      case 'profile':
+        return renderProfile();
+      case 'currency':
+        return renderCurrency();
+      case 'account':
+        return renderAccount();
+      default:
+        return null;
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        
-        {/* Navigation Indicator / Back */}
+      <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+        <View style={[styles.bgCircle, { top: -70, left: -70, width: 280, height: 280, backgroundColor: colors.primary + '26' }]} />
+        <View style={[styles.bgCircle, { top: 240, right: -120, width: 360, height: 360, backgroundColor: colors.primary + '18' }]} />
+        <View style={[styles.bgCircle, { bottom: -110, left: 30, width: 320, height: 320, backgroundColor: colors.secondary + '10' }]} />
+      </View>
+
+      <BlurView
+        blurAmount={Platform.OS === 'ios' ? 70 : 92}
+        blurType={isDark ? 'dark' : 'light'}
+        style={StyleSheet.absoluteFillObject}
+      />
+      {Platform.OS === 'android' ? (
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background + '76' }]} pointerEvents="none" />
+      ) : null}
+
+      <KeyboardAvoidingView style={styles.keyboardWrap} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.header}>
-          {currentIndex > 0 ? (
-            <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
-              <Ionicons name="chevron-back" size={24} color={colors.text} />
-            </TouchableOpacity>
-          ) : <View style={styles.backBtnWrapper} />}
-          
-          <View style={styles.dotsRow}>
-            {ONBOARDING_SLIDES.map((_, idx) => (
-              <View 
-                key={idx} 
-                style={[
-                  styles.dot, 
-                  idx === currentIndex ? { backgroundColor: colors.primary, width: 24 } : { backgroundColor: colors.border }
-                ]} 
-              />
+          <Text style={styles.brand}>FINTRACKER.</Text>
+          <View style={styles.progressTrack}>
+            {STEPS.map((step, index) => (
+              <View key={step.id} style={[styles.progressDot, index <= stepIndex && styles.progressDotActive]} />
             ))}
           </View>
-          
-          <View style={styles.backBtnWrapper} />
         </View>
 
-        <FlatList
-          ref={listRef}
-          data={ONBOARDING_SLIDES}
-          keyExtractor={(item) => item.id}
-          renderItem={renderSlide}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          scrollEnabled={false} // Force using buttons to navigate
-        />
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <View style={styles.stepMeta}>
+            <Text style={styles.eyebrow}>{currentStep.eyebrow}</Text>
+            <Text style={styles.stepTitle}>{currentStep.title}</Text>
+            <Text style={styles.stepSubtitle}>{currentStep.subtitle}</Text>
+          </View>
+
+          <View style={styles.contentCard}>{renderStepContent()}</View>
+        </ScrollView>
 
         <View style={styles.footer}>
-          <Button 
-            title={currentIndex === ONBOARDING_SLIDES.length - 1 ? "Finish Setup" : "Continue"} 
-            onPress={handleNext} 
-            size="lg" 
+          {stepIndex > 0 ? (
+            <TouchableOpacity style={styles.backButton} onPress={() => setStepIndex((current) => current - 1)} activeOpacity={0.9}>
+              <Ionicons name="chevron-back" size={16} color={colors.text} />
+              <Text style={styles.backButtonText}>Back</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.backButtonPlaceholder} />
+          )}
+
+          <Button
+            title={stepIndex === STEPS.length - 1 ? 'Launch Fintracker' : 'Continue'}
+            onPress={handleContinue}
+            size="lg"
             isLoading={isPending}
-            style={styles.button}
+            style={styles.primaryAction}
           />
         </View>
-
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-const createStyles = (colors: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  backBtnWrapper: {
-    width: 40,
-  },
-  dotsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  dot: {
-    height: 6,
-    width: 6,
-    borderRadius: 3,
-    backgroundColor: colors.border,
-  },
-  slide: {
-    flex: 1,
-  },
-  centerContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  formContent: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  imageWrapper: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  heroImage: {
-    width: 280,
-    height: 280,
-  },
-  title: {
-    fontSize: typography.sizes.xxl,
-    fontWeight: typography.weights.bold,
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: 16,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: typography.sizes.md,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  inputGroup: {
-    marginTop: 24,
-    gap: 24,
-  },
-  currencyGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'center',
-    marginTop: 16,
-  },
-  currencyBox: {
-    width: '30%',
-    paddingVertical: 16,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  currencyText: {
-    fontSize: typography.sizes.lg,
-    color: colors.text,
-    fontWeight: typography.weights.medium,
-  },
-  footer: {
-    padding: 32,
-    paddingBottom: Platform.OS === 'ios' ? 16 : 32,
-  },
-  button: {
-    width: '100%',
-  },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      overflow: 'hidden',
+    },
+    keyboardWrap: {
+      flex: 1,
+    },
+    bgCircle: {
+      position: 'absolute',
+      borderRadius: 999,
+    },
+    header: {
+      paddingHorizontal: 24,
+      paddingTop: 12,
+      gap: 14,
+    },
+    brand: {
+      fontFamily: typography.fonts.heading,
+      fontSize: 30,
+      color: colors.text,
+      letterSpacing: -1,
+    },
+    progressTrack: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    progressDot: {
+      flex: 1,
+      height: 6,
+      borderRadius: 999,
+      backgroundColor: colors.surface,
+    },
+    progressDotActive: {
+      backgroundColor: colors.primary,
+    },
+    scrollContent: {
+      paddingHorizontal: 24,
+      paddingTop: 18,
+      paddingBottom: 24,
+      flexGrow: 1,
+    },
+    stepMeta: {
+      marginBottom: 18,
+    },
+    eyebrow: {
+      fontFamily: typography.fonts.semibold,
+      fontSize: 11,
+      color: colors.primary,
+      letterSpacing: 1.5,
+      marginBottom: 10,
+    },
+    stepTitle: {
+      fontFamily: typography.fonts.heading,
+      fontSize: 34,
+      lineHeight: 36,
+      color: colors.text,
+      letterSpacing: -1.1,
+    },
+    stepSubtitle: {
+      marginTop: 10,
+      fontFamily: typography.fonts.regular,
+      fontSize: 14,
+      lineHeight: 22,
+      color: colors.textMuted,
+      maxWidth: 320,
+    },
+    contentCard: {
+      borderRadius: 24,
+      padding: 18,
+      backgroundColor: Platform.OS === 'android' ? colors.background + 'D8' : colors.surface,
+      borderWidth: 1,
+      borderColor: Platform.OS === 'android' ? colors.primary + '20' : colors.text + '12',
+      minHeight: 420,
+      shadowColor: '#000000',
+      shadowOpacity: Platform.OS === 'android' ? 0 : 0.14,
+      shadowRadius: Platform.OS === 'android' ? 0 : 18,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: Platform.OS === 'android' ? 0 : 6,
+    },
+    heroPanel: {
+      flex: 1,
+      justifyContent: 'space-between',
+      minHeight: 380,
+    },
+    heroBadge: {
+      alignSelf: 'flex-start',
+      height: 34,
+      borderRadius: 999,
+      paddingHorizontal: 12,
+      backgroundColor: colors.primary,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    heroBadgeText: {
+      fontFamily: typography.fonts.semibold,
+      fontSize: 11,
+      color: colors.background,
+      letterSpacing: 0.8,
+    },
+    heroTitle: {
+      marginTop: 18,
+      fontFamily: typography.fonts.heading,
+      fontSize: 44,
+      lineHeight: 46,
+      color: colors.text,
+      letterSpacing: -1.6,
+    },
+    heroBody: {
+      marginTop: 14,
+      fontFamily: typography.fonts.regular,
+      fontSize: 15,
+      lineHeight: 24,
+      color: colors.textMuted,
+      maxWidth: 320,
+    },
+    heroStatsRow: {
+      flexDirection: 'row',
+      gap: 10,
+      marginTop: 24,
+    },
+    heroStatCard: {
+      flex: 1,
+      borderRadius: 18,
+      backgroundColor: colors.background + 'C8',
+      padding: 14,
+      borderWidth: 1,
+      borderColor: colors.text + '10',
+    },
+    heroStatLabel: {
+      fontFamily: typography.fonts.semibold,
+      fontSize: 10,
+      color: colors.textMuted,
+      letterSpacing: 1.1,
+      marginBottom: 8,
+    },
+    heroStatValue: {
+      fontFamily: typography.fonts.semibold,
+      fontSize: 13,
+      color: colors.text,
+      lineHeight: 18,
+    },
+    formStack: {
+      gap: 14,
+    },
+    currencyWrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+    },
+    currencyChip: {
+      minWidth: '22%',
+      height: 42,
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.background + 'B8',
+      borderWidth: 1,
+      borderColor: colors.text + '10',
+    },
+    currencyChipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    currencyChipText: {
+      fontFamily: typography.fonts.semibold,
+      fontSize: 13,
+      color: colors.text,
+    },
+    currencyChipTextActive: {
+      color: colors.background,
+    },
+    selectorSection: {
+      marginTop: 6,
+    },
+    selectorLabel: {
+      fontFamily: typography.fonts.semibold,
+      fontSize: 10,
+      color: colors.textMuted,
+      letterSpacing: 1.3,
+      marginBottom: 10,
+    },
+    iconWrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+    },
+    iconChip: {
+      width: 46,
+      height: 46,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.background + 'B8',
+      borderWidth: 1,
+      borderColor: colors.text + '10',
+    },
+    iconChipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    colorWrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    colorChip: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    colorChipActive: {
+      borderColor: colors.text,
+      transform: [{ scale: 1.08 }],
+    },
+    footer: {
+      paddingHorizontal: 24,
+      paddingBottom: Platform.OS === 'ios' ? 18 : 24,
+      paddingTop: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    backButton: {
+      height: 54,
+      paddingHorizontal: 16,
+      borderRadius: 18,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.text + '10',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    backButtonText: {
+      fontFamily: typography.fonts.semibold,
+      fontSize: 14,
+      color: colors.text,
+    },
+    backButtonPlaceholder: {
+      width: 72,
+    },
+    primaryAction: {
+      flex: 1,
+    },
+  });

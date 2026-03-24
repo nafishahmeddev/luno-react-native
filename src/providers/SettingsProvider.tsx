@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 export type UserProfile = {
   name: string;
@@ -28,7 +28,7 @@ const DEFAULT_PROFILE: UserProfile = {
   email: '',
   phone: '',
   defaultCurrency: 'USD',
-  theme: 'dark',
+  theme: 'system',
 };
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
