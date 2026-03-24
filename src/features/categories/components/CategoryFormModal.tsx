@@ -123,12 +123,13 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
 
         <View style={styles.sheet}>
           <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-            <View style={[styles.glow, { top: -120, right: -80, width: 280, height: 280, backgroundColor: colors.primary + '1F' }]} />
-            <View style={[styles.glow, { bottom: -100, left: -70, width: 260, height: 260, backgroundColor: colorHex + '20' }]} />
+            <View style={[styles.glow, { top: -70, left: -70, width: 330, height: 330, backgroundColor: colors.primary + '2E' }]} />
+            <View style={[styles.glow, { top: 260, right: -140, width: 480, height: 480, backgroundColor: colors.text + '0E' }]} />
+            <View style={[styles.glow, { bottom: -90, left: 40, width: 320, height: 320, backgroundColor: colors.primary + '1C' }]} />
           </View>
 
           <BlurView
-            intensity={Platform.OS === 'ios' ? 70 : 94}
+            intensity={Platform.OS === 'ios' ? 80 : 96}
             tint={isDark ? 'dark' : 'light'}
             experimentalBlurMethod={'dimezisBlurView' as any}
             style={StyleSheet.absoluteFillObject}
@@ -137,7 +138,7 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
           {Platform.OS === 'android' && (
             <View
               pointerEvents="none"
-              style={[StyleSheet.absoluteFillObject, { backgroundColor: isDark ? 'rgba(0,0,0,0.46)' : 'rgba(255,255,255,0.44)' }]}
+              style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background + '60' }]}
             />
           )}
 

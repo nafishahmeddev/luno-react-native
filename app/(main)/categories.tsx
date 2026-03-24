@@ -133,8 +133,9 @@ export default function CategoriesScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-        <View style={[styles.bgCircle, { top: -90, left: -70, width: 320, height: 320, backgroundColor: colors.primary + '24' }]} />
-        <View style={[styles.bgCircle, { top: 220, right: -110, width: 380, height: 380, backgroundColor: colors.text + '10' }]} />
+        <View style={[styles.bgCircle, { top: -70, left: -70, width: 330, height: 330, backgroundColor: colors.primary + '2E' }]} />
+        <View style={[styles.bgCircle, { top: 260, right: -140, width: 480, height: 480, backgroundColor: colors.text + '0E' }]} />
+        <View style={[styles.bgCircle, { bottom: -90, left: 40, width: 320, height: 320, backgroundColor: colors.primary + '1C' }]} />
       </View>
 
       <BlurView
