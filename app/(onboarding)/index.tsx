@@ -40,8 +40,6 @@ export default function OnboardingScreen() {
   const currentStep = ONBOARDING_STEPS[stepIndex];
 
   const [name, setName] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [phone, setPhone] = React.useState('');
   const [defaultCurrency, setDefaultCurrency] = React.useState<string>('USD');
   const [accountName, setAccountName] = React.useState('Main Wallet');
   const [accountHolder, setAccountHolder] = React.useState('');
@@ -100,8 +98,8 @@ export default function OnboardingScreen() {
     try {
       await updateProfile({
         name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
+        email: '',
+        phone: '',
         defaultCurrency,
       });
 
@@ -147,11 +145,7 @@ export default function OnboardingScreen() {
         return (
           <ProfileStep
             name={name}
-            email={email}
-            phone={phone}
             onNameChange={setName}
-            onEmailChange={setEmail}
-            onPhoneChange={setPhone}
           />
         );
       case 'currency':

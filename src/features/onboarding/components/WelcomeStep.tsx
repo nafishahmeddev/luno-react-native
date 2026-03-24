@@ -80,11 +80,7 @@ const createStyles = (colors: { [key: string]: string }) =>
     },
     statCard: {
       flex: 1,
-      borderRadius: 18,
-      backgroundColor: colors.background + 'C8',
-      padding: 14,
-      borderWidth: 1,
-      borderColor: colors.text + '10',
+      paddingVertical: 6,
     },
     statLabel: {
       fontFamily: typography.fonts.semibold,

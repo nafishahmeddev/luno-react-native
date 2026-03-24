@@ -46,11 +46,7 @@ const createStyles = (colors: { [key: string]: string }) =>
       gap: 14,
     },
     hero: {
-      borderRadius: 18,
-      padding: 16,
-      backgroundColor: colors.primary + '16',
-      borderWidth: 1,
-      borderColor: colors.primary + '30',
+      paddingVertical: 4,
     },
     heroLabel: {
       fontFamily: typography.fonts.semibold,
