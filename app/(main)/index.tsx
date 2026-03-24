@@ -38,6 +38,11 @@ export default function DashboardScreen() {
 
   const [selectedCurrency, setSelectedCurrency] = React.useState<string>(currencyKeys[0]);
 
+  const getOutlineIcon = (iconName: string | undefined | null, defaultIcon: string) => {
+    const base = iconName || defaultIcon;
+    return base.endsWith('-outline') ? base : `${base}-outline`;
+  };
+
   React.useEffect(() => {
     if (!currencyKeys.includes(selectedCurrency)) {
       setSelectedCurrency(currencyKeys[0]);
@@ -130,8 +135,8 @@ export default function DashboardScreen() {
                 delayLongPress={250}
               >
                 <View style={styles.accountCardHeader}>
-                  <View style={[styles.accountIconBox, { backgroundColor: accColor + '20' }]}>
-                    <Ionicons name={(acc.icon as any) || 'wallet'} size={16} color={accColor} />
+                  <View style={[styles.accountIconBox, { backgroundColor: accColor + '15' }]}>
+                    <Ionicons name={getOutlineIcon(acc.icon, 'wallet') as any} size={20} color={accColor} />
                   </View>
                   <View style={styles.accountCardMeta}>
                     <Text style={styles.accountCardName}>{acc.name}</Text>
@@ -180,14 +185,14 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.txList}>
+        <View style={styles.activityList}>
           {transactions?.slice(0, 5).map(tx => {
             const catColor = tx.category.color ? '#' + tx.category.color.toString(16).padStart(6, '0') : colors.primary;
             return (
-              <View key={tx.id} style={styles.txRow}>
+              <View key={tx.id} style={styles.activityRow}>
                 <View style={styles.txLeft}>
-                  <View style={[styles.txIconBox, { borderColor: catColor }]}>
-                    <Ionicons name={(tx.category.icon as any) || 'pricetag'} size={20} color={catColor} />
+                  <View style={[styles.activityIconBox, { backgroundColor: catColor + '15' }]}>
+                    <Ionicons name={getOutlineIcon(tx.category.icon, 'pricetag') as any} size={22} color={catColor} />
                   </View>
                   <View style={styles.txInfo}>
                     <Text style={styles.txTitle} numberOfLines={1}>{tx.note || 'Untitled'}</Text>
@@ -338,11 +343,12 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     marginBottom: 16,
   },
   accountIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 20, // Circular subtle wash
     justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   accountCardMeta: {
     marginLeft: 8,
@@ -435,11 +441,11 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     letterSpacing: 1,
   },
 
-  txList: {
+  activityList: {
     marginTop: 8,
     paddingHorizontal: 24,
   },
-  txRow: {
+  activityRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -451,15 +457,13 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     flex: 1,
     paddingRight: 16,
   },
-  txIconBox: {
+  activityIconBox: {
     width: 44,
     height: 44,
-    borderRadius: 22, // stark geometric circle
-    borderWidth: 1.5,
+    borderRadius: 22, // Circular subtle wash
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
-    backgroundColor: 'transparent',
   },
   txInfo: {
     flex: 1,

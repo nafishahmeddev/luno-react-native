@@ -20,6 +20,11 @@ export default function TransactionsScreen() {
   
   const params = useLocalSearchParams();
   
+  const getOutlineIcon = (iconName: string | undefined | null, defaultIcon: string) => {
+    const base = iconName || defaultIcon;
+    return base.endsWith('-outline') ? base : `${base}-outline`;
+  };
+
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [activeAccountId, setActiveAccountId] = useState<number | null>(params.accountId ? Number(params.accountId) : null);
   const [dateFilter, setDateFilter] = useState<'ALL' | 'THIS_MONTH' | 'LAST_MONTH'>('ALL');
@@ -131,26 +136,29 @@ export default function TransactionsScreen() {
         ListEmptyComponent={
           <Text style={styles.emptyText}>No transactions found.</Text>
         }
-        renderItem={({ item: tx }) => (
-          <View style={styles.txRow}>
-            <View style={styles.txLeft}>
-              <View style={[styles.txIconBox, { borderColor: (tx.category.color ? '#' + tx.category.color.toString(16).padStart(6, '0') : colors.primary) }]}>
-                <Ionicons name={(tx.category.icon as any) || 'pricetag'} size={20} color={(tx.category.color ? '#' + tx.category.color.toString(16).padStart(6, '0') : colors.primary)} />
+        renderItem={({ item: tx }) => {
+          const catColor = tx.category.color ? '#' + tx.category.color.toString(16).padStart(6, '0') : colors.primary;
+          return (
+            <View style={styles.txRow}>
+              <View style={styles.txLeft}>
+                <View style={[styles.txIconBox, { backgroundColor: catColor + '15' }]}>
+                  <Ionicons name={getOutlineIcon(tx.category.icon, 'pricetag') as any} size={22} color={catColor} />
+                </View>
+                <View style={styles.txMeta}>
+                  <Text style={styles.txTitle} numberOfLines={1}>{tx.note || 'Untitled'}</Text>
+                  <Text style={styles.txSubtitle}>
+                    {tx.category.name} • {new Date(tx.datetime).toLocaleDateString()}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.txMeta}>
-                <Text style={styles.txTitle} numberOfLines={1}>{tx.note || 'Untitled'}</Text>
-                <Text style={styles.txSubtitle}>
-                  {tx.category.name} • {new Date(tx.datetime).toLocaleDateString()}
-                </Text>
-              </View>
+              <MoneyText 
+                amount={tx.amount} 
+                type={tx.type} 
+                style={styles.txAmount} 
+              />
             </View>
-            <MoneyText 
-              amount={tx.amount} 
-              type={tx.type} 
-              style={styles.txAmount} 
-            />
-          </View>
-        )}
+          );
+        }}
       />
 
       {renderFilterModal()}
@@ -191,11 +199,9 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
-    backgroundColor: 'transparent',
   },
   txMeta: {
     flex: 1,
