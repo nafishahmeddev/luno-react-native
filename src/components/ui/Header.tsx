@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
-import { typography } from '../../theme/typography';
 import { ThemeColors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
 
 export type HeaderProps = {
   title: string;
@@ -48,10 +48,10 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     backgroundColor: 'transparent',
   },
   title: {
+    fontFamily: typography.fonts.heading,
     color: colors.text,
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
-    letterSpacing: 0.5,
+    fontSize: typography.sizes.xl,
+    letterSpacing: -0.5,
   },
   actionBtn: {
     width: 40,

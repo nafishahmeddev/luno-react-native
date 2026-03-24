@@ -167,7 +167,14 @@ export default function AddTransactionScreen() {
 const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: 20, paddingBottom: 60 },
-  headerTitle: { fontSize: typography.sizes.xxl, fontWeight: typography.weights.bold, color: colors.text, marginBottom: 24 },
+  headerTitle: { 
+    // @ts-ignore
+    fontFamily: typography.fonts.heading, 
+    fontSize: typography.sizes.xxl, 
+    color: colors.text, 
+    marginBottom: 24, 
+    letterSpacing: -1 
+  },
   switchContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24, gap: 12 },
   switchBtn: { flex: 1 },
   

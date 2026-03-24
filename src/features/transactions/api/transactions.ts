@@ -25,12 +25,58 @@ export const getTransactions = async () => {
 };
 
 export const createTransaction = async (data: InsertPayment) => {
-  // To keep it simple, we use a transaction conceptually but SQLite does basic insert.
-  // We should also update account balances based on payment type, but we will start with insertion.
-  const result = await db.insert(payments).values(data).returning();
-  return result[0];
+  return await db.transaction(async (tx) => {
+    const [payment] = await tx.insert(payments).values(data).returning();
+    
+    const [account] = await tx.select().from(accounts).where(eq(accounts.id, data.accountId));
+    if (!account) throw new Error("Linked Account not found");
+
+    let newBalance = account.balance;
+    let newIncome = account.income;
+    let newExpense = account.expense;
+    
+    if (data.type === 'CR') {
+      newBalance += data.amount;
+      newIncome += data.amount;
+    } else if (data.type === 'DR') {
+      newBalance -= data.amount;
+      newExpense += data.amount;
+    }
+    
+    await tx.update(accounts)
+      .set({ balance: newBalance, income: newIncome, expense: newExpense })
+      .where(eq(accounts.id, data.accountId));
+      
+    return payment;
+  });
 };
 
 export const deleteTransaction = async (id: number) => {
-  return await db.delete(payments).where(eq(payments.id, id));
+  return await db.transaction(async (tx) => {
+    const [payment] = await tx.select().from(payments).where(eq(payments.id, id));
+    if (!payment) return null;
+    
+    const [account] = await tx.select().from(accounts).where(eq(accounts.id, payment.accountId));
+    
+    if (account) {
+      let newBalance = account.balance;
+      let newIncome = account.income;
+      let newExpense = account.expense;
+      
+      if (payment.type === 'CR') {
+        newBalance -= payment.amount;
+        newIncome -= payment.amount;
+      } else if (payment.type === 'DR') {
+        newBalance += payment.amount;
+        newExpense -= payment.amount;
+      }
+      
+      await tx.update(accounts)
+        .set({ balance: newBalance, income: newIncome, expense: newExpense })
+        .where(eq(accounts.id, payment.accountId));
+    }
+      
+    const result = await tx.delete(payments).where(eq(payments.id, id));
+    return result;
+  });
 };

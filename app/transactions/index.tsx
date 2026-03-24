@@ -72,9 +72,11 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     paddingBottom: 10,
   },
   title: {
+    // @ts-ignore
+    fontFamily: typography.fonts.heading,
     color: colors.text,
-    fontSize: typography.sizes.xxl,
-    fontWeight: typography.weights.bold,
+    fontSize: 32,
+    letterSpacing: -1,
   },
   listContent: {
     padding: 20,

@@ -30,7 +30,6 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
 
           let iconName: keyof typeof Ionicons.glyphMap = 'home';
           if (route.name === 'index') iconName = isFocused ? 'home' : 'home-outline';
-          if (route.name === 'accounts') iconName = isFocused ? 'wallet' : 'wallet-outline';
           if (route.name === 'categories') iconName = isFocused ? 'grid' : 'grid-outline';
           if (route.name === 'settings') iconName = isFocused ? 'settings' : 'settings-outline';
 

@@ -15,10 +15,12 @@ export const typography = {
     bold: '500' as const,
   },
   fonts: {
-    regular: 'RedHatText_400Regular',
-    medium: 'RedHatText_400Regular',
-    semibold: 'RedHatText_500Medium',
-    bold: 'RedHatText_500Medium',
+    heading: 'BricolageGrotesque_700Bold',
+    headingRegular: 'BricolageGrotesque_400Regular',
+    regular: 'Inter_400Regular',
+    medium: 'Inter_500Medium',
+    semibold: 'Inter_600SemiBold',
+    bold: 'Inter_700Bold',
     mono: 'JetBrainsMono_700Bold',
     monoBold: 'JetBrainsMono_700Bold',
   }

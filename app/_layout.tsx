@@ -10,14 +10,21 @@ import { OnboardingProvider } from '@/src/providers/OnboardingProvider';
 import { SettingsProvider } from '@/src/providers/SettingsProvider';
 import { ThemeProvider as CustomThemeProvider } from '@/src/providers/ThemeProvider';
 import { 
-  useFonts, 
-  RedHatText_400Regular, 
-  RedHatText_500Medium, 
-  RedHatText_600SemiBold, 
-  RedHatText_700Bold 
-} from '@expo-google-fonts/red-hat-text';
+  useFonts as useBricolageFonts,
+  BricolageGrotesque_400Regular, 
+  BricolageGrotesque_700Bold 
+} from '@expo-google-fonts/bricolage-grotesque';
+
+import {
+  useFonts as useInterFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold
+} from '@expo-google-fonts/inter';
 
 import { 
+  useFonts as useMonoFonts,
   JetBrainsMono_400Regular, 
   JetBrainsMono_700Bold 
 } from '@expo-google-fonts/jetbrains-mono';
@@ -26,7 +33,7 @@ import { Text, TextInput } from 'react-native';
 const customizeText = () => {
   const customTextProps = {
     style: {
-      fontFamily: 'RedHatText_400Regular',
+      fontFamily: 'Inter_400Regular',
     }
   };
   // @ts-ignore
@@ -41,14 +48,24 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [fontsLoaded] = useFonts({
-    RedHatText_400Regular,
-    RedHatText_500Medium,
-    RedHatText_600SemiBold,
-    RedHatText_700Bold,
+  const [bricolageLoaded] = useBricolageFonts({
+    BricolageGrotesque_400Regular,
+    BricolageGrotesque_700Bold,
+  });
+
+  const [interLoaded] = useInterFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  const [monoLoaded] = useMonoFonts({
     JetBrainsMono_400Regular,
     JetBrainsMono_700Bold,
   });
+
+  const fontsLoaded = bricolageLoaded && interLoaded && monoLoaded;
 
   if (!fontsLoaded) return null;
 

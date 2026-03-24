@@ -8,6 +8,8 @@ import { typography } from '../../../theme/typography';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { useCreateAccount, useUpdateAccount } from '../hooks/accounts';
+import { useCreateTransaction } from '../../transactions/hooks/transactions';
+import { useCategories } from '../../categories/hooks/categories';
 
 import { Account } from '../api/accounts';
 
@@ -27,6 +29,8 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
   const isEditing = !!account;
   const { mutateAsync: createAccount, isPending: creating } = useCreateAccount();
   const { mutateAsync: updateAccount, isPending: updating } = useUpdateAccount();
+  const { mutateAsync: createTransaction } = useCreateTransaction();
+  const { data: categories } = useCategories();
 
   const [name, setName] = useState('');
   const [holderName, setHolderName] = useState('');
@@ -68,18 +72,19 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
             name,
             holderName,
             accountNumber,
-            balance: parseFloat(balance) || 0,
             currency,
             icon,
             color: parseInt(colorHex.replace('#', '0x')),
           }
         });
       } else {
-        await createAccount({
+        const initialBalance = parseFloat(balance) || 0;
+
+        const newAcc = await createAccount({
           name,
           holderName: holderName || 'N/A',
           accountNumber: accountNumber || 'N/A',
-          balance: parseFloat(balance) || 0,
+          balance: 0,
           currency,
           isDefault: false,
           icon,
@@ -87,6 +92,20 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
           income: 0,
           expense: 0,
         });
+
+        if (initialBalance !== 0) {
+          const defaultCategory = categories?.[0];
+          if (defaultCategory) {
+            await createTransaction({
+              accountId: newAcc.id,
+              categoryId: defaultCategory.id,
+              amount: Math.abs(initialBalance),
+              type: initialBalance > 0 ? 'CR' : 'DR',
+              note: 'Opening Balance',
+              datetime: new Date().toISOString()
+            });
+          }
+        }
       }
       onClose();
     } catch {
@@ -111,7 +130,15 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
           <Input label="Account Name" value={name} onChangeText={setName} placeholder="e.g. Wallet, Bank" />
           <Input label="Holder Name" value={holderName} onChangeText={setHolderName} placeholder="e.g. John Doe" />
           <Input label="Account Number" value={accountNumber} onChangeText={setAccountNumber} placeholder="e.g. XXXX-XXXX" />
-          <Input label="Initial Balance" value={balance} onChangeText={setBalance} placeholder="0.00" keyboardType="decimal-pad" />
+          {!isEditing && (
+            <Input 
+              label="Opening Balance" 
+              value={balance} 
+              onChangeText={setBalance} 
+              placeholder="0.00" 
+              keyboardType="decimal-pad" 
+            />
+          )}
           
           <Text style={styles.sectionLabel}>Select Currency</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pickerScroll} contentContainerStyle={styles.pickerContent}>
