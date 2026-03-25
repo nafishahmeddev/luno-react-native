@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { ThemeColors } from '../../../theme/colors';
 import { typography } from '../../../theme/typography';
 import { Account } from '../../accounts/api/accounts';
@@ -49,6 +50,39 @@ export const TransactionFilterSheet: React.FC<TransactionFilterSheetProps> = ({
 }) => {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
+  // Staged state
+  const [localType, setLocalType] = React.useState(typeFilter);
+  const [localAccount, setLocalAccount] = React.useState(accountFilterId);
+  const [localCategory, setLocalCategory] = React.useState(categoryFilterId);
+
+  // Sync staged state when modal opens
+  React.useEffect(() => {
+    if (visible) {
+      setLocalType(typeFilter);
+      setLocalAccount(accountFilterId);
+      setLocalCategory(categoryFilterId);
+    }
+  }, [visible, typeFilter, accountFilterId, categoryFilterId]);
+
+  const handleApply = () => {
+    setTypeFilter(localType);
+    setAccountFilterId(localAccount);
+    setCategoryFilterId(localCategory);
+    onClose();
+  };
+
+  const handleReset = () => {
+    setLocalType('ALL');
+    setLocalAccount(null);
+    setLocalCategory(null);
+    onClear();
+  };
+
+  const stagedActiveCount = 
+    (localType !== 'ALL' ? 1 : 0) + 
+    (localAccount !== null ? 1 : 0) + 
+    (localCategory !== null ? 1 : 0);
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.sheetOverlay}>
@@ -58,8 +92,8 @@ export const TransactionFilterSheet: React.FC<TransactionFilterSheetProps> = ({
 
           <View style={styles.sheetHeadRow}>
             <Text style={styles.sheetTitle}>Filters</Text>
-            {activeFilterCount > 0 && (
-              <TouchableOpacity style={styles.sheetClearBtn} onPress={onClear}>
+            {stagedActiveCount > 0 && (
+              <TouchableOpacity style={styles.sheetClearBtn} onPress={handleReset}>
                 <Text style={styles.sheetClearBtnText}>Reset</Text>
               </TouchableOpacity>
             )}
@@ -74,7 +108,7 @@ export const TransactionFilterSheet: React.FC<TransactionFilterSheetProps> = ({
                   { key: 'CR' as const, label: 'Income', icon: 'arrow-down-outline' as const },
                   { key: 'DR' as const, label: 'Expense', icon: 'arrow-up-outline' as const },
                 ]).map((typeOption) => {
-                  const selected = typeFilter === typeOption.key;
+                  const selected = localType === typeOption.key;
                   return (
                     <TouchableOpacity
                       key={typeOption.key}
@@ -83,8 +117,14 @@ export const TransactionFilterSheet: React.FC<TransactionFilterSheetProps> = ({
                         { backgroundColor: colors.surface, borderColor: colors.border },
                         selected && { backgroundColor: colors.text, borderColor: colors.text }
                       ]}
-                      onPress={() => setTypeFilter(typeOption.key)}
+                      onPress={() => setLocalType(typeOption.key)}
                     >
+                      <Ionicons
+                        name={typeOption.icon}
+                        size={18}
+                        color={selected ? colors.background : colors.textMuted}
+                        style={{ marginRight: 8 }}
+                      />
                       <Text style={[styles.sheetPillText, selected && { color: colors.background }]}>
                         {typeOption.label}
                       </Text>
@@ -101,14 +141,14 @@ export const TransactionFilterSheet: React.FC<TransactionFilterSheetProps> = ({
                   style={[
                     styles.sheetPill,
                     { backgroundColor: colors.surface, borderColor: colors.border },
-                    accountFilterId === null && { backgroundColor: colors.text, borderColor: colors.text }
+                    localAccount === null && { backgroundColor: colors.text, borderColor: colors.text }
                   ]}
-                  onPress={() => setAccountFilterId(null)}
+                  onPress={() => setLocalAccount(null)}
                 >
-                  <Text style={[styles.sheetPillText, accountFilterId === null && { color: colors.background }]}>All</Text>
+                  <Text style={[styles.sheetPillText, localAccount === null && { color: colors.background }]}>All</Text>
                 </TouchableOpacity>
                 {accounts.map((account) => {
-                  const selected = accountFilterId === account.id;
+                  const selected = localAccount === account.id;
                   const accColor = toHexColor(account.color);
                   return (
                     <TouchableOpacity
@@ -118,8 +158,14 @@ export const TransactionFilterSheet: React.FC<TransactionFilterSheetProps> = ({
                         { backgroundColor: colors.surface, borderColor: colors.border },
                         selected && { backgroundColor: accColor, borderColor: accColor }
                       ]}
-                      onPress={() => setAccountFilterId(account.id)}
+                      onPress={() => setLocalAccount(account.id)}
                     >
+                      <Ionicons
+                        name={(account.icon as any) || 'wallet-outline'}
+                        size={16}
+                        color={selected ? colors.background : colors.textMuted}
+                        style={{ marginRight: 8 }}
+                      />
                       <Text style={[styles.sheetPillText, selected && { color: colors.background }]}>{account.name}</Text>
                     </TouchableOpacity>
                   );
@@ -134,14 +180,14 @@ export const TransactionFilterSheet: React.FC<TransactionFilterSheetProps> = ({
                   style={[
                     styles.sheetPill,
                     { backgroundColor: colors.surface, borderColor: colors.border },
-                    categoryFilterId === null && { backgroundColor: colors.text, borderColor: colors.text }
+                    localCategory === null && { backgroundColor: colors.text, borderColor: colors.text }
                   ]}
-                  onPress={() => setCategoryFilterId(null)}
+                  onPress={() => setLocalCategory(null)}
                 >
-                  <Text style={[styles.sheetPillText, categoryFilterId === null && { color: colors.background }]}>All</Text>
+                  <Text style={[styles.sheetPillText, localCategory === null && { color: colors.background }]}>All</Text>
                 </TouchableOpacity>
                 {categories.map((category) => {
-                  const selected = categoryFilterId === category.id;
+                  const selected = localCategory === category.id;
                   const catColor = toHexColor(category.color);
                   return (
                     <TouchableOpacity
@@ -151,8 +197,14 @@ export const TransactionFilterSheet: React.FC<TransactionFilterSheetProps> = ({
                         { backgroundColor: colors.surface, borderColor: colors.border },
                         selected && { backgroundColor: catColor, borderColor: catColor }
                       ]}
-                      onPress={() => setCategoryFilterId(category.id)}
+                      onPress={() => setLocalCategory(category.id)}
                     >
+                      <Ionicons
+                        name={(category.icon as any) || 'grid-outline'}
+                        size={16}
+                        color={selected ? colors.background : colors.textMuted}
+                        style={{ marginRight: 8 }}
+                      />
                       <Text style={[styles.sheetPillText, selected && { color: colors.background }]}>{category.name}</Text>
                     </TouchableOpacity>
                   );
@@ -161,8 +213,8 @@ export const TransactionFilterSheet: React.FC<TransactionFilterSheetProps> = ({
             </View>
           </ScrollView>
 
-          <TouchableOpacity style={styles.sheetApplyBtn} onPress={onClose}>
-            <Text style={styles.sheetApplyBtnText}>Show {totalCount} Transactions</Text>
+          <TouchableOpacity style={styles.sheetApplyBtn} onPress={handleApply}>
+            <Text style={styles.sheetApplyBtnText}>Show Transactions</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -244,10 +296,11 @@ const createStyles = (colors: ThemeColors) =>
       gap: 10,
     },
     sheetPill: {
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
       height: 48, // Normalized to bubble height
       borderRadius: 24,
       borderWidth: 1,
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
     },

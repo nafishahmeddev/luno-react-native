@@ -353,14 +353,10 @@ export function TransactionsScreen() {
                 <Text style={styles.dayTitle}>{dateLabel}</Text>
                 <View style={styles.dayTotals}>
                   {dayTotal.in > 0 && (
-                    <Text style={[styles.dayTotalValue, { color: colors.success }]}>
-                      +<MoneyText amount={dayTotal.in} type="CR" weight="bold" />
-                    </Text>
+                    <MoneyText amount={dayTotal.in} type="CR" style={styles.dayTotalValue} />
                   )}
                   {dayTotal.out > 0 && (
-                    <Text style={[styles.dayTotalValue, { color: colors.danger }]}>
-                      -<MoneyText amount={dayTotal.out} type="DR" weight="bold" />
-                    </Text>
+                    <MoneyText amount={dayTotal.out} type="DR" style={styles.dayTotalValue} />
                   )}
                 </View>
               </View>
@@ -515,10 +511,7 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: 12,
     },
     dayCard: {
-      borderRadius: 24,
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
+      borderRadius: 20,
       overflow: 'hidden',
     },
     emptyWrap: {
