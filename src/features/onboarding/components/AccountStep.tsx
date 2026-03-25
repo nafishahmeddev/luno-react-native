@@ -2,32 +2,53 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { CurrencyPickerModal } from '../../../components/ui/CurrencyPickerModal';
 import { ACCOUNT_COLORS, ACCOUNT_ICONS } from '../../../constants/picker';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { typography } from '../../../theme/typography';
 import { OnboardingFormValues } from '../types';
 
 type AccountStepProps = {
-  defaultCurrency: string;
+  accountCurrency: string;
   accountIcon: string;
   accountColor: string;
+  onCurrencyChange: (value: string) => void;
   onIconChange: (value: string) => void;
   onColorChange: (value: string) => void;
 };
 
 export function AccountStep({
-  defaultCurrency,
+  accountCurrency,
   accountIcon,
   accountColor,
+  onCurrencyChange,
   onIconChange,
   onColorChange,
 }: AccountStepProps) {
   const { colors } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const { control, formState: { errors } } = useFormContext<OnboardingFormValues>();
+  const [showCurrencyPicker, setShowCurrencyPicker] = React.useState(false);
 
   return (
     <View style={styles.wrapper}>
+
+      {/* Currency row */}
+      <View style={styles.qaBlock}>
+        <Text style={styles.question}>Account currency</Text>
+        <TouchableOpacity style={styles.currencyRow} onPress={() => setShowCurrencyPicker(true)} activeOpacity={0.85}>
+          <Text style={styles.currencyValue}>{accountCurrency}</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+        </TouchableOpacity>
+        <View style={styles.answerLine} />
+      </View>
+
+      <CurrencyPickerModal
+        visible={showCurrencyPicker}
+        onClose={() => setShowCurrencyPicker(false)}
+        value={accountCurrency}
+        onChange={(code) => { onCurrencyChange(code); setShowCurrencyPicker(false); }}
+      />
 
       {/* Q1 — account name */}
       <View style={styles.qaBlock}>
@@ -103,7 +124,7 @@ export function AccountStep({
 
       {/* Q4 — opening balance */}
       <View style={styles.qaBlock}>
-        <Text style={styles.question}>Opening balance in {defaultCurrency}? <Text style={styles.questionHint}>(optional)</Text></Text>
+        <Text style={styles.question}>Opening balance in {accountCurrency}? <Text style={styles.questionHint}>(optional)</Text></Text>
         <Controller
           control={control}
           name="openingBalance"
@@ -258,6 +279,19 @@ const createStyles = (colors: { [key: string]: string }) =>
     answerLineError: {
       backgroundColor: colors.danger + '88',
     },
+    currencyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 6,
+    },
+    currencyValue: {
+      fontFamily: typography.fonts.heading,
+      fontSize: 28,
+      lineHeight: 34,
+      color: colors.text,
+      letterSpacing: -0.7,
+    },
     selectorSection: {
       paddingBottom: 18,
     },
@@ -276,7 +310,7 @@ const createStyles = (colors: { [key: string]: string }) =>
     iconChip: {
       width: 46,
       height: 46,
-      borderRadius: 100,
+      borderRadius: 23,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.background + 'B8',

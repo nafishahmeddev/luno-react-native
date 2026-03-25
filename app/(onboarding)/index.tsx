@@ -43,7 +43,7 @@ export default function OnboardingScreen() {
   const [stepIndex, setStepIndex] = React.useState(0);
   const currentStep = ONBOARDING_STEPS[stepIndex];
 
-  const [defaultCurrency] = React.useState<string>(() => getDeviceCurrencyCode());
+  const [accountCurrency, setAccountCurrency] = React.useState<string>(() => getDeviceCurrencyCode());
   const [accountIcon, setAccountIcon] = React.useState<string>(ACCOUNT_ICONS[0]);
   const [accountColor, setAccountColor] = React.useState<string>(ACCOUNT_COLORS[0]);
 
@@ -144,7 +144,7 @@ export default function OnboardingScreen() {
         name: values.name.trim(),
         email: '',
         phone: '',
-        defaultCurrency,
+        defaultCurrency: accountCurrency,
       });
 
       await createAccount({
@@ -154,7 +154,7 @@ export default function OnboardingScreen() {
         icon: accountIcon.replace('-outline', ''),
         color: toDbColor(accountColor),
         isDefault: true,
-        currency: defaultCurrency,
+        currency: accountCurrency,
         balance: parseAmount(values.openingBalance),
         income: 0,
         expense: 0,
@@ -189,9 +189,10 @@ export default function OnboardingScreen() {
       case 'account':
         return (
           <AccountStep
-            defaultCurrency={defaultCurrency}
+            accountCurrency={accountCurrency}
             accountIcon={accountIcon}
             accountColor={accountColor}
+            onCurrencyChange={setAccountCurrency}
             onIconChange={setAccountIcon}
             onColorChange={setAccountColor}
           />
