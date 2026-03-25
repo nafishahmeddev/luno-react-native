@@ -10,17 +10,17 @@ import { MoneyText } from '../../../components/ui/MoneyText';
 import { OptionsDialog } from '../../../components/ui/OptionsDialog';
 import { TransactionRow } from '../../../components/ui/TransactionRow';
 import { DEFAULT_CURRENCY } from '../../../constants/currency';
-import type { Account } from '../../accounts/api/accounts';
-import { AccountFormModal } from '../../accounts/components/AccountFormModal';
-import { useAccounts, useDeleteAccount } from '../../accounts/hooks/accounts';
-import { SectionHeader } from '../components/SectionHeader';
-import { TopExpenseCategoriesCard } from '../components/TopExpenseCategoriesCard';
-import { useTransactions } from '../../transactions/hooks/transactions';
-import { useDashboardStats, useTopExpenseCategories } from '../hooks/dashboard';
 import { useSettings } from '../../../providers/SettingsProvider';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { ThemeColors } from '../../../theme/colors';
 import { typography } from '../../../theme/typography';
+import type { Account } from '../../accounts/api/accounts';
+import { AccountFormModal } from '../../accounts/components/AccountFormModal';
+import { useAccounts, useDeleteAccount } from '../../accounts/hooks/accounts';
+import { useTransactions } from '../../transactions/hooks/transactions';
+import { SectionHeader } from '../components/SectionHeader';
+import { TopExpenseCategoriesCard } from '../components/TopExpenseCategoriesCard';
+import { useDashboardStats, useTopExpenseCategories } from '../hooks/dashboard';
 
 const getGreeting = () => {
   const h = new Date().getHours();
@@ -708,9 +708,6 @@ const createStyles = (colors: ThemeColors, screenWidth: number) => StyleSheet.cr
   activityCard: {
     marginHorizontal: 24,
     borderRadius: 20,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
     overflow: 'hidden',
   },
   emptyActivity: {
