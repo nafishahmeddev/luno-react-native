@@ -4,6 +4,7 @@ import React from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Modal,
   Platform,
   ScrollView,
@@ -22,6 +23,9 @@ import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
 
 type TransactionTypeFilter = 'ALL' | 'CR' | 'DR';
+
+const SWIPE_ACTION_WIDTH = 44;
+let openSwipeRow: Swipeable | null = null;
 
 type LedgerTransaction = {
   id: number;
@@ -97,60 +101,87 @@ const SwipeableRow = React.memo(function SwipeableRow({
   }, [onDelete, tx]);
 
   const renderRightActions = React.useCallback(
-    () => (
-      <View
-        style={{
-          flexDirection: 'row',
-          width: 152,
-          borderTopRightRadius: isFirst ? 18 : 0,
-          borderBottomRightRadius: isLast ? 18 : 0,
-          overflow: 'hidden',
-        }}
-      >
-        <TouchableOpacity
-          onPress={handleEdit}
-          activeOpacity={0.85}
+    (progress: Animated.AnimatedInterpolation<number>) => {
+      const opacity = progress.interpolate({
+        inputRange: [0, 0.25, 1],
+        outputRange: [0, 0.65, 1],
+        extrapolate: 'clamp',
+      });
+
+      const translateX = progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [24, 0],
+        extrapolate: 'clamp',
+      });
+
+      return (
+        <Animated.View
           style={{
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 5,
-            backgroundColor: colors.primary,
+            flexDirection: 'row',
+            width: SWIPE_ACTION_WIDTH * 2 + 6,
+            opacity,
+            transform: [{ translateX }],
+            alignItems: 'stretch',
+            justifyContent: 'flex-end',
+            gap: 4,
+            paddingRight: 2,
+            paddingVertical: 2,
           }}
         >
-          <Ionicons name="pencil-outline" size={20} color={colors.background} />
-          <Text style={{ color: colors.background, fontFamily: typography.fonts.semibold, fontSize: 11 }}>
-            Edit
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={handleDelete}
-          activeOpacity={0.85}
-          style={{
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 5,
-            backgroundColor: colors.danger,
-          }}
-        >
-          <Ionicons name="trash-outline" size={20} color="#fff" />
-          <Text style={{ color: '#fff', fontFamily: typography.fonts.semibold, fontSize: 11 }}>
-            Delete
-          </Text>
-        </TouchableOpacity>
-      </View>
-    ),
-    [handleEdit, handleDelete, colors, isFirst, isLast],
+          <TouchableOpacity
+            onPress={handleEdit}
+            activeOpacity={0.85}
+            style={{
+              width: SWIPE_ACTION_WIDTH,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: colors.primary + '1A',
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: colors.primary + '3A',
+            }}
+          >
+            <Ionicons name="pencil" size={18} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleDelete}
+            activeOpacity={0.85}
+            style={{
+              width: SWIPE_ACTION_WIDTH,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: colors.danger + '1A',
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: colors.danger + '3A',
+            }}
+          >
+            <Ionicons name="trash" size={18} color={colors.danger} />
+          </TouchableOpacity>
+        </Animated.View>
+      );
+    },
+    [handleEdit, handleDelete, colors],
   );
 
   return (
     <Swipeable
       ref={swipeRef}
       renderRightActions={renderRightActions}
-      rightThreshold={40}
-      friction={2}
+      rightThreshold={30}
+      friction={1.8}
       overshootRight={false}
+      onSwipeableWillOpen={() => {
+        if (openSwipeRow && openSwipeRow !== swipeRef.current) {
+          openSwipeRow.close();
+        }
+        openSwipeRow = swipeRef.current;
+      }}
+      onSwipeableClose={() => {
+        if (openSwipeRow === swipeRef.current) {
+          openSwipeRow = null;
+        }
+      }}
     >
       <TouchableOpacity
         style={{
@@ -162,6 +193,8 @@ const SwipeableRow = React.memo(function SwipeableRow({
           borderBottomWidth: isLast ? 0 : 1,
           borderBottomColor: colors.border,
           backgroundColor: colors.surface,
+          borderTopLeftRadius: isFirst ? 18 : 0,
+          borderBottomLeftRadius: isLast ? 18 : 0,
         }}
         activeOpacity={0.78}
         onPress={handleEdit}
@@ -381,31 +414,6 @@ export default function TransactionsScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Type segmented control */}
-      <View style={styles.segmentedWrap}>
-        {(['ALL', 'CR', 'DR'] as const).map((t) => {
-          const active = typeFilter === t;
-          const label = t === 'ALL' ? 'All' : t === 'CR' ? 'Income' : 'Expense';
-          const icon: keyof typeof Ionicons.glyphMap =
-            t === 'ALL' ? 'list-outline' : t === 'CR' ? 'arrow-down-outline' : 'arrow-up-outline';
-          return (
-            <TouchableOpacity
-              key={t}
-              style={[styles.segment, active && styles.segmentActive]}
-              onPress={() => setTypeFilter(t)}
-              activeOpacity={0.85}
-            >
-              <Ionicons
-                name={icon}
-                size={13}
-                color={active ? colors.background : colors.textMuted}
-              />
-              <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
         {/* KPI strip */}
@@ -543,6 +551,33 @@ export default function TransactionsScreen() {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.sheetLabel}>Type</Text>
+              <View style={styles.sheetChipsWrap}>
+                {([
+                  { key: 'ALL' as const, label: 'All', icon: 'list-outline' as const },
+                  { key: 'CR' as const, label: 'Income', icon: 'arrow-down-outline' as const },
+                  { key: 'DR' as const, label: 'Expense', icon: 'arrow-up-outline' as const },
+                ]).map((typeOption) => {
+                  const selected = typeFilter === typeOption.key;
+                  return (
+                    <TouchableOpacity
+                      key={typeOption.key}
+                      style={[styles.sheetChip, selected && styles.sheetChipActive]}
+                      onPress={() => setTypeFilter(typeOption.key)}
+                    >
+                      <Ionicons
+                        name={typeOption.icon}
+                        size={14}
+                        color={selected ? colors.background : colors.textMuted}
+                      />
+                      <Text style={[styles.sheetChipText, selected && styles.sheetChipTextActive]}>
+                        {typeOption.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
               <Text style={styles.sheetLabel}>Account</Text>
               <View style={styles.sheetChipsWrap}>
                 <TouchableOpacity
@@ -668,40 +703,6 @@ const createStyles = (colors: ThemeColors) =>
       color: colors.background,
       fontFamily: typography.fonts.semibold,
       fontSize: 9,
-    },
-
-    /* ── Segmented control ── */
-    segmentedWrap: {
-      flexDirection: 'row',
-      marginHorizontal: 24,
-      marginBottom: 16,
-      height: 44,
-      borderRadius: 14,
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: 4,
-      gap: 4,
-    },
-    segment: {
-      flex: 1,
-      borderRadius: 10,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 5,
-    },
-    segmentActive: {
-      backgroundColor: colors.text,
-    },
-    segmentText: {
-      fontFamily: typography.fonts.semibold,
-      fontSize: 12,
-      color: colors.textMuted,
-      letterSpacing: 0.2,
-    },
-    segmentTextActive: {
-      color: colors.background,
     },
 
     /* ── Scroll content ── */
