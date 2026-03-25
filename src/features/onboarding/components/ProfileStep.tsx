@@ -19,7 +19,7 @@ export function ProfileStep({ name, onNameChange }: ProfileStepProps) {
       <TextInput
         value={name}
         onChangeText={onNameChange}
-        placeholder="Ahmed"
+        placeholder="John"
         placeholderTextColor={colors.textMuted + '80'}
         style={styles.nameInput}
         autoCapitalize="words"
