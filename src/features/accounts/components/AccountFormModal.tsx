@@ -21,6 +21,7 @@ import { ThemeColors } from '../../../theme/colors';
 import { typography } from '../../../theme/typography';
 import { Account } from '../api/accounts';
 import { useCreateAccount, useUpdateAccount } from '../hooks/accounts';
+import { parseAmount, toDbColor } from '../../../utils/format';
 
 type AccountFormValues = {
   name: string;
@@ -89,9 +90,9 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
       name: data.name.trim(),
       holderName: data.holderName.trim(),
       accountNumber: data.accountNumber.trim(),
-      balance: data.balance.trim() ? parseFloat(data.balance) : 0,
+      balance: parseAmount(data.balance),
       currency,
-      color: parseInt(colorHex.replace('#', ''), 16),
+      color: toDbColor(colorHex),
       icon: iconKey.replace('-outline', ''),
     };
 

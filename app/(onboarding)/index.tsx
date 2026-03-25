@@ -26,7 +26,7 @@ import {
 } from '../../src/features/onboarding/constants';
 import { createOnboardingStyles } from '../../src/features/onboarding/styles';
 import { OnboardingFormValues } from '../../src/features/onboarding/types';
-import { parseAmount, toDbColor } from '../../src/features/onboarding/utils';
+import { parseAmount, toDbColor } from '../../src/utils/format';
 import { useOnboarding } from '../../src/providers/OnboardingProvider';
 import { useSettings } from '../../src/providers/SettingsProvider';
 import { useTheme } from '../../src/providers/ThemeProvider';
