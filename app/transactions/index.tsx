@@ -4,7 +4,6 @@ import React from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   Modal,
   Platform,
   ScrollView,
@@ -13,7 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurBackground } from '../../src/components/ui/BlurBackground';
 import { MoneyText } from '../../src/components/ui/MoneyText';
@@ -25,7 +24,8 @@ import { typography } from '../../src/theme/typography';
 type TransactionTypeFilter = 'ALL' | 'CR' | 'DR';
 
 const SWIPE_ACTION_WIDTH = 44;
-let openSwipeRow: Swipeable | null = null;
+type SwipeableInstance = React.ElementRef<typeof Swipeable>;
+let openSwipeRow: SwipeableInstance | null = null;
 
 type LedgerTransaction = {
   id: number;
@@ -83,7 +83,7 @@ const SwipeableRow = React.memo(function SwipeableRow({
   onEdit: (tx: LedgerTransaction) => void;
   onDelete: (tx: LedgerTransaction) => void;
 }) {
-  const swipeRef = React.useRef<Swipeable>(null);
+  const swipeRef = React.useRef<SwipeableInstance>(null);
   const categoryColor = toHexColor(tx.category.color);
   const iconName: keyof typeof Ionicons.glyphMap =
     tx.category.icon in Ionicons.glyphMap
@@ -101,31 +101,14 @@ const SwipeableRow = React.memo(function SwipeableRow({
   }, [onDelete, tx]);
 
   const renderRightActions = React.useCallback(
-    (progress: Animated.AnimatedInterpolation<number>) => {
-      const opacity = progress.interpolate({
-        inputRange: [0, 0.25, 1],
-        outputRange: [0, 0.65, 1],
-        extrapolate: 'clamp',
-      });
-
-      const translateX = progress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [24, 0],
-        extrapolate: 'clamp',
-      });
-
+    () => {
       return (
-        <Animated.View
+        <View
           style={{
             flexDirection: 'row',
-            width: SWIPE_ACTION_WIDTH * 2 + 6,
-            opacity,
-            transform: [{ translateX }],
+            width: SWIPE_ACTION_WIDTH * 2,
             alignItems: 'stretch',
             justifyContent: 'flex-end',
-            gap: 4,
-            paddingRight: 2,
-            paddingVertical: 2,
           }}
         >
           <TouchableOpacity
@@ -136,9 +119,6 @@ const SwipeableRow = React.memo(function SwipeableRow({
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: colors.primary + '1A',
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: colors.primary + '3A',
             }}
           >
             <Ionicons name="pencil" size={18} color={colors.primary} />
@@ -151,14 +131,11 @@ const SwipeableRow = React.memo(function SwipeableRow({
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: colors.danger + '1A',
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: colors.danger + '3A',
             }}
           >
             <Ionicons name="trash" size={18} color={colors.danger} />
           </TouchableOpacity>
-        </Animated.View>
+        </View>
       );
     },
     [handleEdit, handleDelete, colors],
