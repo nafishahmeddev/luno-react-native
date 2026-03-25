@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 export const accounts = sqliteTable('accounts', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -20,8 +20,6 @@ export const categories = sqliteTable('categories', {
   icon: text('icon').notNull().default('grid'),
   color: integer('color').notNull(),
   type: text('type', { enum: ['CR', 'DR'] }).notNull().default('DR'),
-  budget: real('budget').notNull().default(0),
-  expense: real('expense').notNull().default(0),
 });
 
 export const payments = sqliteTable('payments', {

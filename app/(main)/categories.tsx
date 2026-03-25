@@ -5,7 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurBackground } from '../../src/components/ui/BlurBackground';
 import { ConfirmDialog } from '../../src/components/ui/ConfirmDialog';
 import { Header } from '../../src/components/ui/Header';
-import { MoneyText } from '../../src/components/ui/MoneyText';
 import { OptionsDialog } from '../../src/components/ui/OptionsDialog';
 import { Category } from '../../src/features/categories/api/categories';
 import { CategoryFormModal } from '../../src/features/categories/components/CategoryFormModal';
@@ -34,7 +33,7 @@ export default function CategoriesScreen() {
       categories
         ?.filter((cat) => cat.type === activeType)
         .filter((cat) => (q ? cat.name.toLowerCase().includes(q) : true))
-        .sort((a, b) => b.expense - a.expense) || []
+        .sort((a, b) => a.name.localeCompare(b.name)) || []
     );
   }, [categories, activeType, query]);
 
@@ -73,10 +72,7 @@ export default function CategoriesScreen() {
   }, [selectedCategory]);
 
   const renderItem = ({ item }: { item: Category }) => {
-    const isOverBudget = item.budget > 0 && item.expense > item.budget;
     const catColor = item.color ? '#' + item.color.toString(16).padStart(6, '0') : colors.primary;
-    const progress = item.budget > 0 ? Math.min((item.expense / item.budget) * 100, 100) : 0;
-    const hasBudget = item.budget > 0;
 
     return (
       <TouchableOpacity
@@ -105,44 +101,9 @@ export default function CategoriesScreen() {
         <View style={styles.cardMainRow}>
           <View style={styles.cardInfo}>
             <Text style={styles.categoryName} numberOfLines={1}>{item.name}</Text>
-            <Text style={styles.categorySubtext}>{hasBudget ? `${Math.round(progress)}% budget used` : 'No monthly budget yet'}</Text>
+            <Text style={styles.categorySubtext}>Tap to edit, hold for more options.</Text>
           </View>
           <Ionicons name="ellipsis-horizontal" size={16} color={colors.textMuted} />
-        </View>
-
-        <View style={styles.metricsRow}>
-          <View style={styles.amountCol}>
-            <Text style={styles.amountLabel}>{item.type === 'DR' ? 'Spent' : 'Received'}</Text>
-            <MoneyText amount={item.expense} style={styles.categoryValue} weight="bold" />
-          </View>
-          <View style={styles.amountCol}>
-            <Text style={styles.amountLabel}>Budget</Text>
-            {hasBudget ? (
-              <MoneyText amount={item.budget} style={styles.budgetAmountText} />
-            ) : (
-              <Text style={styles.noBudgetText}>Not set</Text>
-            )}
-          </View>
-        </View>
-
-        {hasBudget && (
-          <View style={styles.progressContainer}>
-            <View
-              style={[
-                styles.progressBar,
-                {
-                  width: `${progress}%`,
-                  backgroundColor: isOverBudget ? colors.danger : catColor
-                }
-              ]}
-            />
-          </View>
-        )}
-
-        <View style={styles.cardHintRow}>
-          <Text style={[styles.cardHint, isOverBudget && styles.cardHintDanger]}>
-            {isOverBudget ? 'Over budget, consider adjusting this category.' : 'Tap to edit, hold for more options.'}
-          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -425,69 +386,6 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
     marginTop: 2,
-  },
-
-  metricsRow: {
-    flexDirection: 'row',
-    marginTop: 14,
-    marginBottom: 10,
-  },
-
-  amountCol: {
-    flex: 1,
-  },
-
-  amountLabel: {
-    fontFamily: typography.fonts.semibold,
-    fontSize: 10,
-    color: colors.textMuted,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-
-  categoryValue: {
-    fontFamily: typography.fonts.amountBold,
-    color: colors.text,
-    fontSize: 15,
-  },
-
-  budgetAmountText: {
-    fontFamily: typography.fonts.amountRegular,
-    color: colors.textMuted,
-    fontSize: 13,
-  },
-
-  noBudgetText: {
-    fontFamily: typography.fonts.regular,
-    color: colors.textMuted,
-    fontSize: 13,
-  },
-
-  progressContainer: {
-    height: 8,
-    backgroundColor: colors.border,
-    borderRadius: 999,
-    marginTop: 2,
-    overflow: 'hidden',
-  },
-
-  progressBar: {
-    height: '100%',
-  },
-
-  cardHintRow: {
-    marginTop: 10,
-  },
-
-  cardHint: {
-    fontFamily: typography.fonts.regular,
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-
-  cardHintDanger: {
-    color: colors.danger,
   },
 
   emptyContainer: {

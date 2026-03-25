@@ -136,22 +136,6 @@
           "notNull": true,
           "autoincrement": false,
           "default": "'DR'"
-        },
-        "budget": {
-          "name": "budget",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "expense": {
-          "name": "expense",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
         }
       },
       "indexes": {},

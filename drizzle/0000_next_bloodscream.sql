@@ -17,9 +17,7 @@ CREATE TABLE `categories` (
 	`name` text NOT NULL,
 	`icon` text DEFAULT 'grid' NOT NULL,
 	`color` integer NOT NULL,
-	`type` text DEFAULT 'DR' NOT NULL,
-	`budget` real DEFAULT 0 NOT NULL,
-	`expense` real DEFAULT 0 NOT NULL
+	`type` text DEFAULT 'DR' NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `payments` (

@@ -3,15 +3,15 @@ import { BlurView } from '@sbaiahmed1/react-native-blur';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CATEGORY_COLORS, CATEGORY_ICONS } from '../../../constants/picker';
@@ -23,7 +23,6 @@ import { useCreateCategory, useUpdateCategory } from '../hooks/categories';
 
 type CategoryFormValues = {
   name: string;
-  budget: string;
 };
 
 export type CategoryFormModalProps = {
@@ -53,7 +52,7 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
     formState: { errors, isValid },
   } = useForm<CategoryFormValues>({
     mode: 'onChange',
-    defaultValues: { name: '', budget: '' },
+    defaultValues: { name: '' },
   });
 
   useEffect(() => {
@@ -62,7 +61,6 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
     if (category) {
       reset({
         name: category.name,
-        budget: category.budget > 0 ? String(category.budget) : '',
       });
       setType(category.type);
       setIcon(typeof category.icon === 'string' ? category.icon : CATEGORY_ICONS[0]);
@@ -70,7 +68,7 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
       return;
     }
 
-    reset({ name: '', budget: '' });
+    reset({ name: '' });
     setType('DR');
     setIcon(CATEGORY_ICONS[0]);
     setColorHex(CATEGORY_COLORS[0]);
@@ -82,7 +80,6 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
       type,
       icon,
       color: parseInt(colorHex.replace('#', ''), 16),
-      budget: data.budget.trim() ? parseFloat(data.budget) : undefined,
     };
 
     try {
@@ -189,29 +186,6 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
                 )}
               />
               <View style={[styles.answerLine, errors.name && styles.answerLineError]} />
-
-              <Text style={[styles.label, styles.labelSpaced]}>Monthly Budget (Optional)</Text>
-              <Controller
-                control={control}
-                name="budget"
-                rules={{
-                  validate: (v) =>
-                    !v.trim() || (!isNaN(parseFloat(v)) && parseFloat(v) >= 0) || 'Enter a valid budget',
-                }}
-                render={({ field }) => (
-                  <TextInput
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    placeholder="0.00"
-                    placeholderTextColor={colors.textMuted + '50'}
-                    keyboardType="decimal-pad"
-                    style={[styles.answerInput, styles.answerInputAmount]}
-                    returnKeyType="done"
-                  />
-                )}
-              />
-              <View style={[styles.answerLine, errors.budget && styles.answerLineError]} />
             </View>
 
             <View style={styles.section}>
@@ -362,9 +336,6 @@ const createStyles = (colors: ThemeColors) =>
       letterSpacing: 0.1,
       marginBottom: 6,
     },
-    labelSpaced: {
-      marginTop: 16,
-    },
     answerInput: {
       fontFamily: typography.fonts.heading,
       fontSize: 28,
@@ -373,10 +344,6 @@ const createStyles = (colors: ThemeColors) =>
       letterSpacing: -0.7,
       paddingHorizontal: 0,
       paddingVertical: 4,
-    },
-    answerInputAmount: {
-      fontFamily: typography.fonts.amountBold,
-      letterSpacing: 0,
     },
     answerLine: {
       height: 2,
