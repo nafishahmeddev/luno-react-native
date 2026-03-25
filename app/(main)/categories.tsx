@@ -125,7 +125,7 @@ export default function CategoriesScreen() {
     <SafeAreaView style={styles.container}>
       <BlurBackground />
 
-      <Header title="Categories" showBack />
+      <Header title="Categories" subtitle="Organize your spending" showBack />
 
       {isLoading ? (
         <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />

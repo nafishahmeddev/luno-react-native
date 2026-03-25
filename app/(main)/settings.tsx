@@ -82,7 +82,7 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.container}>
       <BlurBackground />
 
-      <Header title="Settings" showBack />
+      <Header title="Settings" subtitle="Preferences & appearance" showBack />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.heroPanel}>

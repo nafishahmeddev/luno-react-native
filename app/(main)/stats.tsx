@@ -245,7 +245,7 @@ export default function StatsScreen() {
     <SafeAreaView style={styles.container}>
       <BlurBackground />
 
-      <Header title="Stats" showBack />
+      <Header title="Stats" subtitle="Your financial insights" showBack />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.heroCard}>
