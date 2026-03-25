@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurBackground } from '../../src/components/ui/BlurBackground';
 import { ConfirmDialog } from '../../src/components/ui/ConfirmDialog';
@@ -22,6 +22,8 @@ export default function SettingsScreen() {
   const router = useRouter();
   const [showAppearanceDialog, setShowAppearanceDialog] = React.useState(false);
   const [showResetConfirmDialog, setShowResetConfirmDialog] = React.useState(false);
+  const [showEditNameModal, setShowEditNameModal] = React.useState(false);
+  const [nameInput, setNameInput] = React.useState('');
 
   const themeOptions: { label: string; value: 'light' | 'dark' | 'system'; icon: keyof typeof Ionicons.glyphMap }[] = [
     { label: 'Light Mode', value: 'light', icon: 'sunny-outline' },
@@ -47,6 +49,16 @@ export default function SettingsScreen() {
   };
 
   const handleThemeChange = () => setShowAppearanceDialog(true);
+
+  const openEditName = () => {
+    setNameInput(profile.name || '');
+    setShowEditNameModal(true);
+  };
+
+  const saveEditName = async () => {
+    await updateProfile({ name: nameInput.trim() });
+    setShowEditNameModal(false);
+  };
 
   type PreferenceRowProps = {
     icon: any;
@@ -108,6 +120,19 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.sectionWrap}>
+          <Text style={styles.sectionLabel}>PROFILE</Text>
+          <View style={styles.sectionCard}>
+            <PreferenceRow
+              icon="person-outline"
+              title="Display Name"
+              value={profile.name ? undefined : 'NOT SET'}
+              subtitle={profile.name || 'Tap to set your name'}
+              onPress={openEditName}
+            />
+          </View>
+        </View>
+
+        <View style={styles.sectionWrap}>
           <Text style={styles.sectionLabel}>PREFERENCES</Text>
           <View style={styles.sectionCard}>
             <PreferenceRow
@@ -160,6 +185,44 @@ export default function SettingsScreen() {
           },
         }))}
       />
+
+      {/* ── Edit Name Modal ── */}
+      <Modal
+        visible={showEditNameModal}
+        transparent
+        animationType="fade"
+        presentationStyle="overFullScreen"
+        statusBarTranslucent
+        onRequestClose={() => setShowEditNameModal(false)}
+      >
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={styles.modalOverlay}>
+            <TouchableOpacity style={StyleSheet.absoluteFillObject} activeOpacity={1} onPress={() => setShowEditNameModal(false)} />
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Display Name</Text>
+              <Text style={styles.modalSubtitle}>This name appears across the app</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={nameInput}
+                onChangeText={setNameInput}
+                placeholder="e.g. Ahmed"
+                placeholderTextColor={colors.textMuted + '80'}
+                autoFocus
+                returnKeyType="done"
+                onSubmitEditing={saveEditName}
+              />
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.modalBtnCancel} onPress={() => setShowEditNameModal(false)} activeOpacity={0.9}>
+                  <Text style={styles.modalBtnCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalBtnSave} onPress={saveEditName} activeOpacity={0.9}>
+                  <Text style={styles.modalBtnSaveText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       <ConfirmDialog
         visible={showResetConfirmDialog}
@@ -328,5 +391,82 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     opacity: 0.72,
     marginBottom: 2,
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.52)',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 24,
+    paddingBottom: 42,
+  },
+  modalCard: {
+    alignSelf: 'stretch',
+    borderRadius: 22,
+    backgroundColor: Platform.OS === 'ios' ? colors.background + 'F2' : colors.background,
+    borderWidth: 1,
+    borderColor: colors.text + '18',
+    padding: 18,
+    shadowColor: '#000000',
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 10,
+  },
+  modalTitle: {
+    fontFamily: typography.fonts.headingRegular,
+    fontSize: 24,
+    color: colors.text,
+    letterSpacing: -0.6,
+  },
+  modalSubtitle: {
+    fontFamily: typography.fonts.regular,
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  modalInput: {
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+    height: 50,
+    fontSize: 16,
+    fontFamily: typography.fonts.regular,
+    color: colors.text,
+    marginBottom: 16,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  modalBtnCancel: {
+    flex: 1,
+    height: 46,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.primary + '22',
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBtnCancelText: {
+    fontFamily: typography.fonts.semibold,
+    fontSize: 14,
+    color: colors.text,
+  },
+  modalBtnSave: {
+    flex: 1,
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBtnSaveText: {
+    fontFamily: typography.fonts.semibold,
+    fontSize: 14,
+    color: '#FFFFFF',
   },
 });
