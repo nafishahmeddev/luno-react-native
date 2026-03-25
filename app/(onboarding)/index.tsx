@@ -51,23 +51,14 @@ export default function OnboardingScreen() {
     mode: 'onChange',
     defaultValues: {
       name: '',
-      accountName: 'Main Wallet',
+      accountName: '',
       accountHolder: '',
       accountNumber: '',
       openingBalance: '0',
     },
   });
 
-  const { trigger, getValues, watch, setValue } = methods;
-
-  // Auto-fill holder name from profile name when not yet set
-  const watchedName = watch('name');
-  const watchedHolder = watch('accountHolder');
-  React.useEffect(() => {
-    if (!watchedHolder.trim() && watchedName.trim()) {
-      setValue('accountHolder', watchedName.trim());
-    }
-  }, [watchedName, watchedHolder, setValue]);
+  const { trigger, getValues } = methods;
 
   const isPending = accountPending || categoryPending;
 
