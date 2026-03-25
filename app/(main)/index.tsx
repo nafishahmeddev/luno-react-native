@@ -9,6 +9,7 @@ import { DEFAULT_CURRENCY } from '../../src/constants/currency';
 import { AccountFormModal } from '../../src/features/accounts/components/AccountFormModal';
 import { useAccounts, useDeleteAccount } from '../../src/features/accounts/hooks/accounts';
 import { useTransactions } from '../../src/features/transactions/hooks/transactions';
+import { useSettings } from '../../src/providers/SettingsProvider';
 import { useTheme } from '../../src/providers/ThemeProvider';
 import { ThemeColors } from '../../src/theme/colors';
 import { typography } from '../../src/theme/typography';
@@ -22,6 +23,7 @@ const getGreeting = () => {
 
 export default function DashboardScreen() {
   const { colors, isDark } = useTheme();
+  const { profile } = useSettings();
   const { width: screenWidth } = useWindowDimensions();
   const styles = React.useMemo(() => createStyles(colors, screenWidth), [colors, screenWidth]);
   const router = useRouter();
@@ -114,7 +116,7 @@ export default function DashboardScreen() {
         {/* ── Header ── */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.greeting}>{getGreeting()}</Text>
+            <Text style={styles.greeting}>{getGreeting()}{profile.name ? `, ${profile.name.split(' ')[0]}` : ''}</Text>
             <Text style={styles.brandName}>FINTRACKER.</Text>
           </View>
           <View style={styles.headerActions}>
