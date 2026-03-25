@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from '@sbaiahmed1/react-native-blur';
 import React, { useEffect, useMemo, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import {
     KeyboardAvoidingView,
     Modal,
@@ -18,6 +19,11 @@ import { ThemeColors } from '../../../theme/colors';
 import { typography } from '../../../theme/typography';
 import { Category } from '../api/categories';
 import { useCreateCategory, useUpdateCategory } from '../hooks/categories';
+
+type CategoryFormValues = {
+  name: string;
+  budget: string;
+};
 
 export type CategoryFormModalProps = {
   visible: boolean;
@@ -68,40 +74,47 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
   const { mutateAsync: createCategory } = useCreateCategory();
   const { mutateAsync: updateCategory } = useUpdateCategory();
 
-  const [name, setName] = useState('');
-  const [budget, setBudget] = useState('');
   const [type, setType] = useState<'CR' | 'DR'>('DR');
   const [icon, setIcon] = useState<string>(ICONS[0]);
   const [colorHex, setColorHex] = useState<string>(COLORS[0]);
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid },
+  } = useForm<CategoryFormValues>({
+    mode: 'onChange',
+    defaultValues: { name: '', budget: '' },
+  });
 
   useEffect(() => {
     if (!visible) return;
 
     if (category) {
-      setName(category.name);
-      setBudget(category.budget > 0 ? String(category.budget) : '');
+      reset({
+        name: category.name,
+        budget: category.budget > 0 ? String(category.budget) : '',
+      });
       setType(category.type);
       setIcon(typeof category.icon === 'string' ? category.icon : ICONS[0]);
       setColorHex(`#${category.color.toString(16).padStart(6, '0').toUpperCase()}`);
       return;
     }
 
-    setName('');
-    setBudget('');
+    reset({ name: '', budget: '' });
     setType('DR');
     setIcon(ICONS[0]);
     setColorHex(COLORS[0]);
-  }, [category, visible]);
+  }, [category, visible, reset]);
 
-  const handleSave = async () => {
-    if (!name.trim()) return;
-
+  const handleSave = handleSubmit(async (data) => {
     const payload = {
-      name: name.trim(),
+      name: data.name.trim(),
       type,
       icon,
       color: parseInt(colorHex.replace('#', ''), 16),
-      budget: budget.trim() ? parseFloat(budget) : undefined,
+      budget: data.budget.trim() ? parseFloat(data.budget) : undefined,
     };
 
     try {
@@ -114,7 +127,7 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
     } catch (error) {
       console.error('Failed to save category:', error);
     }
-  };
+  });
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -156,10 +169,43 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
           <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
             <View style={styles.section}>
               <Text style={styles.label}>Name</Text>
-              <Input value={name} onChangeText={setName} placeholder="Groceries" autoFocus={!isEditing} style={styles.formInput} />
+              <Controller
+                control={control}
+                name="name"
+                rules={{ required: 'Category name is required' }}
+                render={({ field }) => (
+                  <Input
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="Groceries"
+                    autoFocus={!isEditing}
+                    style={styles.formInput}
+                    error={errors.name?.message}
+                  />
+                )}
+              />
 
               <Text style={[styles.label, styles.labelSpaced]}>Monthly Budget (Optional)</Text>
-              <Input value={budget} onChangeText={setBudget} placeholder="0.00" keyboardType="decimal-pad" style={styles.formInput} />
+              <Controller
+                control={control}
+                name="budget"
+                rules={{
+                  validate: (v) =>
+                    !v.trim() || (!isNaN(parseFloat(v)) && parseFloat(v) >= 0) || 'Enter a valid budget',
+                }}
+                render={({ field }) => (
+                  <Input
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="0.00"
+                    keyboardType="decimal-pad"
+                    style={styles.formInput}
+                    error={errors.budget?.message}
+                  />
+                )}
+              />
             </View>
 
             <View style={styles.section}>
@@ -228,9 +274,9 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
           <View style={styles.footer}>
             <TouchableOpacity
               activeOpacity={0.9}
-              style={[styles.primaryBtn, !name.trim() && styles.primaryBtnDisabled]}
+              style={[styles.primaryBtn, !isValid && styles.primaryBtnDisabled]}
               onPress={handleSave}
-              disabled={!name.trim()}
+              disabled={!isValid}
             >
               <Text style={styles.primaryBtnText}>{isEditing ? 'Save Category' : 'Create Category'}</Text>
               <Ionicons name="arrow-forward" size={16} color="#FFF" />

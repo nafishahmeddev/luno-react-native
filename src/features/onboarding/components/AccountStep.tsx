@@ -1,50 +1,39 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
+import { Controller, useFormContext } from 'react-hook-form';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Input } from '../../../components/ui/Input';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { typography } from '../../../theme/typography';
 import { ONBOARDING_ACCOUNT_COLORS, ONBOARDING_ACCOUNT_ICONS } from '../constants';
+import { OnboardingFormValues } from '../types';
 import { parseAmount } from '../utils';
 
 type AccountStepProps = {
-  accountName: string;
-  accountHolder: string;
-  accountNumber: string;
-  openingBalance: string;
   defaultCurrency: string;
   accountIcon: string;
   accountColor: string;
-  profileName: string;
-  onAccountNameChange: (value: string) => void;
-  onAccountHolderChange: (value: string) => void;
-  onAccountNumberChange: (value: string) => void;
-  onOpeningBalanceChange: (value: string) => void;
   onIconChange: (value: string) => void;
   onColorChange: (value: string) => void;
 };
 
 export function AccountStep({
-  accountName,
-  accountHolder,
-  accountNumber,
-  openingBalance,
   defaultCurrency,
   accountIcon,
   accountColor,
-  profileName,
-  onAccountNameChange,
-  onAccountHolderChange,
-  onAccountNumberChange,
-  onOpeningBalanceChange,
   onIconChange,
   onColorChange,
 }: AccountStepProps) {
   const { colors } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const { control, watch, formState: { errors } } = useFormContext<OnboardingFormValues>();
+
+  const accountName = watch('accountName');
+  const accountHolder = watch('accountHolder');
+  const openingBalance = watch('openingBalance');
 
   const previewName = accountName.trim() || 'Main Wallet';
-  const previewHolder = accountHolder.trim() || profileName.trim() || 'Account Holder';
+  const previewHolder = accountHolder.trim() || 'Account Holder';
 
   return (
     <View style={styles.wrapper}>
@@ -59,15 +48,69 @@ export function AccountStep({
         <Text style={styles.previewAmount}>{parseAmount(openingBalance).toFixed(2)}</Text>
       </View>
 
-      <Input label="Account Name" placeholder="Main Wallet" value={accountName} onChangeText={onAccountNameChange} />
-      <Input label="Holder Name" placeholder="Account holder" value={accountHolder} onChangeText={onAccountHolderChange} />
-      <Input label="Account Number" placeholder="IBAN / Last 4 / Wallet ID" value={accountNumber} onChangeText={onAccountNumberChange} />
-      <Input
-        label={`Opening Balance (${defaultCurrency})`}
-        placeholder="0.00"
-        value={openingBalance}
-        onChangeText={onOpeningBalanceChange}
-        keyboardType="decimal-pad"
+      <Controller
+        control={control}
+        name="accountName"
+        rules={{ required: 'Account name is required' }}
+        render={({ field }) => (
+          <Input
+            label="Account Name"
+            placeholder="Main Wallet"
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            error={errors.accountName?.message}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="accountHolder"
+        rules={{ required: 'Holder name is required' }}
+        render={({ field }) => (
+          <Input
+            label="Holder Name"
+            placeholder="Account holder"
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            error={errors.accountHolder?.message}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="accountNumber"
+        rules={{ required: 'Account number is required' }}
+        render={({ field }) => (
+          <Input
+            label="Account Number"
+            placeholder="IBAN / Last 4 / Wallet ID"
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            error={errors.accountNumber?.message}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="openingBalance"
+        rules={{
+          validate: (v) =>
+            !v.trim() || (!isNaN(parseFloat(v)) && parseFloat(v) >= 0) || 'Enter a valid balance',
+        }}
+        render={({ field }) => (
+          <Input
+            label={`Opening Balance (${defaultCurrency})`}
+            placeholder="0.00"
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            keyboardType="decimal-pad"
+            error={errors.openingBalance?.message}
+          />
+        )}
       />
 
       <Text style={styles.selectorLabel}>ACCOUNT ICON</Text>

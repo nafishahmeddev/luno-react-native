@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -26,6 +27,7 @@ import {
   ONBOARDING_STEPS,
 } from '../../src/features/onboarding/constants';
 import { createOnboardingStyles } from '../../src/features/onboarding/styles';
+import { OnboardingFormValues } from '../../src/features/onboarding/types';
 import { parseAmount, toDbColor } from '../../src/features/onboarding/utils';
 import { useOnboarding } from '../../src/providers/OnboardingProvider';
 import { useSettings } from '../../src/providers/SettingsProvider';
@@ -43,44 +45,41 @@ export default function OnboardingScreen() {
   const [stepIndex, setStepIndex] = React.useState(0);
   const currentStep = ONBOARDING_STEPS[stepIndex];
 
-  const [name, setName] = React.useState('');
   const [defaultCurrency, setDefaultCurrency] = React.useState<string>(() => getDeviceCurrencyCode());
-  const [accountName, setAccountName] = React.useState('Main Wallet');
-  const [accountHolder, setAccountHolder] = React.useState('');
-  const [accountNumber, setAccountNumber] = React.useState('');
-  const [openingBalance, setOpeningBalance] = React.useState('0');
   const [accountIcon, setAccountIcon] = React.useState<string>(ONBOARDING_ACCOUNT_ICONS[0]);
   const [accountColor, setAccountColor] = React.useState<string>(ONBOARDING_ACCOUNT_COLORS[0]);
 
+  const methods = useForm<OnboardingFormValues>({
+    mode: 'onChange',
+    defaultValues: {
+      name: '',
+      accountName: 'Main Wallet',
+      accountHolder: '',
+      accountNumber: '',
+      openingBalance: '0',
+    },
+  });
+
+  const { trigger, getValues, watch, setValue } = methods;
+
+  // Auto-fill holder name from profile name when not yet set
+  const watchedName = watch('name');
+  const watchedHolder = watch('accountHolder');
   React.useEffect(() => {
-    if (!accountHolder.trim() && name.trim()) {
-      setAccountHolder(name.trim());
+    if (!watchedHolder.trim() && watchedName.trim()) {
+      setValue('accountHolder', watchedName.trim());
     }
-  }, [name, accountHolder]);
+  }, [watchedName, watchedHolder, setValue]);
 
   const isPending = accountPending || categoryPending;
 
-  const validateStep = () => {
-    if (currentStep.id === 'profile' && !name.trim()) {
-      Alert.alert('Missing name', 'Enter your name to continue.');
-      return false;
+  const validateStep = async () => {
+    if (currentStep.id === 'profile') {
+      return trigger('name');
     }
-
     if (currentStep.id === 'account') {
-      if (!accountName.trim()) {
-        Alert.alert('Missing account name', 'Enter a name for your first account.');
-        return false;
-      }
-      if (!accountHolder.trim()) {
-        Alert.alert('Missing holder name', 'Enter the holder name for this account.');
-        return false;
-      }
-      if (!accountNumber.trim()) {
-        Alert.alert('Missing account number', 'Enter an account number or identifier.');
-        return false;
-      }
+      return trigger(['accountName', 'accountHolder', 'accountNumber', 'openingBalance']);
     }
-
     return true;
   };
 
@@ -150,23 +149,24 @@ export default function OnboardingScreen() {
   };
 
   const finalizeSetup = async () => {
+    const values = getValues();
     try {
       await updateProfile({
-        name: name.trim(),
+        name: values.name.trim(),
         email: '',
         phone: '',
         defaultCurrency,
       });
 
       await createAccount({
-        name: accountName.trim(),
-        holderName: accountHolder.trim(),
-        accountNumber: accountNumber.trim(),
+        name: values.accountName.trim(),
+        holderName: values.accountHolder.trim(),
+        accountNumber: values.accountNumber.trim(),
         icon: accountIcon.replace('-outline', ''),
         color: toDbColor(accountColor),
         isDefault: true,
         currency: defaultCurrency,
-        balance: parseAmount(openingBalance),
+        balance: parseAmount(values.openingBalance),
         income: 0,
         expense: 0,
       });
@@ -180,9 +180,8 @@ export default function OnboardingScreen() {
   };
 
   const handleContinue = async () => {
-    if (!validateStep()) {
-      return;
-    }
+    const valid = await validateStep();
+    if (!valid) return;
 
     if (stepIndex === ONBOARDING_STEPS.length - 1) {
       await finalizeSetup();
@@ -197,29 +196,15 @@ export default function OnboardingScreen() {
       case 'welcome':
         return <WelcomeStep />;
       case 'profile':
-        return (
-          <ProfileStep
-            name={name}
-            onNameChange={setName}
-          />
-        );
+        return <ProfileStep />;
       case 'currency':
         return <CurrencyStep currency={defaultCurrency} onCurrencyChange={setDefaultCurrency} />;
       case 'account':
         return (
           <AccountStep
-            accountName={accountName}
-            accountHolder={accountHolder}
-            accountNumber={accountNumber}
-            openingBalance={openingBalance}
             defaultCurrency={defaultCurrency}
             accountIcon={accountIcon}
             accountColor={accountColor}
-            profileName={name}
-            onAccountNameChange={setAccountName}
-            onAccountHolderChange={setAccountHolder}
-            onAccountNumberChange={setAccountNumber}
-            onOpeningBalanceChange={setOpeningBalance}
             onIconChange={setAccountIcon}
             onColorChange={setAccountColor}
           />
@@ -233,7 +218,8 @@ export default function OnboardingScreen() {
     <SafeAreaView style={styles.container}>
       <BlurBackground androidOverlayOpacity="76" />
 
-      <KeyboardAvoidingView style={styles.keyboardWrap} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <FormProvider {...methods}>
+        <KeyboardAvoidingView style={styles.keyboardWrap} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.header}>
           <View style={styles.headerTopRow}>
             {stepIndex > 0 ? (
@@ -277,7 +263,8 @@ export default function OnboardingScreen() {
             style={styles.primaryAction}
           />
         </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </FormProvider>
     </SafeAreaView>
   );
 }

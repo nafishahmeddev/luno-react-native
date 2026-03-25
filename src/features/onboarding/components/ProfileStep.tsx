@@ -1,31 +1,37 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
+import { Controller, useFormContext } from 'react-hook-form';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { typography } from '../../../theme/typography';
+import { OnboardingFormValues } from '../types';
 
-type ProfileStepProps = {
-  name: string;
-  onNameChange: (value: string) => void;
-};
-
-export function ProfileStep({ name, onNameChange }: ProfileStepProps) {
+export function ProfileStep() {
   const { colors } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const { control, formState: { errors } } = useFormContext<OnboardingFormValues>();
 
   return (
     <View style={styles.wrapper}>
       <Text style={styles.prompt}>Tell us your name</Text>
-      <TextInput
-        value={name}
-        onChangeText={onNameChange}
-        placeholder="John"
-        placeholderTextColor={colors.textMuted + '80'}
-        style={styles.nameInput}
-        autoCapitalize="words"
-        autoCorrect={false}
+      <Controller
+        control={control}
+        name="name"
+        rules={{ required: true }}
+        render={({ field }) => (
+          <TextInput
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            placeholder="John"
+            placeholderTextColor={colors.textMuted + '80'}
+            style={styles.nameInput}
+            autoCapitalize="words"
+            autoCorrect={false}
+          />
+        )}
       />
-      <View style={styles.nameUnderline} />
+      <View style={[styles.nameUnderline, errors.name && styles.nameUnderlineError]} />
 
       <View style={styles.noteRow}>
         <Ionicons name="person-circle-outline" size={18} color={colors.primary} />
@@ -62,6 +68,9 @@ const createStyles = (colors: { [key: string]: string }) =>
       backgroundColor: colors.primary + '66',
       marginTop: -2,
       marginBottom: 8,
+    },
+    nameUnderlineError: {
+      backgroundColor: colors.danger + '99',
     },
     noteRow: {
       marginTop: 4,

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import {
   Alert,
   ScrollView,
@@ -25,6 +26,11 @@ type TransactionType = 'CR' | 'DR';
 type Account = typeof accountsTable.$inferSelect;
 type Category = typeof categoriesTable.$inferSelect;
 type IoniconName = keyof typeof Ionicons.glyphMap;
+
+type TransactionFormValues = {
+  amountInput: string;
+  note: string;
+};
 
 const TYPE_META: Record<TransactionType, { title: string; subtitle: string; icon: IoniconName }> = {
   CR: { title: 'Income', subtitle: 'Cash coming in', icon: 'trending-up-outline' },
@@ -53,11 +59,20 @@ export default function AddTransactionScreen() {
   const categories = React.useMemo(() => (categoriesQuery.data ?? []) as Category[], [categoriesQuery.data]);
 
   const [type, setType] = React.useState<TransactionType>('DR');
-  const [amountInput, setAmountInput] = React.useState('');
-  const [note, setNote] = React.useState('');
   const [selectedAccountId, setSelectedAccountId] = React.useState<number | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<number | null>(null);
 
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors, isValid },
+  } = useForm<TransactionFormValues>({
+    mode: 'onChange',
+    defaultValues: { amountInput: '', note: '' },
+  });
+
+  const amountInput = watch('amountInput');
   const amountValue = React.useMemo(() => parseAmount(amountInput), [amountInput]);
 
   const filteredCategories = React.useMemo(
@@ -102,14 +117,14 @@ export default function AddTransactionScreen() {
   }, [filteredCategories, selectedCategoryId]);
 
   const canSubmit =
+    isValid &&
     !!selectedAccountId &&
     !!selectedCategoryId &&
-    amountValue > 0 &&
     !createTransaction.isPending &&
     accounts.length > 0;
 
-  const handleSave = async () => {
-    if (!canSubmit || !selectedAccountId || !selectedCategoryId) {
+  const handleSave = handleSubmit(async (data) => {
+    if (!selectedAccountId || !selectedCategoryId) {
       Alert.alert('Missing details', 'Please select account, category, and a valid amount.');
       return;
     }
@@ -118,17 +133,17 @@ export default function AddTransactionScreen() {
       await createTransaction.mutateAsync({
         accountId: selectedAccountId,
         categoryId: selectedCategoryId,
-        amount: amountValue,
+        amount: parseAmount(data.amountInput),
         type,
         datetime: new Date().toISOString(),
-        note: note.trim() || selectedCategory?.name || 'Transaction',
+        note: data.note.trim() || selectedCategory?.name || 'Transaction',
       });
 
       router.back();
     } catch {
       Alert.alert('Unable to save', 'Could not create transaction. Please try again.');
     }
-  };
+  });
 
   const resolvedCurrency = selectedAccount?.currency || profile.defaultCurrency;
   const typeMeta = TYPE_META[type];
@@ -167,15 +182,29 @@ export default function AddTransactionScreen() {
             </View>
           </View>
 
-          <TextInput
-            value={amountInput}
-            onChangeText={setAmountInput}
-            placeholder="0.00"
-            placeholderTextColor={colors.textMuted + '85'}
-            keyboardType="decimal-pad"
-            style={styles.amountInput}
+          <Controller
+            control={control}
+            name="amountInput"
+            rules={{
+              required: 'Amount is required',
+              validate: (v) => parseAmount(v) > 0 || 'Enter a valid amount greater than 0',
+            }}
+            render={({ field }) => (
+              <TextInput
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                placeholder="0.00"
+                placeholderTextColor={colors.textMuted + '85'}
+                keyboardType="decimal-pad"
+                style={styles.amountInput}
+              />
+            )}
           />
           <Text style={styles.amountHint}>{typeMeta.subtitle}</Text>
+          {errors.amountInput && (
+            <Text style={styles.fieldError}>{errors.amountInput.message}</Text>
+          )}
         </View>
 
         <View style={styles.sectionWrap}>
@@ -303,14 +332,21 @@ export default function AddTransactionScreen() {
         <View style={styles.sectionWrap}>
           <Text style={styles.sectionLabel}>NOTE</Text>
           <View style={styles.noteBox}>
-            <TextInput
-              value={note}
-              onChangeText={setNote}
-              placeholder="Optional context"
-              placeholderTextColor={colors.textMuted + '88'}
-              style={styles.noteInput}
-              multiline
-              textAlignVertical="top"
+            <Controller
+              control={control}
+              name="note"
+              render={({ field }) => (
+                <TextInput
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="Optional context"
+                  placeholderTextColor={colors.textMuted + '88'}
+                  style={styles.noteInput}
+                  multiline
+                  textAlignVertical="top"
+                />
+              )}
             />
           </View>
         </View>
@@ -455,6 +491,12 @@ const createStyles = (colors: ThemeColors) =>
     amountHint: {
       marginTop: 2,
       color: colors.textMuted,
+      fontFamily: typography.fonts.regular,
+      fontSize: 12,
+    },
+    fieldError: {
+      marginTop: 4,
+      color: colors.danger,
       fontFamily: typography.fonts.regular,
       fontSize: 12,
     },

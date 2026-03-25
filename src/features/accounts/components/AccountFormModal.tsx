@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from '@sbaiahmed1/react-native-blur';
 import React, { useEffect, useMemo, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import {
   KeyboardAvoidingView,
   Modal,
@@ -19,6 +20,13 @@ import { ThemeColors } from '../../../theme/colors';
 import { typography } from '../../../theme/typography';
 import { Account } from '../api/accounts';
 import { useCreateAccount, useUpdateAccount } from '../hooks/accounts';
+
+type AccountFormValues = {
+  name: string;
+  holderName: string;
+  accountNumber: string;
+  balance: string;
+};
 
 export type AccountFormModalProps = {
   visible: boolean;
@@ -51,42 +59,46 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
   const { mutateAsync: createAccount } = useCreateAccount();
   const { mutateAsync: updateAccount } = useUpdateAccount();
 
-  const [name, setName] = useState('');
-  const [holderName, setHolderName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [balance, setBalance] = useState('');
   const [currency, setCurrency] = useState<string>('USD');
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [colorHex, setColorHex] = useState<string>(COLORS[0]);
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid },
+  } = useForm<AccountFormValues>({
+    mode: 'onChange',
+    defaultValues: { name: '', holderName: '', accountNumber: '', balance: '' },
+  });
 
   useEffect(() => {
     if (!visible) return;
 
     if (account) {
-      setName(account.name);
-      setHolderName(account.holderName);
-      setAccountNumber(account.accountNumber);
+      reset({
+        name: account.name,
+        holderName: account.holderName,
+        accountNumber: account.accountNumber,
+        balance: '',
+      });
       setCurrency(account.currency);
       setColorHex(`#${account.color.toString(16).padStart(6, '0').toUpperCase()}`);
       return;
     }
 
-    setName('');
-    setHolderName('');
-    setAccountNumber('');
-    setBalance('');
+    reset({ name: '', holderName: '', accountNumber: '', balance: '' });
     setCurrency('USD');
     setColorHex(COLORS[0]);
-  }, [account, visible]);
+  }, [account, visible, reset]);
 
-  const handleSave = async () => {
-    if (!name.trim()) return;
-
+  const handleSave = handleSubmit(async (data) => {
     const payload = {
-      name: name.trim(),
-      holderName: holderName.trim(),
-      accountNumber: accountNumber.trim(),
-      balance: balance.trim() ? parseFloat(balance) : 0,
+      name: data.name.trim(),
+      holderName: data.holderName.trim(),
+      accountNumber: data.accountNumber.trim(),
+      balance: data.balance.trim() ? parseFloat(data.balance) : 0,
       currency,
       color: parseInt(colorHex.replace('#', ''), 16),
     };
@@ -101,7 +113,7 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
     } catch (error) {
       console.error('Failed to save account:', error);
     }
-  };
+  });
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -143,18 +155,75 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
           <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
             <View style={styles.section}>
               <Text style={styles.label}>Account Name</Text>
-              <Input value={name} onChangeText={setName} placeholder="Main Wallet" autoFocus={!isEditing} style={styles.formInput} />
+              <Controller
+                control={control}
+                name="name"
+                rules={{ required: 'Account name is required' }}
+                render={({ field }) => (
+                  <Input
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="Main Wallet"
+                    autoFocus={!isEditing}
+                    style={styles.formInput}
+                    error={errors.name?.message}
+                  />
+                )}
+              />
 
               <Text style={[styles.label, styles.labelSpaced]}>Holder Name</Text>
-              <Input value={holderName} onChangeText={setHolderName} placeholder="Account Holder" style={styles.formInput} />
+              <Controller
+                control={control}
+                name="holderName"
+                render={({ field }) => (
+                  <Input
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="Account Holder"
+                    style={styles.formInput}
+                  />
+                )}
+              />
 
               <Text style={[styles.label, styles.labelSpaced]}>Account Number</Text>
-              <Input value={accountNumber} onChangeText={setAccountNumber} placeholder="IBAN / Account Number" style={styles.formInput} />
+              <Controller
+                control={control}
+                name="accountNumber"
+                render={({ field }) => (
+                  <Input
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="IBAN / Account Number"
+                    style={styles.formInput}
+                  />
+                )}
+              />
 
               {!isEditing && (
                 <>
                   <Text style={[styles.label, styles.labelSpaced]}>Opening Balance</Text>
-                  <Input value={balance} onChangeText={setBalance} placeholder="0.00" keyboardType="decimal-pad" style={styles.formInput} />
+                  <Controller
+                    control={control}
+                    name="balance"
+                    rules={{
+                      validate: (v) =>
+                        !v.trim() || (!isNaN(parseFloat(v)) && parseFloat(v) >= 0) || 'Enter a valid amount',
+                    }}
+                    render={({ field }) => (
+                      <Input
+                        value={field.value}
+                        onChangeText={field.onChange}
+                        onBlur={field.onBlur}
+                        placeholder="0.00"
+                        keyboardType="decimal-pad"
+                        style={styles.formInput}
+                        error={errors.balance?.message}
+                      />
+                    )}
+                  />
                 </>
               )}
             </View>
@@ -200,9 +269,9 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
           <View style={styles.footer}>
             <TouchableOpacity
               activeOpacity={0.9}
-              style={[styles.primaryBtn, !name.trim() && styles.primaryBtnDisabled]}
+              style={[styles.primaryBtn, !isValid && styles.primaryBtnDisabled]}
               onPress={handleSave}
-              disabled={!name.trim()}
+              disabled={!isValid}
             >
               <Text style={styles.primaryBtnText}>{isEditing ? 'Save Account' : 'Create Account'}</Text>
               <Ionicons name="arrow-forward" size={16} color="#FFF" />
