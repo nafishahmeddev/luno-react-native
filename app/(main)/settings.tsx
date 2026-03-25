@@ -279,7 +279,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     marginBottom: 4,
   },
   heroTitle: {
-    fontFamily: typography.fonts.headingRegular,
+    fontFamily: typography.fonts.heading,
     fontSize: 26,
     color: colors.text,
     letterSpacing: -0.5,
@@ -365,7 +365,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     flex: 1,
   },
   rowTitle: {
-    fontFamily: typography.fonts.headingRegular,
+    fontFamily: typography.fonts.semibold,
     fontSize: 16,
     color: colors.text,
   },
