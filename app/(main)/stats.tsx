@@ -248,17 +248,8 @@ export default function StatsScreen() {
       <Header title="Stats" subtitle="Your financial insights" showBack />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.heroCard}>
-          <View style={styles.heroTopRow}>
-            <View>
-              <Text style={styles.heroKicker}>NET FLOW</Text>
-              <MoneyText amount={summary.net} currency={selectedCurrency} type={summary.net >= 0 ? 'CR' : 'DR'} style={styles.heroAmount} weight="bold" />
-            </View>
-            <View style={styles.heroRangeBadge}>
-              <Text style={styles.heroRangeText}>{selectedRange === null ? 'ALL TIME' : `${selectedRange} DAYS`}</Text>
-            </View>
-          </View>
-
+        <View style={styles.controlCard}>
+          <Text style={styles.cardLabel}>CURRENCY</Text>
           <View style={styles.segmentRow}>
             {currencyKeys.map((currency) => {
               const active = currency === selectedCurrency;
@@ -275,6 +266,7 @@ export default function StatsScreen() {
             })}
           </View>
 
+          <Text style={[styles.cardLabel, { marginTop: 12 }]}>WINDOW</Text>
           <View style={styles.segmentRow}>
             {RANGE_OPTIONS.map((option) => {
               const active = option.value === selectedRange;
@@ -290,25 +282,37 @@ export default function StatsScreen() {
               );
             })}
           </View>
+        </View>
 
-          <View style={styles.kpiGrid}>
-            <View style={styles.kpiCard}>
-              <Text style={styles.kpiLabel}>IN</Text>
-              <MoneyText amount={summary.income} currency={selectedCurrency} type="CR" style={styles.kpiValue} weight="bold" />
+        <View style={styles.snapshotCard}>
+          <View style={styles.snapshotTopRow}>
+            <View>
+              <Text style={styles.snapshotKicker}>NET POSITION</Text>
+              <MoneyText amount={summary.net} currency={selectedCurrency} type={summary.net >= 0 ? 'CR' : 'DR'} style={styles.snapshotAmount} weight="bold" />
             </View>
-            <View style={styles.kpiCard}>
-              <Text style={styles.kpiLabel}>OUT</Text>
-              <MoneyText amount={summary.expense} currency={selectedCurrency} type="DR" style={styles.kpiValue} weight="bold" />
+            <View style={styles.rangeBadge}>
+              <Text style={styles.rangeBadgeText}>{selectedRange === null ? 'ALL TIME' : `${selectedRange} DAYS`}</Text>
             </View>
-            <View style={styles.kpiCard}>
-              <Text style={styles.kpiLabel}>BALANCE</Text>
-              <MoneyText amount={summary.balance} currency={selectedCurrency} style={styles.kpiValue} weight="bold" />
+          </View>
+
+          <View style={styles.snapshotGrid}>
+            <View style={styles.snapshotCell}>
+              <Text style={styles.snapshotLabel}>INCOME</Text>
+              <MoneyText amount={summary.income} currency={selectedCurrency} type="CR" style={styles.snapshotValue} weight="bold" />
+            </View>
+            <View style={styles.snapshotCell}>
+              <Text style={styles.snapshotLabel}>EXPENSE</Text>
+              <MoneyText amount={summary.expense} currency={selectedCurrency} type="DR" style={styles.snapshotValue} weight="bold" />
+            </View>
+            <View style={styles.snapshotCell}>
+              <Text style={styles.snapshotLabel}>BALANCE</Text>
+              <MoneyText amount={summary.balance} currency={selectedCurrency} style={styles.snapshotValue} weight="bold" />
             </View>
           </View>
         </View>
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>PRACTICAL METRICS</Text>
+          <Text style={styles.sectionTitle}>PRACTICAL INSIGHTS</Text>
           <Text style={styles.sectionHint}>{selectedCurrency}</Text>
         </View>
         <View style={styles.sectionCard}>
@@ -333,39 +337,50 @@ export default function StatsScreen() {
         </View>
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>PERIOD COMPARISON</Text>
+          <Text style={styles.sectionTitle}>PERIOD DELTA</Text>
           <Text style={styles.sectionHint}>{selectedRange === null ? 'Unavailable for ALL' : `vs previous ${selectedRange}D`}</Text>
         </View>
         <View style={styles.sectionCard}>
           {comparison ? (
-            <View style={styles.metricGrid}>
-              <View style={styles.metricCell}>
-                <Text style={styles.metricLabel}>INCOME DELTA</Text>
+            <View style={styles.deltaList}>
+              <View style={styles.deltaRow}>
+                <View style={styles.deltaMeta}>
+                  <Ionicons name={comparison.deltaIncome >= 0 ? 'arrow-up' : 'arrow-down'} size={14} color={comparison.deltaIncome >= 0 ? colors.success : colors.danger} />
+                  <Text style={styles.deltaLabel}>INCOME</Text>
+                </View>
                 <MoneyText
                   amount={Math.abs(comparison.deltaIncome)}
                   currency={selectedCurrency}
                   type={comparison.deltaIncome >= 0 ? 'CR' : 'DR'}
-                  style={styles.metricValue}
+                  style={styles.deltaValue}
                   weight="bold"
                 />
               </View>
-              <View style={styles.metricCell}>
-                <Text style={styles.metricLabel}>EXPENSE DELTA</Text>
+
+              <View style={styles.deltaRow}>
+                <View style={styles.deltaMeta}>
+                  <Ionicons name={comparison.deltaExpense <= 0 ? 'arrow-down' : 'arrow-up'} size={14} color={comparison.deltaExpense <= 0 ? colors.success : colors.danger} />
+                  <Text style={styles.deltaLabel}>EXPENSE</Text>
+                </View>
                 <MoneyText
                   amount={Math.abs(comparison.deltaExpense)}
                   currency={selectedCurrency}
                   type={comparison.deltaExpense <= 0 ? 'CR' : 'DR'}
-                  style={styles.metricValue}
+                  style={styles.deltaValue}
                   weight="bold"
                 />
               </View>
-              <View style={styles.metricCell}>
-                <Text style={styles.metricLabel}>NET DELTA</Text>
+
+              <View style={styles.deltaRow}>
+                <View style={styles.deltaMeta}>
+                  <Ionicons name={comparison.deltaNet >= 0 ? 'trending-up' : 'trending-down'} size={14} color={comparison.deltaNet >= 0 ? colors.success : colors.danger} />
+                  <Text style={styles.deltaLabel}>NET</Text>
+                </View>
                 <MoneyText
                   amount={Math.abs(comparison.deltaNet)}
                   currency={selectedCurrency}
                   type={comparison.deltaNet >= 0 ? 'CR' : 'DR'}
-                  style={styles.metricValue}
+                  style={styles.deltaValue}
                   weight="bold"
                 />
               </View>
@@ -378,10 +393,20 @@ export default function StatsScreen() {
         </View>
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>LAST 7 DAYS</Text>
+          <Text style={styles.sectionTitle}>7-DAY FLOW</Text>
           <Text style={styles.sectionHint}>Income vs expense</Text>
         </View>
         <View style={styles.sectionCard}>
+          <View style={styles.legendRow}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
+              <Text style={styles.legendText}>Income</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: colors.danger }]} />
+              <Text style={styles.legendText}>Expense</Text>
+            </View>
+          </View>
           {trendDays.map((day) => (
             <View key={day.date.toISOString()} style={styles.trendRow}>
               <View style={styles.trendDayWrap}>
@@ -589,51 +614,69 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   content: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 46,
   },
-  heroCard: {
-    padding: 20,
-    borderRadius: 24,
+  controlCard: {
+    padding: 16,
+    borderRadius: 18,
     backgroundColor: colors.surface,
-    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 14,
   },
-  heroTopRow: {
+  snapshotCard: {
+    padding: 18,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 18,
+  },
+  snapshotTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 18,
+    alignItems: 'center',
+    marginBottom: 14,
     gap: 12,
   },
-  heroKicker: {
+  snapshotKicker: {
     fontFamily: typography.fonts.semibold,
     color: colors.textMuted,
-    fontSize: 10,
-    letterSpacing: 1.5,
-    marginBottom: 8,
+    fontSize: 9,
+    letterSpacing: 1.4,
+    marginBottom: 6,
   },
-  heroAmount: {
-    fontSize: 34,
-    lineHeight: 38,
-    letterSpacing: -1.2,
+  snapshotAmount: {
+    fontSize: 32,
+    lineHeight: 36,
+    letterSpacing: -1,
   },
-  heroRangeBadge: {
+  rangeBadge: {
     height: 28,
     borderRadius: 999,
-    backgroundColor: colors.background + 'A6',
+    backgroundColor: colors.background + 'B3',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  heroRangeText: {
+  rangeBadgeText: {
     fontFamily: typography.fonts.semibold,
     color: colors.textMuted,
     fontSize: 10,
     letterSpacing: 1,
   },
+  cardLabel: {
+    fontFamily: typography.fonts.semibold,
+    color: colors.textMuted,
+    fontSize: 10,
+    letterSpacing: 1.2,
+    marginBottom: 8,
+  },
   segmentRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 10,
     flexWrap: 'wrap',
   },
   segmentPill: {
@@ -657,26 +700,27 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   segmentTextActive: {
     color: colors.background,
   },
-  kpiGrid: {
+  snapshotGrid: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 8,
+    gap: 8,
   },
-  kpiCard: {
+  snapshotCell: {
     flex: 1,
-    minHeight: 82,
-    borderRadius: 16,
+    minHeight: 78,
+    borderRadius: 14,
     backgroundColor: colors.background + '80',
-    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 10,
     justifyContent: 'space-between',
   },
-  kpiLabel: {
+  snapshotLabel: {
     fontFamily: typography.fonts.semibold,
     color: colors.textMuted,
     fontSize: 9,
-    letterSpacing: 1.2,
+    letterSpacing: 1,
   },
-  kpiValue: {
+  snapshotValue: {
     fontSize: 14,
   },
   sectionHeader: {
@@ -687,9 +731,9 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: typography.fonts.semibold,
-    color: colors.textMuted,
+    color: colors.text,
     fontSize: 10,
-    letterSpacing: 1.5,
+    letterSpacing: 1.2,
   },
   sectionHint: {
     fontFamily: typography.fonts.regular,
@@ -697,9 +741,11 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     fontSize: 11,
   },
   sectionCard: {
-    borderRadius: 20,
+    borderRadius: 18,
     backgroundColor: colors.surface,
     padding: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
     marginBottom: 22,
   },
   metricGrid: {
@@ -729,7 +775,55 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   metricPlainValue: {
     fontFamily: typography.fonts.amountBold,
     color: colors.text,
+    fontSize: 14,
+  },
+  deltaList: {
+    gap: 10,
+  },
+  deltaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.background + '80',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  deltaMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  deltaLabel: {
+    fontFamily: typography.fonts.semibold,
+    color: colors.textMuted,
+    fontSize: 11,
+    letterSpacing: 0.8,
+  },
+  deltaValue: {
     fontSize: 13,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    gap: 14,
+    marginBottom: 10,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  legendDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 7,
+  },
+  legendText: {
+    fontFamily: typography.fonts.medium,
+    color: colors.textMuted,
+    fontSize: 11,
   },
   trendRow: {
     flexDirection: 'row',
@@ -781,7 +875,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   listRowLast: {
     borderBottomWidth: 0,
-    paddingBottom: 0,
+    paddingBottom: 2,
   },
   listIcon: {
     width: 38,
