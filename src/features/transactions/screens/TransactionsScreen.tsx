@@ -280,7 +280,7 @@ export function TransactionsScreen() {
         showBack
         rightAction={(
           <TouchableOpacity style={styles.filterActionBtn} onPress={() => setShowFilterSheet(true)} activeOpacity={0.9}>
-            <Ionicons name="options-outline" size={18} color={colors.text} />
+            <Ionicons name="filter-outline" size={20} color={colors.text} />
             {activeFilterCount > 0 && (
               <View style={styles.filterBadge}>
                 <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
@@ -297,7 +297,7 @@ export function TransactionsScreen() {
         showsVerticalScrollIndicator={false}
         onEndReached={loadMore}
         onEndReachedThreshold={0.4}
-        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+        ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
         ListHeaderComponent={(
           <View style={styles.listHeader}>
             <KPICard
@@ -310,10 +310,9 @@ export function TransactionsScreen() {
 
             {activeFilterCount > 0 && (
               <View style={styles.activeFiltersRow}>
-                <Text style={styles.activeFiltersLabel}>FILTERS</Text>
+                <Text style={styles.activeFiltersLabel}>ACTIVE FILTERS</Text>
                 <TouchableOpacity style={styles.clearChip} onPress={clearFilters}>
-                  <Ionicons name="close" size={11} color={colors.background} />
-                  <Text style={styles.clearChipText}>Clear all</Text>
+                  <Text style={styles.clearChipText}>Clear All</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -357,10 +356,14 @@ export function TransactionsScreen() {
                 <Text style={styles.dayTitle}>{dateLabel}</Text>
                 <View style={styles.dayTotals}>
                   {dayTotal.in > 0 && (
-                    <MoneyText amount={dayTotal.in} type="CR" weight="bold" style={styles.dayTotalValue} />
+                    <Text style={[styles.dayTotalValue, { color: colors.success }]}>
+                      +<MoneyText amount={dayTotal.in} type="CR" weight="bold" />
+                    </Text>
                   )}
                   {dayTotal.out > 0 && (
-                    <MoneyText amount={dayTotal.out} type="DR" weight="bold" style={styles.dayTotalValue} />
+                    <Text style={[styles.dayTotalValue, { color: colors.danger }]}>
+                      -<MoneyText amount={dayTotal.out} type="DR" weight="bold" />
+                    </Text>
                   )}
                 </View>
               </View>
@@ -410,93 +413,109 @@ export function TransactionsScreen() {
               <Text style={styles.sheetTitle}>Filters</Text>
               {activeFilterCount > 0 && (
                 <TouchableOpacity style={styles.sheetClearBtn} onPress={clearFilters}>
-                  <Text style={styles.sheetClearBtnText}>Clear all</Text>
+                  <Text style={styles.sheetClearBtnText}>Reset</Text>
                 </TouchableOpacity>
               )}
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={styles.sheetLabel}>Type</Text>
-              <View style={styles.sheetChipsWrap}>
-                {([
-                  { key: 'ALL' as const, label: 'All', icon: 'list-outline' as const },
-                  { key: 'CR' as const, label: 'Income', icon: 'arrow-down-outline' as const },
-                  { key: 'DR' as const, label: 'Expense', icon: 'arrow-up-outline' as const },
-                ]).map((typeOption) => {
-                  const selected = typeFilter === typeOption.key;
-                  return (
-                    <TouchableOpacity
-                      key={typeOption.key}
-                      style={[styles.sheetChip, selected && styles.sheetChipActive]}
-                      onPress={() => setTypeFilter(typeOption.key)}
-                    >
-                      <Ionicons
-                        name={typeOption.icon}
-                        size={14}
-                        color={selected ? colors.background : colors.textMuted}
-                      />
-                      <Text style={[styles.sheetChipText, selected && styles.sheetChipTextActive]}>
-                        {typeOption.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.sheetScroll}>
+              <View style={styles.sheetSection}>
+                <Text style={styles.sheetLabel}>TYPE</Text>
+                <View style={styles.sheetGrid}>
+                  {([
+                    { key: 'ALL' as const, label: 'All', icon: 'list-outline' as const },
+                    { key: 'CR' as const, label: 'Income', icon: 'arrow-down-outline' as const },
+                    { key: 'DR' as const, label: 'Expense', icon: 'arrow-up-outline' as const },
+                  ]).map((typeOption) => {
+                    const selected = typeFilter === typeOption.key;
+                    return (
+                      <TouchableOpacity
+                        key={typeOption.key}
+                        style={[
+                          styles.sheetPill,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                          selected && { backgroundColor: colors.text, borderColor: colors.text }
+                        ]}
+                        onPress={() => setTypeFilter(typeOption.key)}
+                      >
+                        <Text style={[styles.sheetPillText, selected && { color: colors.background }]}>
+                          {typeOption.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
 
-              <Text style={styles.sheetLabel}>Account</Text>
-              <View style={styles.sheetChipsWrap}>
-                <TouchableOpacity
-                  style={[styles.sheetChip, accountFilterId === null && styles.sheetChipActive]}
-                  onPress={() => setAccountFilterId(null)}
-                >
-                  <Text style={[styles.sheetChipText, accountFilterId === null && styles.sheetChipTextActive]}>All</Text>
-                </TouchableOpacity>
-                {(accountsQuery.data ?? []).map((account) => {
-                  const selected = accountFilterId === account.id;
-                  const accColor = toHexColor(account.color);
-                  return (
-                    <TouchableOpacity
-                      key={account.id}
-                      style={[styles.sheetChip, selected && styles.sheetChipActive]}
-                      onPress={() => setAccountFilterId(account.id)}
-                    >
-                      {selected && <View style={[styles.sheetChipDot, { backgroundColor: accColor }]} />}
-                      <Text style={[styles.sheetChipText, selected && styles.sheetChipTextActive]}>{account.name}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
+              <View style={styles.sheetSection}>
+                <Text style={styles.sheetLabel}>ACCOUNT</Text>
+                <View style={styles.sheetGrid}>
+                  <TouchableOpacity
+                    style={[
+                      styles.sheetPill,
+                      { backgroundColor: colors.surface, borderColor: colors.border },
+                      accountFilterId === null && { backgroundColor: colors.text, borderColor: colors.text }
+                    ]}
+                    onPress={() => setAccountFilterId(null)}
+                  >
+                    <Text style={[styles.sheetPillText, accountFilterId === null && { color: colors.background }]}>All</Text>
+                  </TouchableOpacity>
+                  {(accountsQuery.data ?? []).map((account) => {
+                    const selected = accountFilterId === account.id;
+                    const accColor = toHexColor(account.color);
+                    return (
+                      <TouchableOpacity
+                        key={account.id}
+                        style={[
+                          styles.sheetPill,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                          selected && { backgroundColor: accColor, borderColor: accColor }
+                        ]}
+                        onPress={() => setAccountFilterId(account.id)}
+                      >
+                        <Text style={[styles.sheetPillText, selected && { color: colors.background }]}>{account.name}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
 
-              <Text style={[styles.sheetLabel, { marginTop: 16 }]}>Category</Text>
-              <View style={styles.sheetChipsWrap}>
-                <TouchableOpacity
-                  style={[styles.sheetChip, categoryFilterId === null && styles.sheetChipActive]}
-                  onPress={() => setCategoryFilterId(null)}
-                >
-                  <Text style={[styles.sheetChipText, categoryFilterId === null && styles.sheetChipTextActive]}>All</Text>
-                </TouchableOpacity>
-                {(categoriesQuery.data ?? []).map((category) => {
-                  const selected = categoryFilterId === category.id;
-                  return (
-                    <TouchableOpacity
-                      key={category.id}
-                      style={[styles.sheetChip, selected && styles.sheetChipActive]}
-                      onPress={() => setCategoryFilterId(category.id)}
-                    >
-                      <Text style={[styles.sheetChipText, selected && styles.sheetChipTextActive]}>{category.name}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
+              <View style={styles.sheetSection}>
+                <Text style={styles.sheetLabel}>CATEGORY</Text>
+                <View style={styles.sheetGrid}>
+                  <TouchableOpacity
+                    style={[
+                      styles.sheetPill,
+                      { backgroundColor: colors.surface, borderColor: colors.border },
+                      categoryFilterId === null && { backgroundColor: colors.text, borderColor: colors.text }
+                    ]}
+                    onPress={() => setCategoryFilterId(null)}
+                  >
+                    <Text style={[styles.sheetPillText, categoryFilterId === null && { color: colors.background }]}>All</Text>
+                  </TouchableOpacity>
+                  {(categoriesQuery.data ?? []).map((category) => {
+                    const selected = categoryFilterId === category.id;
+                    const catColor = toHexColor(category.color);
+                    return (
+                      <TouchableOpacity
+                        key={category.id}
+                        style={[
+                          styles.sheetPill,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                          selected && { backgroundColor: catColor, borderColor: catColor }
+                        ]}
+                        onPress={() => setCategoryFilterId(category.id)}
+                      >
+                        <Text style={[styles.sheetPillText, selected && { color: colors.background }]}>{category.name}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
             </ScrollView>
 
             <TouchableOpacity style={styles.sheetApplyBtn} onPress={() => setShowFilterSheet(false)}>
-              <Text style={styles.sheetApplyBtnText}>Apply Filters</Text>
-              {activeFilterCount > 0 && (
-                <View style={styles.sheetApplyBadge}>
-                  <Text style={styles.sheetApplyBadgeText}>{activeFilterCount}</Text>
-                </View>
-              )}
+              <Text style={styles.sheetApplyBtnText}>Show {txCountQuery.data ?? 0} Transactions</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -510,7 +529,6 @@ const createStyles = (colors: ThemeColors) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-      overflow: 'hidden',
     },
     loadingWrap: {
       flex: 1,
@@ -519,9 +537,9 @@ const createStyles = (colors: ThemeColors) =>
       alignItems: 'center',
     },
     filterActionBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.border,
@@ -530,251 +548,250 @@ const createStyles = (colors: ThemeColors) =>
     },
     filterBadge: {
       position: 'absolute',
-      top: 5,
-      right: 5,
-      minWidth: 16,
-      height: 16,
-      borderRadius: 8,
-      paddingHorizontal: 4,
+      top: 0,
+      right: 0,
+      minWidth: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: colors.primary,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.primary,
+      borderWidth: 2,
+      borderColor: colors.background,
     },
     filterBadgeText: {
       color: colors.background,
       fontFamily: typography.fonts.semibold,
-      fontSize: 9,
+      fontSize: 10,
     },
     content: {
       paddingHorizontal: 24,
+      paddingTop: 12,
       paddingBottom: 120,
     },
     listHeader: {
-      gap: 16,
-      paddingBottom: 16,
-    },
-    loadMoreWrap: {
-      paddingVertical: 20,
-      alignItems: 'center',
+      gap: 20,
+      marginBottom: 24,
     },
     activeFiltersRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginTop: -4,
     },
     activeFiltersLabel: {
       fontFamily: typography.fonts.semibold,
       fontSize: 10,
       color: colors.textMuted,
-      letterSpacing: 1.3,
+      letterSpacing: 1.5,
     },
     clearChip: {
-      flexDirection: 'row',
+      backgroundColor: colors.danger + '15',
+      paddingHorizontal: 12,
+      height: 28,
+      borderRadius: 14,
       alignItems: 'center',
-      gap: 5,
-      height: 26,
-      paddingHorizontal: 10,
-      borderRadius: 999,
-      backgroundColor: colors.danger,
+      justifyContent: 'center',
     },
     clearChipText: {
       fontFamily: typography.fonts.semibold,
       fontSize: 11,
-      color: colors.background,
+      color: colors.danger,
     },
-    daySection: { gap: 8 },
+    daySection: { gap: 12 },
     dayHeaderRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: 2,
+      paddingHorizontal: 4,
     },
     dayTitle: {
       color: colors.textMuted,
       fontFamily: typography.fonts.semibold,
       fontSize: 11,
-      letterSpacing: 1.1,
+      letterSpacing: 1.2,
       textTransform: 'uppercase',
     },
     dayTotals: {
       flexDirection: 'row',
-      gap: 10,
+      gap: 12,
     },
     dayTotalValue: {
+      fontFamily: typography.fonts.semibold,
       fontSize: 12,
     },
     dayCard: {
-      borderRadius: 18,
+      borderRadius: 24,
+      backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.border,
       overflow: 'hidden',
     },
     emptyWrap: {
-      paddingVertical: 40,
+      paddingVertical: 60,
       alignItems: 'center',
-      gap: 12,
+      gap: 16,
     },
     emptyIconBox: {
-      width: 64,
-      height: 64,
-      borderRadius: 20,
+      width: 80,
+      height: 80,
+      borderRadius: 28,
       backgroundColor: colors.surface,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
     },
     emptyTitle: {
       fontFamily: typography.fonts.semibold,
       color: colors.text,
-      fontSize: 16,
+      fontSize: 18,
     },
     emptySubtitle: {
       fontFamily: typography.fonts.regular,
       color: colors.textMuted,
       fontSize: 14,
       textAlign: 'center',
+      maxWidth: 240,
+      lineHeight: 20,
     },
     emptyAction: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
-      height: 44,
-      paddingHorizontal: 16,
-      borderRadius: 14,
+      gap: 10,
+      paddingHorizontal: 20,
+      height: 48,
+      borderRadius: 16,
       backgroundColor: colors.text,
       marginTop: 8,
     },
     emptyActionText: {
       fontFamily: typography.fonts.semibold,
       color: colors.background,
-      fontSize: 14,
+      fontSize: 15,
+    },
+    loadMoreWrap: {
+      paddingVertical: 32,
+      alignItems: 'center',
     },
     fab: {
       position: 'absolute',
-      bottom: 40,
+      bottom: 34,
       right: 24,
-      width: 56,
-      height: 56,
-      borderRadius: 28,
+      width: 64,
+      height: 64,
+      borderRadius: 32,
       backgroundColor: colors.text,
       alignItems: 'center',
       justifyContent: 'center',
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.2,
-      shadowRadius: 8,
-      elevation: 4,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 8,
     },
     sheetOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
+      backgroundColor: 'rgba(0,0,0,0.6)',
       justifyContent: 'flex-end',
     },
     sheetCard: {
-      backgroundColor: colors.surface,
-      borderTopLeftRadius: 32,
-      borderTopRightRadius: 32,
-      paddingHorizontal: 24,
+      backgroundColor: colors.background,
+      borderTopLeftRadius: 36,
+      borderTopRightRadius: 36,
       paddingBottom: 40,
-      maxHeight: '80%',
+      maxHeight: '85%',
     },
     sheetHandle: {
-      width: 40,
-      height: 4,
-      borderRadius: 2,
+      width: 48,
+      height: 5,
+      borderRadius: 3,
       backgroundColor: colors.border,
       alignSelf: 'center',
-      marginVertical: 12,
+      marginTop: 12,
+      marginBottom: 8,
     },
     sheetHeadRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 20,
+      paddingHorizontal: 28,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderColor: colors.border,
     },
     sheetTitle: {
       fontFamily: typography.fonts.heading,
-      fontSize: 24,
+      fontSize: 26,
       color: colors.text,
+      letterSpacing: -0.5,
     },
     sheetClearBtn: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 8,
-      backgroundColor: colors.danger + '1A',
+      paddingHorizontal: 16,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     sheetClearBtnText: {
       fontFamily: typography.fonts.semibold,
-      color: colors.danger,
-      fontSize: 13,
+      color: colors.text,
+      fontSize: 12,
+    },
+    sheetScroll: {
+      paddingHorizontal: 28,
+      paddingTop: 24,
+      paddingBottom: 100,
+    },
+    sheetSection: {
+      marginBottom: 28,
     },
     sheetLabel: {
       fontFamily: typography.fonts.semibold,
       fontSize: 10,
       color: colors.textMuted,
-      letterSpacing: 1.25,
-      marginBottom: 12,
+      letterSpacing: 1.5,
+      marginBottom: 16,
     },
-    sheetChipsWrap: {
+    sheetGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 10,
-      marginBottom: 24,
     },
-    sheetChip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 14,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: colors.background,
+    sheetPill: {
+      paddingHorizontal: 16,
+      height: 40,
+      borderRadius: 20,
       borderWidth: 1,
-      borderColor: colors.border,
-    },
-    sheetChipActive: {
-      backgroundColor: colors.text,
-      borderColor: colors.text,
-    },
-    sheetChipText: {
-      fontFamily: typography.fonts.medium,
-      fontSize: 13,
-      color: colors.textMuted,
-    },
-    sheetChipTextActive: {
-      color: colors.background,
-    },
-    sheetChipDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-    },
-    sheetApplyBtn: {
-      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 8,
-      height: 52,
+    },
+    sheetPillText: {
+      fontFamily: typography.fonts.medium,
+      fontSize: 14,
+      color: colors.text,
+    },
+    sheetApplyBtn: {
+      position: 'absolute',
+      bottom: 34,
+      left: 28,
+      right: 28,
+      height: 56,
       borderRadius: 18,
       backgroundColor: colors.text,
-      marginTop: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.2,
+      shadowRadius: 10,
+      elevation: 6,
     },
     sheetApplyBtnText: {
       fontFamily: typography.fonts.semibold,
       color: colors.background,
       fontSize: 16,
-    },
-    sheetApplyBadge: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      backgroundColor: colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    sheetApplyBadgeText: {
-      fontSize: 10,
-      color: colors.background,
-      fontFamily: typography.fonts.semibold,
     },
   });

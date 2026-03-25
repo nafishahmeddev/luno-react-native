@@ -20,21 +20,18 @@ export function Header({ title, subtitle, showBack, rightAction }: HeaderProps) 
 
   return (
     <View style={styles.container}>
-      {/* Left: back btn + title/subtitle */}
       <View style={styles.left}>
         {showBack && (
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.75}>
-            <Ionicons name="chevron-back" size={20} color={colors.text} />
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={20} color={colors.text} />
           </TouchableOpacity>
         )}
-
+        <View style={styles.titleBlock}>
+          <Text style={styles.title} numberOfLines={1}>{title}</Text>
+          {subtitle ? <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text> : null}
+        </View>
       </View>
-      <View style={styles.titleBlock}>
-        <Text style={styles.title}>{title}</Text>
-        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-      </View>
 
-      {/* Right action */}
       {rightAction ? (
         <View style={styles.rightActionWrap}>{rightAction}</View>
       ) : null}
@@ -46,45 +43,47 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 16,
     backgroundColor: 'transparent',
-    gap: 20
   },
   left: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 16,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: colors.border,
   },
   titleBlock: {
-    flex:1,
-    gap: 2,
+    flex: 1,
+    justifyContent: 'center',
   },
   title: {
     fontFamily: typography.fonts.heading,
     color: colors.text,
-    fontSize: 26,
-    letterSpacing: -0.8,
-    lineHeight: 30,
+    fontSize: 28,
+    letterSpacing: -1,
+    lineHeight: 32,
   },
   subtitle: {
     fontFamily: typography.fonts.regular,
     color: colors.textMuted,
     fontSize: 13,
     letterSpacing: 0.1,
+    marginTop: 2,
   },
   rightActionWrap: {
-    alignItems: 'flex-end',
     justifyContent: 'center',
   },
 });
