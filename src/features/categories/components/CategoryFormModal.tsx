@@ -9,10 +9,10 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Input } from '../../../components/ui/Input';
 import { CATEGORY_COLORS, CATEGORY_ICONS } from '../../../constants/picker';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { ThemeColors } from '../../../theme/colors';
@@ -35,8 +35,6 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const isEditing = !!category;
-  const iconCellSize = 48;
-  const swatchSize = iconCellSize;
 
   const { mutateAsync: createCategory } = useCreateCategory();
   const { mutateAsync: updateCategory } = useUpdateCategory();
@@ -141,17 +139,21 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
                 name="name"
                 rules={{ required: 'Category name is required' }}
                 render={({ field }) => (
-                  <Input
+                  <TextInput
                     value={field.value}
                     onChangeText={field.onChange}
                     onBlur={field.onBlur}
                     placeholder="Groceries"
+                    placeholderTextColor={colors.textMuted + '50'}
                     autoFocus={!isEditing}
-                    style={styles.formInput}
-                    error={errors.name?.message}
+                    style={styles.answerInput}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    returnKeyType="next"
                   />
                 )}
               />
+              <View style={[styles.answerLine, errors.name && styles.answerLineError]} />
 
               <Text style={[styles.label, styles.labelSpaced]}>Monthly Budget (Optional)</Text>
               <Controller
@@ -162,17 +164,19 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
                     !v.trim() || (!isNaN(parseFloat(v)) && parseFloat(v) >= 0) || 'Enter a valid budget',
                 }}
                 render={({ field }) => (
-                  <Input
+                  <TextInput
                     value={field.value}
                     onChangeText={field.onChange}
                     onBlur={field.onBlur}
                     placeholder="0.00"
+                    placeholderTextColor={colors.textMuted + '50'}
                     keyboardType="decimal-pad"
-                    style={styles.formInput}
-                    error={errors.budget?.message}
+                    style={[styles.answerInput, styles.answerInputAmount]}
+                    returnKeyType="done"
                   />
                 )}
               />
+              <View style={[styles.answerLine, errors.budget && styles.answerLineError]} />
             </View>
 
             <View style={styles.section}>
@@ -209,9 +213,13 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
                     key={item}
                     activeOpacity={0.9}
                     onPress={() => setIcon(item)}
-                    style={[styles.iconCell, { width: iconCellSize, height: iconCellSize }, icon === item && styles.iconCellActive]}
+                    style={[
+                      styles.iconCell,
+                      icon === item && { backgroundColor: colorHex, borderColor: colorHex },
+                      icon === item && styles.iconCellActive,
+                    ]}
                   >
-                    <Ionicons name={item as any} size={18} color={icon === item ? colorHex : colors.textMuted} />
+                    <Ionicons name={item as any} size={18} color={icon === item ? '#000100' : colors.text} />
                   </TouchableOpacity>
                 ))}
               </View>
@@ -227,11 +235,11 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
                     onPress={() => setColorHex(item)}
                     style={[
                       styles.colorCell,
-                      { backgroundColor: item, width: swatchSize, height: swatchSize },
+                      { backgroundColor: item },
                       colorHex === item && styles.colorCellActive,
                     ]}
                   >
-                    {colorHex === item ? <Ionicons name="checkmark" size={13} color="#FFF" /> : null}
+                    {colorHex === item ? <Ionicons name="checkmark" size={14} color="#000100" /> : null}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -335,17 +343,35 @@ const createStyles = (colors: ThemeColors) =>
     },
     label: {
       fontFamily: typography.fonts.semibold,
-      fontSize: 9,
+      fontSize: 13,
       color: colors.textMuted,
-      letterSpacing: 1.5,
-      marginBottom: 10,
-      textTransform: 'uppercase',
+      letterSpacing: 0.1,
+      marginBottom: 6,
     },
     labelSpaced: {
-      marginTop: 18,
+      marginTop: 16,
     },
-    formInput: {
-      height: 56,
+    answerInput: {
+      fontFamily: typography.fonts.heading,
+      fontSize: 28,
+      lineHeight: 34,
+      color: colors.text,
+      letterSpacing: -0.7,
+      paddingHorizontal: 0,
+      paddingVertical: 4,
+    },
+    answerInputAmount: {
+      fontFamily: typography.fonts.amountBold,
+      letterSpacing: 0,
+    },
+    answerLine: {
+      height: 2,
+      borderRadius: 999,
+      backgroundColor: colors.primary + '55',
+      marginTop: 4,
+    },
+    answerLineError: {
+      backgroundColor: colors.danger + '88',
     },
     typeRow: {
       flexDirection: 'row',
@@ -392,31 +418,28 @@ const createStyles = (colors: ThemeColors) =>
     iconGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 12,
+      gap: 10,
     },
     iconCell: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+      width: 46,
+      height: 46,
+      borderRadius: 23,
       borderWidth: 1,
       borderColor: colors.text + '10',
       backgroundColor: colors.background + 'B8',
       justifyContent: 'center',
       alignItems: 'center',
     },
-    iconCellActive: {
-      backgroundColor: colors.primary + '20',
-      borderColor: colors.primary,
-    },
+    iconCellActive: {},
     colorGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 12,
     },
     colorCell: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+      width: 34,
+      height: 34,
+      borderRadius: 17,
       borderWidth: 2,
       borderColor: 'transparent',
       justifyContent: 'center',
@@ -424,7 +447,7 @@ const createStyles = (colors: ThemeColors) =>
     },
     colorCellActive: {
       borderColor: colors.text,
-      transform: [{ scale: 1.1 }],
+      transform: [{ scale: 1.08 }],
     },
     footer: {
       paddingHorizontal: 24,

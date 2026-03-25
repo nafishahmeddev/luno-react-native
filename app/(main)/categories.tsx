@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurBackground } from '../../src/components/ui/BlurBackground';
 import { Header } from '../../src/components/ui/Header';
 import { MoneyText } from '../../src/components/ui/MoneyText';
+import { OptionsDialog } from '../../src/components/ui/OptionsDialog';
 import { Category } from '../../src/features/categories/api/categories';
 import { CategoryFormModal } from '../../src/features/categories/components/CategoryFormModal';
 import { useCategories, useDeleteCategory } from '../../src/features/categories/hooks/categories';
@@ -22,10 +23,19 @@ export default function CategoriesScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [activeType, setActiveType] = useState<'CR' | 'DR'>('DR');
+  const [query, setQuery] = useState('');
+  const [showManageDialog, setShowManageDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const filteredCategories = React.useMemo(() => {
-    return categories?.filter(cat => cat.type === activeType) || [];
-  }, [categories, activeType]);
+    const q = query.trim().toLowerCase();
+    return (
+      categories
+        ?.filter((cat) => cat.type === activeType)
+        .filter((cat) => (q ? cat.name.toLowerCase().includes(q) : true))
+        .sort((a, b) => b.expense - a.expense) || []
+    );
+  }, [categories, activeType, query]);
 
   const totals = React.useMemo(() => {
     const selected = filteredCategories;
@@ -49,42 +59,55 @@ export default function CategoriesScreen() {
   };
 
   const handleDelete = (id: number) => {
-    Alert.alert(
-      "Delete Category",
-      "Are you sure? This will delete the category and all associated transactions.",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: () => deleteCategory(id) }
-      ]
-    );
+    deleteCategory(id);
   };
+
+  const manageOptions = React.useMemo(() => {
+    if (!selectedCategory) return [];
+
+    return [
+      {
+        key: 'edit-category',
+        label: 'Edit category',
+        icon: 'create-outline' as const,
+        onPress: () => handleEdit(selectedCategory),
+      },
+      {
+        key: 'delete-category',
+        label: 'Delete category',
+        icon: 'trash-outline' as const,
+        destructive: true,
+        onPress: () => setShowDeleteDialog(true),
+      },
+    ];
+  }, [selectedCategory]);
 
   const renderItem = ({ item }: { item: Category }) => {
     const isOverBudget = item.budget > 0 && item.expense > item.budget;
     const catColor = item.color ? '#' + item.color.toString(16).padStart(6, '0') : colors.primary;
     const progress = item.budget > 0 ? Math.min((item.expense / item.budget) * 100, 100) : 0;
+    const hasBudget = item.budget > 0;
 
     return (
       <TouchableOpacity
         style={styles.categoryCard}
         onPress={() => handleEdit(item)}
         onLongPress={() => {
-          Alert.alert("Manage category", item.name, [
-            { text: "Cancel", style: "cancel" },
-            { text: "Edit", onPress: () => handleEdit(item) },
-            { text: "Delete", style: "destructive", onPress: () => handleDelete(item.id) },
-          ]);
+          setSelectedCategory(item);
+          setShowManageDialog(true);
         }}
-        delayLongPress={500}
+        delayLongPress={280}
         activeOpacity={0.92}
       >
+        <View style={[styles.leftAccent, { backgroundColor: catColor }]} />
+
         <View style={styles.cardTopRow}>
-          <View style={[styles.categoryIconBox, { backgroundColor: catColor + '1C' }]}> 
+          <View style={[styles.categoryIconBox, { backgroundColor: catColor + '1F' }]}> 
             <Ionicons name={item.icon as any || 'grid-outline'} size={20} color={catColor} />
           </View>
-          <View style={[styles.typeBadge, activeType === 'DR' ? styles.typeBadgeDanger : styles.typeBadgeSuccess]}>
-            <Text style={[styles.typeBadgeText, activeType === 'DR' ? styles.typeBadgeTextDanger : styles.typeBadgeTextSuccess]}>
-              {activeType === 'DR' ? 'EXPENSE' : 'INCOME'}
+          <View style={[styles.typeBadge, item.type === 'DR' ? styles.typeBadgeDanger : styles.typeBadgeSuccess]}>
+            <Text style={[styles.typeBadgeText, item.type === 'DR' ? styles.typeBadgeTextDanger : styles.typeBadgeTextSuccess]}>
+              {item.type === 'DR' ? 'EXPENSE' : 'INCOME'}
             </Text>
           </View>
         </View>
@@ -92,19 +115,19 @@ export default function CategoriesScreen() {
         <View style={styles.cardMainRow}>
           <View style={styles.cardInfo}>
             <Text style={styles.categoryName} numberOfLines={1}>{item.name}</Text>
-            <Text style={styles.categorySubtext}>Tap to edit • Hold for actions</Text>
+            <Text style={styles.categorySubtext}>{hasBudget ? `${Math.round(progress)}% budget used` : 'No monthly budget yet'}</Text>
           </View>
           <Ionicons name="ellipsis-horizontal" size={16} color={colors.textMuted} />
         </View>
 
-        <View style={styles.amountRow}>
+        <View style={styles.metricsRow}>
           <View style={styles.amountCol}>
-            <Text style={styles.amountLabel}>SPENT</Text>
+            <Text style={styles.amountLabel}>{item.type === 'DR' ? 'Spent' : 'Received'}</Text>
             <MoneyText amount={item.expense} style={styles.categoryValue} weight="bold" />
           </View>
           <View style={styles.amountCol}>
-            <Text style={styles.amountLabel}>BUDGET</Text>
-            {item.budget > 0 ? (
+            <Text style={styles.amountLabel}>Budget</Text>
+            {hasBudget ? (
               <MoneyText amount={item.budget} style={styles.budgetAmountText} />
             ) : (
               <Text style={styles.noBudgetText}>Not set</Text>
@@ -112,7 +135,7 @@ export default function CategoriesScreen() {
           </View>
         </View>
 
-        {item.budget > 0 && (
+        {hasBudget && (
           <View style={styles.progressContainer}>
             <View
               style={[
@@ -123,9 +146,14 @@ export default function CategoriesScreen() {
                 }
               ]}
             />
-            <Text style={[styles.progressText, isOverBudget && { color: colors.danger }]}>{Math.round(progress)}%</Text>
           </View>
         )}
+
+        <View style={styles.cardHintRow}>
+          <Text style={[styles.cardHint, isOverBudget && styles.cardHintDanger]}>
+            {isOverBudget ? 'Over budget, consider adjusting this category.' : 'Tap to edit, hold for more options.'}
+          </Text>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -140,41 +168,60 @@ export default function CategoriesScreen() {
         <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <View style={{ flex: 1 }}>
-          <View style={styles.heroWrap}>
-            <Text style={styles.heroKicker}>{activeType === 'DR' ? 'Expense Landscape' : 'Income Landscape'}</Text>
+          <View style={styles.heroCard}>
+            <Text style={styles.heroKicker}>Category Control</Text>
+            <Text style={styles.heroTitle}>{activeType === 'DR' ? 'Expense Categories' : 'Income Categories'}</Text>
+
             <View style={styles.heroStatsRow}>
-              <View style={styles.heroStatCol}>
-                <Text style={styles.heroStatLabel}>Categories</Text>
+              <View style={styles.heroStatTile}>
+                <Text style={styles.heroStatLabel}>Count</Text>
                 <Text style={styles.heroStatValue}>{totals.count}</Text>
               </View>
-              <View style={styles.heroStatCol}>
+              <View style={styles.heroStatTile}>
                 <Text style={styles.heroStatLabel}>{activeType === 'DR' ? 'Spent' : 'Received'}</Text>
                 <MoneyText amount={totals.spent} style={styles.heroStatMoney} weight="bold" />
               </View>
-              <View style={styles.heroStatCol}>
+              <View style={styles.heroStatTile}>
                 <Text style={styles.heroStatLabel}>Budget</Text>
                 <MoneyText amount={totals.budget} style={styles.heroStatMoney} weight="regular" />
               </View>
             </View>
-          </View>
 
-          <View style={styles.segmentedControl}>
-            <TouchableOpacity
-              style={[styles.segment, activeType === 'DR' && styles.segmentActive]}
-              onPress={() => setActiveType('DR')}
-              activeOpacity={0.9}
-            >
-              <Ionicons name="arrow-down-circle-outline" size={14} color={activeType === 'DR' ? colors.background : colors.textMuted} />
-              <Text style={[styles.segmentText, activeType === 'DR' && styles.segmentTextActive]}>EXPENSES</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.segment, activeType === 'CR' && styles.segmentActive]}
-              onPress={() => setActiveType('CR')}
-              activeOpacity={0.9}
-            >
-              <Ionicons name="arrow-up-circle-outline" size={14} color={activeType === 'CR' ? colors.background : colors.textMuted} />
-              <Text style={[styles.segmentText, activeType === 'CR' && styles.segmentTextActive]}>INCOME</Text>
-            </TouchableOpacity>
+            <View style={styles.controlRow}>
+              <TouchableOpacity
+                style={[styles.segmentPill, activeType === 'DR' && styles.segmentPillActive]}
+                onPress={() => setActiveType('DR')}
+                activeOpacity={0.9}
+              >
+                <Ionicons name="arrow-down-circle-outline" size={14} color={activeType === 'DR' ? colors.background : colors.textMuted} />
+                <Text style={[styles.segmentPillText, activeType === 'DR' && styles.segmentPillTextActive]}>Expenses</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.segmentPill, activeType === 'CR' && styles.segmentPillActive]}
+                onPress={() => setActiveType('CR')}
+                activeOpacity={0.9}
+              >
+                <Ionicons name="arrow-up-circle-outline" size={14} color={activeType === 'CR' ? colors.background : colors.textMuted} />
+                <Text style={[styles.segmentPillText, activeType === 'CR' && styles.segmentPillTextActive]}>Income</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.searchWrap}>
+              <Ionicons name="search-outline" size={16} color={colors.textMuted} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search categories"
+                placeholderTextColor={colors.textMuted}
+                style={styles.searchInput}
+              />
+              {query.length > 0 ? (
+                <TouchableOpacity onPress={() => setQuery('')} activeOpacity={0.85}>
+                  <Ionicons name="close-circle" size={16} color={colors.textMuted} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
           </View>
 
           <FlatList
@@ -188,9 +235,10 @@ export default function CategoriesScreen() {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Ionicons name="sparkles-outline" size={22} color={colors.textMuted} />
-                <Text style={styles.emptyText}>No {activeType === 'DR' ? 'expense' : 'income'} categories found.</Text>
+                <Text style={styles.emptyTitle}>Nothing here yet</Text>
+                <Text style={styles.emptyText}>No {activeType === 'DR' ? 'expense' : 'income'} categories match your current filter.</Text>
                 <TouchableOpacity style={styles.emptyBtn} onPress={handleCreate}>
-                  <Text style={styles.emptyBtnText}>Create First Category</Text>
+                  <Text style={styles.emptyBtnText}>Create category</Text>
                 </TouchableOpacity>
               </View>
             }
@@ -207,106 +255,180 @@ export default function CategoriesScreen() {
         onClose={() => setModalVisible(false)}
         category={selectedCategory || undefined}
       />
+
+      <OptionsDialog
+        visible={showManageDialog}
+        onClose={() => setShowManageDialog(false)}
+        title="Manage Category"
+        subtitle={selectedCategory?.name}
+        options={manageOptions}
+      />
+
+      <OptionsDialog
+        visible={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        title="Delete Category"
+        subtitle="This will delete the category and associated transactions."
+        closeLabel="Cancel"
+        options={selectedCategory ? [
+          {
+            key: 'confirm-delete-category',
+            label: 'Delete permanently',
+            icon: 'trash-outline',
+            destructive: true,
+            onPress: () => {
+              handleDelete(selectedCategory.id);
+              setSelectedCategory(null);
+            },
+          },
+        ] : []}
+      />
     </SafeAreaView>
   );
 }
 
 const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, overflow: 'hidden' },
-  bgCircle: {
-    position: 'absolute',
-    borderRadius: 999,
-  },
+
   listContent: {
     paddingHorizontal: 24,
-    paddingTop: 8,
+    paddingTop: 4,
     paddingBottom: 100,
   },
-  heroWrap: {
+
+  heroCard: {
     marginHorizontal: 24,
-    marginTop: 10,
-    marginBottom: 16,
-    borderRadius: 16,
-    padding: 14,
+    marginTop: 8,
+    marginBottom: 14,
+    borderRadius: 22,
+    padding: 16,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
   },
   heroKicker: {
+    fontFamily: typography.fonts.semibold,
+    color: colors.textMuted,
+    fontSize: 10,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  heroTitle: {
     fontFamily: typography.fonts.headingRegular,
     color: colors.text,
-    fontSize: 16,
-    letterSpacing: -0.2,
-    marginBottom: 10,
+    fontSize: 24,
+    letterSpacing: -0.6,
+    marginBottom: 12,
   },
   heroStatsRow: {
     flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
   },
-  heroStatCol: {
+
+  heroStatTile: {
     flex: 1,
+    borderRadius: 14,
+    backgroundColor: colors.background + 'B8',
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
   },
   heroStatLabel: {
     fontFamily: typography.fonts.medium,
     color: colors.textMuted,
-    fontSize: 10,
-    textTransform: 'uppercase',
+    fontSize: 9,
     letterSpacing: 1,
     marginBottom: 4,
+    textTransform: 'uppercase',
   },
   heroStatValue: {
-    fontFamily: typography.fonts.heading,
+    fontFamily: typography.fonts.headingRegular,
     color: colors.text,
-    fontSize: 20,
-    letterSpacing: -0.3,
+    fontSize: 22,
+    letterSpacing: -0.6,
   },
   heroStatMoney: {
-    fontSize: 14,
+    fontSize: 13,
   },
 
-  segmentedControl: {
+  controlRow: {
     flexDirection: 'row',
-    marginHorizontal: 24,
-    marginTop: 8,
-    marginBottom: 12,
-    height: 48,
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    padding: 4,
-    overflow: 'hidden',
+    gap: 8,
+    marginBottom: 10,
   },
-  segment: {
+
+  segmentPill: {
     flex: 1,
-    height: '100%',
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 6,
-    borderRadius: 8,
+    gap: 7,
+    borderRadius: 12,
+    backgroundColor: colors.background + 'B8',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  segmentActive: {
+
+  segmentPillActive: {
     backgroundColor: colors.text,
+    borderColor: colors.text,
   },
-  segmentText: {
+
+  segmentPillText: {
     fontFamily: typography.fonts.semibold,
     color: colors.textMuted,
-    fontSize: 11,
-    letterSpacing: 1.5,
+    fontSize: 12,
+    letterSpacing: 0.2,
   },
-  segmentTextActive: {
+
+  segmentPillTextActive: {
     color: colors.background,
   },
 
+  searchWrap: {
+    height: 46,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background + 'B8',
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  searchInput: {
+    flex: 1,
+    height: '100%',
+    fontFamily: typography.fonts.regular,
+    fontSize: 14,
+    color: colors.text,
+  },
+
   categoryCard: {
+    position: 'relative',
     width: '100%',
     backgroundColor: colors.surface,
-    borderRadius: 18,
+    borderRadius: 20,
     padding: 16,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: 12,
+    overflow: 'hidden',
   },
+
+  leftAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
+  },
+
   cardTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -314,12 +436,13 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     marginBottom: 10,
   },
   categoryIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 13,
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   typeBadge: {
     height: 24,
     borderRadius: 999,
@@ -349,83 +472,111 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+
   cardInfo: {
     flex: 1,
   },
+
   categoryName: {
     fontFamily: typography.fonts.headingRegular,
     color: colors.text,
-    fontSize: typography.sizes.lg,
-    letterSpacing: -0.2,
+    fontSize: 22,
+    letterSpacing: -0.5,
   },
+
   categorySubtext: {
     fontFamily: typography.fonts.regular,
     color: colors.textMuted,
     fontSize: 12,
     marginTop: 2,
   },
-  amountRow: {
+
+  metricsRow: {
     flexDirection: 'row',
     marginTop: 14,
-    marginBottom: 6,
+    marginBottom: 10,
   },
+
   amountCol: {
     flex: 1,
   },
+
   amountLabel: {
-    fontFamily: typography.fonts.medium,
+    fontFamily: typography.fonts.semibold,
     fontSize: 10,
     color: colors.textMuted,
     letterSpacing: 1,
     textTransform: 'uppercase',
     marginBottom: 4,
   },
+
   categoryValue: {
     fontFamily: typography.fonts.amountBold,
     color: colors.text,
-    fontSize: typography.sizes.md,
+    fontSize: 15,
   },
+
   budgetAmountText: {
     fontFamily: typography.fonts.amountRegular,
     color: colors.textMuted,
     fontSize: 13,
   },
+
   noBudgetText: {
     fontFamily: typography.fonts.regular,
     color: colors.textMuted,
     fontSize: 13,
   },
+
   progressContainer: {
-    height: 6,
+    height: 8,
     backgroundColor: colors.border,
     borderRadius: 999,
-    marginTop: 12,
+    marginTop: 2,
     overflow: 'hidden',
-    position: 'relative',
   },
+
   progressBar: {
     height: '100%',
   },
-  progressText: {
-    position: 'absolute',
-    top: -20,
-    right: 0,
-    fontFamily: typography.fonts.medium,
-    fontSize: 11,
+
+  cardHintRow: {
+    marginTop: 10,
+  },
+
+  cardHint: {
+    fontFamily: typography.fonts.regular,
+    fontSize: 12,
     color: colors.textMuted,
+  },
+
+  cardHintDanger: {
+    color: colors.danger,
   },
 
   emptyContainer: {
     paddingVertical: 60,
     alignItems: 'center',
   },
+
+  emptyTitle: {
+    fontFamily: typography.fonts.headingRegular,
+    color: colors.text,
+    fontSize: 20,
+    marginTop: 10,
+    letterSpacing: -0.4,
+  },
+
   emptyText: {
     fontFamily: typography.fonts.regular,
     color: colors.textMuted,
-    fontSize: typography.sizes.sm,
-    marginTop: 10,
+    fontSize: 13,
+    marginTop: 4,
     marginBottom: 14,
+    textAlign: 'center',
+    maxWidth: 260,
   },
+
   emptyBtn: {
     height: 38,
     borderRadius: 999,
@@ -446,9 +597,9 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     position: 'absolute',
     bottom: 24,
     right: 24,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',

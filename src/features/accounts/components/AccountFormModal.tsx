@@ -9,11 +9,11 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
 import { CurrencyPickerModal } from '../../../components/ui/CurrencyPickerModal';
-import { Input } from '../../../components/ui/Input';
 import { ACCOUNT_COLORS, ACCOUNT_ICONS } from '../../../constants/picker';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { ThemeColors } from '../../../theme/colors';
@@ -38,7 +38,6 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const isEditing = !!account;
-  const swatchSize = 48;
 
   const { mutateAsync: createAccount } = useCreateAccount();
   const { mutateAsync: updateAccount } = useUpdateAccount();
@@ -150,47 +149,61 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
                 name="name"
                 rules={{ required: 'Account name is required' }}
                 render={({ field }) => (
-                  <Input
+                  <TextInput
                     value={field.value}
                     onChangeText={field.onChange}
                     onBlur={field.onBlur}
                     placeholder="Main Wallet"
+                    placeholderTextColor={colors.textMuted + '50'}
                     autoFocus={!isEditing}
-                    style={styles.formInput}
-                    error={errors.name?.message}
+                    style={styles.answerInput}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    returnKeyType="next"
                   />
                 )}
               />
+              <View style={[styles.answerLine, errors.name && styles.answerLineError]} />
 
               <Text style={[styles.label, styles.labelSpaced]}>Holder Name</Text>
               <Controller
                 control={control}
                 name="holderName"
                 render={({ field }) => (
-                  <Input
+                  <TextInput
                     value={field.value}
                     onChangeText={field.onChange}
                     onBlur={field.onBlur}
                     placeholder="Account Holder"
-                    style={styles.formInput}
+                    placeholderTextColor={colors.textMuted + '50'}
+                    style={styles.answerInput}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    returnKeyType="next"
                   />
                 )}
               />
+              <View style={styles.answerLine} />
 
               <Text style={[styles.label, styles.labelSpaced]}>Account Number</Text>
               <Controller
                 control={control}
                 name="accountNumber"
                 render={({ field }) => (
-                  <Input
+                  <TextInput
                     value={field.value}
                     onChangeText={field.onChange}
                     onBlur={field.onBlur}
                     placeholder="IBAN / Account Number"
-                    style={styles.formInput}
+                    placeholderTextColor={colors.textMuted + '50'}
+                    style={styles.answerInput}
+                    autoCorrect={false}
+                    autoCapitalize="none"
+                    returnKeyType="next"
                   />
                 )}
               />
+              <View style={styles.answerLine} />
 
               {!isEditing && (
                 <>
@@ -203,17 +216,19 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
                         !v.trim() || (!isNaN(parseFloat(v)) && parseFloat(v) >= 0) || 'Enter a valid amount',
                     }}
                     render={({ field }) => (
-                      <Input
+                      <TextInput
                         value={field.value}
                         onChangeText={field.onChange}
                         onBlur={field.onBlur}
                         placeholder="0.00"
+                        placeholderTextColor={colors.textMuted + '50'}
                         keyboardType="decimal-pad"
-                        style={styles.formInput}
-                        error={errors.balance?.message}
+                        style={[styles.answerInput, styles.answerInputAmount]}
+                        returnKeyType="done"
                       />
                     )}
                   />
+                  <View style={[styles.answerLine, errors.balance && styles.answerLineError]} />
                 </>
               )}
             </View>
@@ -221,23 +236,19 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
             <View style={styles.section}>
               <Text style={styles.label}>Currency</Text>
               <TouchableOpacity
-                style={styles.currencySelector}
+                style={styles.currencyRow}
                 onPress={() => setShowCurrencyPicker(true)}
                 activeOpacity={0.85}
               >
-                <View style={styles.currencySelectorLeft}>
-                  <View style={styles.currencyCodeWrap}>
-                    <Text style={styles.currencyCodeText}>{currency}</Text>
-                  </View>
-                  <Text style={styles.currencySelectorValue}>{currency}</Text>
-                </View>
-                <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
+                <Text style={styles.currencyValue}>{currency}</Text>
+                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
               </TouchableOpacity>
+              <View style={styles.answerLine} />
             </View>
 
             <View style={styles.section}>
               <Text style={styles.label}>Icon</Text>
-              <View style={styles.colorGrid}>
+              <View style={styles.iconGrid}>
                 {ACCOUNT_ICONS.map((item) => (
                   <TouchableOpacity
                     key={item}
@@ -245,11 +256,11 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
                     onPress={() => setIconKey(item)}
                     style={[
                       styles.iconCell,
-                      { width: swatchSize, height: swatchSize },
+                      iconKey === item && { backgroundColor: colorHex, borderColor: colorHex },
                       iconKey === item && styles.iconCellActive,
                     ]}
                   >
-                    <Ionicons name={item as any} size={18} color={iconKey === item ? colorHex : colors.textMuted} />
+                    <Ionicons name={item as any} size={18} color={iconKey === item ? '#000100' : colors.text} />
                   </TouchableOpacity>
                 ))}
               </View>
@@ -265,11 +276,11 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
                     onPress={() => setColorHex(item)}
                     style={[
                       styles.colorCell,
-                      { backgroundColor: item, width: swatchSize, height: swatchSize },
+                      { backgroundColor: item },
                       colorHex === item && styles.colorCellActive,
                     ]}
                   >
-                    {colorHex === item ? <Ionicons name="checkmark" size={13} color="#FFF" /> : null}
+                    {colorHex === item ? <Ionicons name="checkmark" size={14} color="#000100" /> : null}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -380,54 +391,53 @@ const createStyles = (colors: ThemeColors) =>
     },
     label: {
       fontFamily: typography.fonts.semibold,
-      fontSize: 9,
+      fontSize: 13,
       color: colors.textMuted,
-      letterSpacing: 1.5,
-      marginBottom: 10,
-      textTransform: 'uppercase',
+      letterSpacing: 0.1,
+      marginBottom: 6,
     },
     labelSpaced: {
-      marginTop: 18,
+      marginTop: 16,
     },
-    formInput: {
-      height: 56,
+    answerInput: {
+      fontFamily: typography.fonts.heading,
+      fontSize: 28,
+      lineHeight: 34,
+      color: colors.text,
+      letterSpacing: -0.7,
+      paddingHorizontal: 0,
+      paddingVertical: 4,
     },
-    currencySelector: {
+    answerInputAmount: {
+      fontFamily: typography.fonts.amountBold,
+      letterSpacing: 0,
+    },
+    answerLine: {
+      height: 2,
+      borderRadius: 999,
+      backgroundColor: colors.primary + '55',
+      marginTop: 4,
+    },
+    answerLineError: {
+      backgroundColor: colors.danger + '88',
+    },
+    currencyRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      height: 56,
-      paddingHorizontal: 16,
-      borderRadius: 14,
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
+      paddingVertical: 6,
     },
-    currencySelectorLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-    },
-    currencyCodeWrap: {
-      height: 28,
-      paddingHorizontal: 8,
-      borderRadius: 8,
-      backgroundColor: colors.primary + '20',
-      borderWidth: 1,
-      borderColor: colors.primary + '40',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    currencyCodeText: {
-      fontFamily: typography.fonts.semibold,
-      fontSize: 11,
-      color: colors.primary,
-      letterSpacing: 0.5,
-    },
-    currencySelectorValue: {
-      fontFamily: typography.fonts.regular,
-      fontSize: 15,
+    currencyValue: {
+      fontFamily: typography.fonts.heading,
+      fontSize: 28,
+      lineHeight: 34,
       color: colors.text,
+      letterSpacing: -0.7,
+    },
+    iconGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
     },
     colorGrid: {
       flexDirection: 'row',
@@ -435,9 +445,9 @@ const createStyles = (colors: ThemeColors) =>
       gap: 12,
     },
     colorCell: {
-      width: 30,
-      height: 30,
-      borderRadius: 100,
+      width: 34,
+      height: 34,
+      borderRadius: 17,
       borderWidth: 2,
       borderColor: 'transparent',
       justifyContent: 'center',
@@ -445,22 +455,19 @@ const createStyles = (colors: ThemeColors) =>
     },
     colorCellActive: {
       borderColor: colors.text,
-      transform: [{ scale: 1.1 }],
+      transform: [{ scale: 1.08 }],
     },
     iconCell: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+      width: 46,
+      height: 46,
+      borderRadius: 23,
       borderWidth: 1,
       borderColor: colors.text + '10',
       backgroundColor: colors.background + 'B8',
       justifyContent: 'center',
       alignItems: 'center',
     },
-    iconCellActive: {
-      backgroundColor: colors.primary + '20',
-      borderColor: colors.primary,
-    },
+    iconCellActive: {},
     footer: {
       paddingHorizontal: 24,
       paddingTop: 10,
