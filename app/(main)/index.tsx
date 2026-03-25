@@ -153,7 +153,14 @@ export default function DashboardScreen() {
     }
   }, [topCategoryCurrencies, selectedCurrency, selectedTopCategoryCurrency]);
 
-  const topExpenseCategories = topExpenseCategoriesByCurrency[selectedTopCategoryCurrency] ?? [];
+  const topExpenseCategories = React.useMemo(
+    () => topExpenseCategoriesByCurrency[selectedTopCategoryCurrency] ?? [],
+    [topExpenseCategoriesByCurrency, selectedTopCategoryCurrency]
+  );
+  const topCategoryMaxAmount = React.useMemo(
+    () => topExpenseCategories.reduce((max, item) => (item.amount > max ? item.amount : max), 0),
+    [topExpenseCategories]
+  );
 
   const handleAccountLongPress = (acc: Account) => {
     Alert.alert('Manage Account', acc.name, [
@@ -385,25 +392,44 @@ export default function DashboardScreen() {
             </ScrollView>
           )}
 
+          {topExpenseCategories.length > 0 && (
+            <View style={styles.topCategoryHeaderRow}>
+              <Text style={styles.topCategoryHeaderLabel}>Most spent in {selectedTopCategoryCurrency}</Text>
+              <Text style={styles.topCategoryHeaderLabel}>Ranked</Text>
+            </View>
+          )}
+
           {topExpenseCategories.length > 0 ? (
             topExpenseCategories.map((category, idx) => {
               const isLast = idx === topExpenseCategories.length - 1;
               const accent = '#' + category.color.toString(16).padStart(6, '0');
+              const ratio = topCategoryMaxAmount > 0 ? category.amount / topCategoryMaxAmount : 0;
               return (
                 <View key={`${category.name}-${idx}`} style={[styles.topCategoryRow, isLast && styles.topCategoryRowLast]}>
                   <View style={styles.topCategoryLeft}>
-                    <View style={[styles.topCategoryIconWrap, { backgroundColor: accent + '1F' }]}>
-                      <Ionicons name={resolveIconName(category.icon, 'pricetag-outline')} size={15} color={accent} />
+                    <View style={styles.topCategoryRankBadge}>
+                      <Text style={styles.topCategoryRankText}>{idx + 1}</Text>
                     </View>
-                    <Text style={styles.topCategoryName} numberOfLines={1}>{category.name}</Text>
+                    <View style={[styles.topCategoryIconWrap, { backgroundColor: accent + '22' }]}> 
+                      <Ionicons name={resolveIconName(category.icon, 'pricetag-outline')} size={14} color={accent} />
+                    </View>
+                    <View style={styles.topCategoryMeta}>
+                      <Text style={styles.topCategoryName} numberOfLines={1}>{category.name}</Text>
+                      <View style={styles.topCategoryBarTrack}>
+                        <View style={[styles.topCategoryBarFill, { width: `${Math.max(8, ratio * 100)}%`, backgroundColor: accent }]} />
+                      </View>
+                    </View>
                   </View>
-                  <MoneyText
-                    amount={category.amount}
-                    currency={selectedTopCategoryCurrency}
-                    type="DR"
-                    weight="bold"
-                    style={styles.topCategoryAmount}
-                  />
+                  <View style={styles.topCategoryRight}>
+                    <MoneyText
+                      amount={category.amount}
+                      currency={selectedTopCategoryCurrency}
+                      type="DR"
+                      weight="bold"
+                      style={styles.topCategoryAmount}
+                    />
+                    <Text style={styles.topCategoryPercent}>{`${(ratio * 100).toFixed(0)}%`}</Text>
+                  </View>
                 </View>
               );
             })
@@ -872,6 +898,19 @@ const createStyles = (colors: ThemeColors, screenWidth: number) => StyleSheet.cr
     paddingTop: 10,
     paddingBottom: 6,
   },
+  topCategoryHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingTop: 4,
+    paddingBottom: 6,
+  },
+  topCategoryHeaderLabel: {
+    fontFamily: typography.fonts.regular,
+    color: colors.textMuted,
+    fontSize: 11,
+  },
   topCategoryTab: {
     height: 26,
     borderRadius: 999,
@@ -900,7 +939,7 @@ const createStyles = (colors: ThemeColors, screenWidth: number) => StyleSheet.cr
     justifyContent: 'space-between',
     gap: 12,
     paddingHorizontal: 14,
-    paddingVertical: 11,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -913,21 +952,61 @@ const createStyles = (colors: ThemeColors, screenWidth: number) => StyleSheet.cr
     alignItems: 'center',
     gap: 9,
   },
-  topCategoryIconWrap: {
-    width: 30,
-    height: 30,
+  topCategoryRankBadge: {
+    width: 20,
+    height: 20,
     borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background + 'AA',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  topCategoryRankText: {
+    fontFamily: typography.fonts.semibold,
+    color: colors.textMuted,
+    fontSize: 10,
+  },
+  topCategoryIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  topCategoryName: {
+  topCategoryMeta: {
     flex: 1,
+  },
+  topCategoryName: {
     fontFamily: typography.fonts.semibold,
     color: colors.text,
-    fontSize: 13,
+    fontSize: 12,
+    marginBottom: 5,
+  },
+  topCategoryBarTrack: {
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: colors.background + 'CC',
+    overflow: 'hidden',
+  },
+  topCategoryBarFill: {
+    height: '100%',
+    borderRadius: 999,
+    minWidth: 8,
+  },
+  topCategoryRight: {
+    minWidth: 88,
+    alignItems: 'flex-end',
   },
   topCategoryAmount: {
     fontSize: 13,
+    lineHeight: 15,
+  },
+  topCategoryPercent: {
+    marginTop: 3,
+    fontFamily: typography.fonts.regular,
+    color: colors.textMuted,
+    fontSize: 10,
   },
   topCategoryEmpty: {
     flexDirection: 'row',

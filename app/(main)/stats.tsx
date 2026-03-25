@@ -21,6 +21,28 @@ const RANGE_OPTIONS = [
 
 const WEEKDAY_FORMATTER = new Intl.DateTimeFormat(undefined, { weekday: 'short' });
 const DAY_FORMATTER = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
+const DATE_TIME_FORMATTER = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
+const resolveIconName = (raw: string | null | undefined, fallback: IoniconName): IoniconName => {
+  if (raw && raw in Ionicons.glyphMap) return raw as IoniconName;
+  if (raw) {
+    const outlined = `${raw}-outline`;
+    if (outlined in Ionicons.glyphMap) return outlined as IoniconName;
+  }
+  return fallback;
+};
+
+const computeFlow = (items: Array<{ type: 'CR' | 'DR'; amount: number }>) =>
+  items.reduce(
+    (accumulator, transaction) => {
+      if (transaction.type === 'CR') accumulator.income += transaction.amount;
+      else accumulator.expense += transaction.amount;
+      return accumulator;
+    },
+    { income: 0, expense: 0 },
+  );
 
 export default function StatsScreen() {
   const { colors } = useTheme();
@@ -64,17 +86,7 @@ export default function StatsScreen() {
   }, [accounts, selectedCurrency]);
 
   const summary = React.useMemo(() => {
-    const totals = filteredTransactions.reduce(
-      (accumulator, transaction) => {
-        if (transaction.type === 'CR') {
-          accumulator.income += transaction.amount;
-        } else {
-          accumulator.expense += transaction.amount;
-        }
-        return accumulator;
-      },
-      { income: 0, expense: 0 },
-    );
+    const totals = computeFlow(filteredTransactions as Array<{ type: 'CR' | 'DR'; amount: number }>);
 
     const balance = currencyAccounts.reduce((sum, account) => sum + account.balance, 0);
     const avgExpense = filteredTransactions.filter((transaction) => transaction.type === 'DR').length > 0
@@ -89,6 +101,49 @@ export default function StatsScreen() {
       avgExpense,
     };
   }, [filteredTransactions, currencyAccounts]);
+
+  const previousWindowTransactions = React.useMemo(() => {
+    if (selectedRange === null || !cutoffDate) return [];
+
+    const previousStart = new Date(cutoffDate);
+    previousStart.setDate(previousStart.getDate() - selectedRange);
+
+    return (transactions ?? []).filter((transaction) => {
+      if (transaction.account.currency !== selectedCurrency) return false;
+      const txDate = new Date(transaction.datetime);
+      return txDate >= previousStart && txDate < cutoffDate;
+    });
+  }, [transactions, selectedCurrency, selectedRange, cutoffDate]);
+
+  const previousSummary = React.useMemo(() => {
+    const totals = computeFlow(previousWindowTransactions as Array<{ type: 'CR' | 'DR'; amount: number }>);
+    return {
+      ...totals,
+      net: totals.income - totals.expense,
+    };
+  }, [previousWindowTransactions]);
+
+  const practicalMetrics = React.useMemo(() => {
+    const expenseCount = filteredTransactions.filter((transaction) => transaction.type === 'DR').length;
+    const coveredDays = selectedRange ?? Math.max(1, Math.ceil((Date.now() - new Date(filteredTransactions.at(-1)?.datetime ?? Date.now()).getTime()) / 86400000));
+    const dailyBurn = coveredDays > 0 ? summary.expense / coveredDays : 0;
+    const runwayDays = dailyBurn > 0 ? summary.balance / dailyBurn : null;
+    const savingsRate = summary.income > 0 ? summary.net / summary.income : 0;
+    const flowRatio = summary.expense > 0 ? summary.income / summary.expense : null;
+    const largestExpense = filteredTransactions
+      .filter((transaction) => transaction.type === 'DR')
+      .sort((a, b) => b.amount - a.amount)[0] ?? null;
+
+    return {
+      coveredDays,
+      dailyBurn,
+      runwayDays,
+      savingsRate,
+      flowRatio,
+      expenseCount,
+      largestExpense,
+    };
+  }, [filteredTransactions, selectedRange, summary]);
 
   const topCategories = React.useMemo(() => {
     const categoryMap = new Map<number, {
@@ -171,6 +226,14 @@ export default function StatsScreen() {
 
   const latestTransactions = React.useMemo(() => filteredTransactions.slice(0, 5), [filteredTransactions]);
 
+  const comparison = React.useMemo(() => {
+    if (selectedRange === null) return null;
+    const deltaIncome = summary.income - previousSummary.income;
+    const deltaExpense = summary.expense - previousSummary.expense;
+    const deltaNet = summary.net - previousSummary.net;
+    return { deltaIncome, deltaExpense, deltaNet };
+  }, [selectedRange, summary, previousSummary]);
+
   if (txLoading || accountsLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -252,6 +315,62 @@ export default function StatsScreen() {
               <MoneyText amount={summary.balance} currency={selectedCurrency} style={styles.kpiValue} weight="bold" />
             </View>
           </View>
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>PRACTICAL METRICS</Text>
+          <Text style={styles.sectionHint}>{selectedCurrency}</Text>
+        </View>
+        <View style={styles.sectionCard}>
+          <View style={styles.metricGrid}>
+            <View style={styles.metricCell}>
+              <Text style={styles.metricLabel}>AVG DAILY BURN</Text>
+              <MoneyText amount={practicalMetrics.dailyBurn} currency={selectedCurrency} type="DR" style={styles.metricValue} weight="bold" />
+            </View>
+            <View style={styles.metricCell}>
+              <Text style={styles.metricLabel}>SAVINGS RATE</Text>
+              <Text style={styles.metricPlainValue}>{`${(practicalMetrics.savingsRate * 100).toFixed(1)}%`}</Text>
+            </View>
+            <View style={styles.metricCell}>
+              <Text style={styles.metricLabel}>RUNWAY</Text>
+              <Text style={styles.metricPlainValue}>{practicalMetrics.runwayDays === null ? 'No burn' : `${Math.max(0, practicalMetrics.runwayDays).toFixed(0)} days`}</Text>
+            </View>
+            <View style={styles.metricCell}>
+              <Text style={styles.metricLabel}>IN/OUT RATIO</Text>
+              <Text style={styles.metricPlainValue}>{practicalMetrics.flowRatio === null ? 'N/A' : `${practicalMetrics.flowRatio.toFixed(2)}x`}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>PERIOD COMPARISON</Text>
+          <Text style={styles.sectionHint}>{selectedRange === null ? 'Unavailable for ALL' : `vs previous ${selectedRange}D`}</Text>
+        </View>
+        <View style={styles.sectionCard}>
+          {comparison ? (
+            <View style={styles.metricGrid}>
+              <View style={styles.metricCell}>
+                <Text style={styles.metricLabel}>INCOME DELTA</Text>
+                <MoneyText amount={Math.abs(comparison.deltaIncome)} currency={selectedCurrency} type={comparison.deltaIncome >= 0 ? 'CR' : 'DR'} style={styles.metricValue} weight="bold" />
+              </View>
+              <View style={styles.metricCell}>
+                <Text style={styles.metricLabel}>EXPENSE DELTA</Text>
+                <MoneyText amount={Math.abs(comparison.deltaExpense)} currency={selectedCurrency} type={comparison.deltaExpense <= 0 ? 'CR' : 'DR'} style={styles.metricValue} weight="bold" />
+              </View>
+              <View style={styles.metricCell}>
+                <Text style={styles.metricLabel}>NET DELTA</Text>
+                <MoneyText amount={Math.abs(comparison.deltaNet)} currency={selectedCurrency} type={comparison.deltaNet >= 0 ? 'CR' : 'DR'} style={styles.metricValue} weight="bold" />
+              </View>
+              <View style={styles.metricCell}>
+                <Text style={styles.metricLabel}>TRANSACTIONS</Text>
+                <Text style={styles.metricPlainValue}>{summary.count}</Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.emptyStateCompact}>
+              <Text style={styles.emptyText}>Switch from ALL to a fixed range (7D/30D/90D) to see period-over-period deltas.</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.sectionHeader}>
@@ -369,6 +488,45 @@ export default function StatsScreen() {
               <Ionicons name="receipt-outline" size={26} color={colors.textMuted} />
               <Text style={styles.emptyTitle}>No transactions in range</Text>
               <Text style={styles.emptyText}>Try switching the currency or widening the time range.</Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>LARGEST EXPENSE</Text>
+          <Text style={styles.sectionHint}>{practicalMetrics.expenseCount} expense entries</Text>
+        </View>
+        <View style={styles.sectionCard}>
+          {practicalMetrics.largestExpense ? (
+            <View style={styles.highlightRow}>
+              <View style={[styles.listIcon, { backgroundColor: colors.danger + '1A' }]}> 
+                <Ionicons
+                  name={resolveIconName(practicalMetrics.largestExpense.category.icon, 'pricetag-outline')}
+                  size={16}
+                  color={colors.danger}
+                />
+              </View>
+              <View style={styles.listBody}>
+                <View style={styles.listTopLine}>
+                  <Text style={styles.listTitle} numberOfLines={1}>
+                    {practicalMetrics.largestExpense.note || practicalMetrics.largestExpense.category.name}
+                  </Text>
+                  <MoneyText
+                    amount={practicalMetrics.largestExpense.amount}
+                    currency={selectedCurrency}
+                    type="DR"
+                    style={styles.listAmount}
+                    weight="bold"
+                  />
+                </View>
+                <Text style={styles.listMeta}>
+                  {practicalMetrics.largestExpense.account.name} · {DATE_TIME_FORMATTER.format(new Date(practicalMetrics.largestExpense.datetime))}
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.emptyStateCompact}>
+              <Text style={styles.emptyText}>No expense transactions in the selected range.</Text>
             </View>
           )}
         </View>
@@ -540,6 +698,35 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     padding: 14,
     marginBottom: 22,
   },
+  metricGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  metricCell: {
+    width: '47%',
+    minHeight: 74,
+    borderRadius: 14,
+    backgroundColor: colors.background + '80',
+    borderWidth: 1,
+    borderColor: colors.background + '40',
+    padding: 10,
+    justifyContent: 'space-between',
+  },
+  metricLabel: {
+    fontFamily: typography.fonts.semibold,
+    color: colors.textMuted,
+    fontSize: 9,
+    letterSpacing: 1,
+  },
+  metricValue: {
+    fontSize: 13,
+  },
+  metricPlainValue: {
+    fontFamily: typography.fonts.amountBold,
+    color: colors.text,
+    fontSize: 13,
+  },
   trendRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -639,6 +826,11 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 26,
   },
+  emptyStateCompact: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+  },
   emptyTitle: {
     fontFamily: typography.fonts.semibold,
     color: colors.text,
@@ -666,5 +858,10 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     width: 3,
     alignSelf: 'stretch',
     borderRadius: 999,
+  },
+  highlightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
 });
