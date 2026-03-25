@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurBackground } from '../../src/components/ui/BlurBackground';
+import { Header } from '../../src/components/ui/Header';
 import { MoneyText } from '../../src/components/ui/MoneyText';
 import { DEFAULT_CURRENCY } from '../../src/constants/currency';
 import { useAccounts } from '../../src/features/accounts/hooks/accounts';
@@ -47,7 +47,6 @@ const computeFlow = (items: { type: 'CR' | 'DR'; amount: number }[]) =>
 export default function StatsScreen() {
   const { colors } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const router = useRouter();
   const { data: transactions, isLoading: txLoading } = useTransactions();
   const { data: accounts, isLoading: accountsLoading } = useAccounts();
 
@@ -246,16 +245,7 @@ export default function StatsScreen() {
     <SafeAreaView style={styles.container}>
       <BlurBackground />
 
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton} onPress={() => router.back()} activeOpacity={0.85}>
-          <Ionicons name="chevron-back" size={20} color={colors.text} />
-        </TouchableOpacity>
-        <View style={styles.headerCopy}>
-          <Text style={styles.headerKicker}>ANALYTICS</Text>
-          <Text style={styles.headerTitle}>Stats</Text>
-        </View>
-        <View style={styles.headerButtonGhost} />
-      </View>
+      <Header title="Stats" showBack />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.heroCard}>
@@ -351,24 +341,38 @@ export default function StatsScreen() {
             <View style={styles.metricGrid}>
               <View style={styles.metricCell}>
                 <Text style={styles.metricLabel}>INCOME DELTA</Text>
-                <MoneyText amount={Math.abs(comparison.deltaIncome)} currency={selectedCurrency} type={comparison.deltaIncome >= 0 ? 'CR' : 'DR'} style={styles.metricValue} weight="bold" />
+                <MoneyText
+                  amount={Math.abs(comparison.deltaIncome)}
+                  currency={selectedCurrency}
+                  type={comparison.deltaIncome >= 0 ? 'CR' : 'DR'}
+                  style={styles.metricValue}
+                  weight="bold"
+                />
               </View>
               <View style={styles.metricCell}>
                 <Text style={styles.metricLabel}>EXPENSE DELTA</Text>
-                <MoneyText amount={Math.abs(comparison.deltaExpense)} currency={selectedCurrency} type={comparison.deltaExpense <= 0 ? 'CR' : 'DR'} style={styles.metricValue} weight="bold" />
+                <MoneyText
+                  amount={Math.abs(comparison.deltaExpense)}
+                  currency={selectedCurrency}
+                  type={comparison.deltaExpense <= 0 ? 'CR' : 'DR'}
+                  style={styles.metricValue}
+                  weight="bold"
+                />
               </View>
               <View style={styles.metricCell}>
                 <Text style={styles.metricLabel}>NET DELTA</Text>
-                <MoneyText amount={Math.abs(comparison.deltaNet)} currency={selectedCurrency} type={comparison.deltaNet >= 0 ? 'CR' : 'DR'} style={styles.metricValue} weight="bold" />
-              </View>
-              <View style={styles.metricCell}>
-                <Text style={styles.metricLabel}>TRANSACTIONS</Text>
-                <Text style={styles.metricPlainValue}>{summary.count}</Text>
+                <MoneyText
+                  amount={Math.abs(comparison.deltaNet)}
+                  currency={selectedCurrency}
+                  type={comparison.deltaNet >= 0 ? 'CR' : 'DR'}
+                  style={styles.metricValue}
+                  weight="bold"
+                />
               </View>
             </View>
           ) : (
             <View style={styles.emptyStateCompact}>
-              <Text style={styles.emptyText}>Switch from ALL to a fixed range (7D/30D/90D) to see period-over-period deltas.</Text>
+              <Text style={styles.emptyText}>Comparison requires a fixed date range.</Text>
             </View>
           )}
         </View>

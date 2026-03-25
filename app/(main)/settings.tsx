@@ -6,6 +6,7 @@ import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurBackground } from '../../src/components/ui/BlurBackground';
 import { ConfirmDialog } from '../../src/components/ui/ConfirmDialog';
+import { Header } from '../../src/components/ui/Header';
 import { OptionsDialog } from '../../src/components/ui/OptionsDialog';
 import { db } from '../../src/db/client';
 import { accounts, categories, payments } from '../../src/db/schema';
@@ -81,16 +82,7 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.container}>
       <BlurBackground />
 
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={21} color={colors.text} />
-        </TouchableOpacity>
-        <View style={styles.headerCopy}>
-          <Text style={styles.headerKicker}>CONTROL CENTER</Text>
-          <Text style={styles.headerTitle}>Settings</Text>
-        </View>
-        <View style={styles.headerBtnPlaceholder} />
-      </View>
+      <Header title="Settings" showBack />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.heroPanel}>
@@ -163,7 +155,9 @@ export default function SettingsScreen() {
           label: option.label,
           icon: option.icon,
           selected: (profile.theme || 'system') === option.value,
-          onPress: () => updateProfile({ theme: option.value }),
+          onPress: async () => {
+            await updateProfile({ theme: option.value });
+          },
         }))}
       />
 
@@ -171,11 +165,11 @@ export default function SettingsScreen() {
         visible={showResetConfirmDialog}
         onClose={() => setShowResetConfirmDialog(false)}
         title="Factory Reset"
-        message="This will permanently wipe all data. Accounts, categories, and payments will be destroyed."
-        confirmLabel="Wipe Everything"
+        message="This will permanently erase all local accounts, categories, transactions, and preferences."
+        confirmLabel="Erase Everything"
+        destructive
         onConfirm={runResetData}
       />
-
     </SafeAreaView>
   );
 }
@@ -185,48 +179,6 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     overflow: 'hidden',
-  },
-  bgCircle: {
-    position: 'absolute',
-    borderRadius: 999,
-  },
-  header: {
-    marginTop: 12,
-    marginBottom: 18,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-  },
-  headerBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerBtnPlaceholder: {
-    width: 44,
-  },
-  headerCopy: {
-    flex: 1,
-    paddingHorizontal: 14,
-  },
-  headerKicker: {
-    fontFamily: typography.fonts.semibold,
-    fontSize: 10,
-    color: colors.textMuted,
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  headerTitle: {
-    fontFamily: typography.fonts.headingRegular,
-    fontSize: 30,
-    color: colors.text,
-    letterSpacing: -0.9,
-    lineHeight: 34,
   },
   scrollContent: {
     paddingHorizontal: 24,

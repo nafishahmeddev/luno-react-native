@@ -15,6 +15,7 @@ import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurBackground } from '../../src/components/ui/BlurBackground';
 import { ConfirmDialog } from '../../src/components/ui/ConfirmDialog';
+import { Header } from '../../src/components/ui/Header';
 import { MoneyText } from '../../src/components/ui/MoneyText';
 import { useDeleteTransaction, useTransactions } from '../../src/features/transactions/hooks/transactions';
 import { useTheme } from '../../src/providers/ThemeProvider';
@@ -368,24 +369,21 @@ export default function TransactionsScreen() {
     <SafeAreaView style={styles.container}>
       <BlurBackground />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => router.back()} activeOpacity={0.9}>
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-        </TouchableOpacity>
-        <View style={styles.headerCopy}>
-          <Text style={styles.headerTitle}>Transactions</Text>
-          <Text style={styles.headerSubtitle}>{filteredTransactions.length} records</Text>
-        </View>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => setShowFilterSheet(true)} activeOpacity={0.9}>
-          <Ionicons name="options-outline" size={18} color={colors.text} />
-          {activeFilterCount > 0 && (
-            <View style={styles.filterBadge}>
-              <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
+      <Header
+        title="Transactions"
+        subtitle={`${filteredTransactions.length} records`}
+        showBack
+        rightAction={(
+          <TouchableOpacity style={styles.filterActionBtn} onPress={() => setShowFilterSheet(true)} activeOpacity={0.9}>
+            <Ionicons name="options-outline" size={18} color={colors.text} />
+            {activeFilterCount > 0 && (
+              <View style={styles.filterBadge}>
+                <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        )}
+      />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
@@ -644,38 +642,16 @@ const createStyles = (colors: ThemeColors) =>
       alignItems: 'center',
     },
 
-    /* ── Header ── */
-    header: {
-      marginTop: 12,
-      marginBottom: 12,
-      paddingHorizontal: 24,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    headerBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+    /* ── Header actions ── */
+    filterActionBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.border,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    headerCopy: { flex: 1 },
-    headerTitle: {
-      fontFamily: typography.fonts.heading,
-      fontSize: 30,
-      lineHeight: 32,
-      color: colors.text,
-      letterSpacing: -0.8,
-    },
-    headerSubtitle: {
-      marginTop: 2,
-      color: colors.textMuted,
-      fontFamily: typography.fonts.regular,
-      fontSize: 12,
     },
     filterBadge: {
       position: 'absolute',

@@ -5,6 +5,7 @@ import React from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ConfirmDialog } from '../../src/components/ui/ConfirmDialog';
+import { Header } from '../../src/components/ui/Header';
 import { MoneyText } from '../../src/components/ui/MoneyText';
 import { OptionsDialog } from '../../src/components/ui/OptionsDialog';
 import { DEFAULT_CURRENCY } from '../../src/constants/currency';
@@ -221,20 +222,20 @@ export default function DashboardScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
         {/* ── Header ── */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.greeting}>{getGreeting()}{profile.name ? `, ${profile.name.split(' ')[0]}` : ''}</Text>
-            <Text style={styles.brandName}>FINTRACKER.</Text>
-          </View>
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/(main)/stats')} activeOpacity={0.85}>
-              <Ionicons name="stats-chart-outline" size={18} color={colors.text} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/settings')} activeOpacity={0.85}>
-              <Ionicons name="settings-outline" size={19} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <Header
+          title="Dashboard"
+          subtitle={`${getGreeting()}${profile.name ? `, ${profile.name.split(' ')[0]}` : ''}`}
+          rightAction={(
+            <View style={styles.headerActions}>
+              <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/(main)/stats')} activeOpacity={0.85}>
+                <Ionicons name="stats-chart-outline" size={18} color={colors.text} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/settings')} activeOpacity={0.85}>
+                <Ionicons name="settings-outline" size={19} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+          )}
+        />
 
         {/* ── Hero balance card ── */}
         <View style={styles.heroCard}>
@@ -489,37 +490,16 @@ const createStyles = (colors: ThemeColors, screenWidth: number) => StyleSheet.cr
     paddingBottom: 110,
   },
 
-  /* ── Header ── */
-  header: {
-    marginTop: 12,
-    marginBottom: 20,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  headerLeft: { flex: 1 },
-  greeting: {
-    fontFamily: typography.fonts.regular,
-    color: colors.textMuted,
-    fontSize: 13,
-    marginBottom: 2,
-  },
-  brandName: {
-    fontFamily: typography.fonts.heading,
-    color: colors.text,
-    fontSize: 34,
-    letterSpacing: -1.2,
-  },
+  /* ── Header actions ── */
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',

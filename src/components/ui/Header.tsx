@@ -8,32 +8,33 @@ import { typography } from '../../theme/typography';
 
 export type HeaderProps = {
   title: string;
+  subtitle?: string;
   showBack?: boolean;
   rightAction?: React.ReactNode;
 };
 
-export function Header({ title, showBack, rightAction }: HeaderProps) {
+export function Header({ title, subtitle, showBack, rightAction }: HeaderProps) {
   const router = useRouter();
   const { colors } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={styles.container}>
-      {showBack ? (
-        <TouchableOpacity onPress={() => router.back()} style={styles.actionBtn}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.actionPlaceholder} />
-      )}
-
-      <Text style={styles.title}>{title}</Text>
+      <View style={styles.leftWrap}>
+        {showBack && (
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
+          </TouchableOpacity>
+        )}
+        <View style={styles.titleWrap}>
+          <Text style={styles.title}>{title}</Text>
+          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        </View>
+      </View>
 
       {rightAction ? (
-        <View style={styles.actionBtn}>{rightAction}</View>
-      ) : (
-        <View style={styles.actionPlaceholder} />
-      )}
+        <View style={styles.rightActionWrap}>{rightAction}</View>
+      ) : null}
     </View>
   );
 }
@@ -47,16 +48,33 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: 'transparent',
   },
+  leftWrap: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  titleWrap: {
+    flexShrink: 1,
+  },
   title: {
     fontFamily: typography.fonts.heading,
     color: colors.text,
-    fontSize: typography.sizes.xl,
+    fontSize: 26,
     letterSpacing: -0.5,
+    textAlign: 'left',
   },
-  actionBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  subtitle: {
+    marginTop: 1,
+    fontFamily: typography.fonts.regular,
+    color: colors.textMuted,
+    fontSize: 12,
+    textAlign: 'left',
+  },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
@@ -65,5 +83,12 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   actionPlaceholder: {
     width: 40,
+    height: 40,
+  },
+  rightActionWrap: {
+    minWidth: 40,
+    height: 40,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
 });

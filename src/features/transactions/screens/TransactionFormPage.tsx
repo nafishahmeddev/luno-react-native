@@ -3,18 +3,19 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurBackground } from '../../../components/ui/BlurBackground';
+import { Header } from '../../../components/ui/Header';
 import { accounts as accountsTable, categories as categoriesTable } from '../../../db/schema';
 import { useSettings } from '../../../providers/SettingsProvider';
 import { useTheme } from '../../../providers/ThemeProvider';
@@ -23,9 +24,9 @@ import { typography } from '../../../theme/typography';
 import { useAccounts } from '../../accounts/hooks/accounts';
 import { useCategories } from '../../categories/hooks/categories';
 import {
-    useCreateTransaction,
-    useTransactions,
-    useUpdateTransaction,
+  useCreateTransaction,
+  useTransactions,
+  useUpdateTransaction,
 } from '../hooks/transactions';
 
 type TransactionType = 'CR' | 'DR';
@@ -264,16 +265,11 @@ export function TransactionFormPage({ mode, transactionId }: Props) {
     <SafeAreaView style={styles.container}>
       <BlurBackground />
 
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton} onPress={() => router.back()} activeOpacity={0.9}>
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-        </TouchableOpacity>
-        <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>{isEditMode ? 'Edit Entry' : 'New Entry'}</Text>
-          <Text style={styles.headerSubtitle}>Record flow with precision</Text>
-        </View>
-        <View style={styles.headerButtonGhost} />
-      </View>
+      <Header
+        title={isEditMode ? 'Edit Entry' : 'New Entry'}
+        subtitle="Record flow with precision"
+        showBack
+      />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -350,14 +346,9 @@ export function TransactionFormPage({ mode, transactionId }: Props) {
               <DateTimePicker
                 value={transactionDateTime}
                 mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                display={Platform.OS === 'ios' ? 'inline' : 'default'}
                 onChange={onDatePicked}
               />
-              {Platform.OS === 'ios' && (
-                <TouchableOpacity style={styles.inlinePickerDone} onPress={() => setShowDatePicker(false)}>
-                  <Text style={styles.inlinePickerDoneText}>Done</Text>
-                </TouchableOpacity>
-              )}
             </View>
           )}
 
@@ -369,17 +360,12 @@ export function TransactionFormPage({ mode, transactionId }: Props) {
                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 onChange={onTimePicked}
               />
-              {Platform.OS === 'ios' && (
-                <TouchableOpacity style={styles.inlinePickerDone} onPress={() => setShowTimePicker(false)}>
-                  <Text style={styles.inlinePickerDoneText}>Done</Text>
-                </TouchableOpacity>
-              )}
             </View>
           )}
         </View>
 
         <View style={styles.sectionWrap}>
-          <Text style={styles.sectionLabel}>SOURCE ACCOUNT</Text>
+          <Text style={styles.sectionLabel}>ACCOUNT</Text>
           {accounts.length === 0 ? (
             <View style={styles.emptyPanel}>
               <Text style={styles.emptyTitle}>No accounts available</Text>
