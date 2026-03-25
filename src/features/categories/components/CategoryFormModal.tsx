@@ -3,7 +3,7 @@ import { BlurView } from '@sbaiahmed1/react-native-blur';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
-  KeyboardAvoidingView,
+  Keyboard,
   Modal,
   Platform,
   ScrollView,
@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CATEGORY_COLORS, CATEGORY_ICONS } from '../../../constants/picker';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { ThemeColors } from '../../../theme/colors';
@@ -33,8 +34,10 @@ export type CategoryFormModalProps = {
 
 export function CategoryFormModal({ visible, onClose, category }: CategoryFormModalProps) {
   const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const isEditing = !!category;
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   const { mutateAsync: createCategory } = useCreateCategory();
   const { mutateAsync: updateCategory } = useUpdateCategory();
@@ -42,6 +45,7 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
   const [type, setType] = useState<'CR' | 'DR'>('DR');
   const [icon, setIcon] = useState<string>(CATEGORY_ICONS[0]);
   const [colorHex, setColorHex] = useState<string>(CATEGORY_COLORS[0]);
+  const [footerHeight, setFooterHeight] = useState(96);
 
   const {
     control,
@@ -73,6 +77,23 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
     setColorHex(CATEGORY_COLORS[0]);
   }, [category, visible, reset]);
 
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => {
+      setIsKeyboardVisible(true);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
   const handleSave = handleSubmit(async (data) => {
     const payload = {
       name: data.name.trim(),
@@ -96,7 +117,7 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.overlay}>
+      <View style={styles.overlay}>
         <TouchableOpacity style={styles.backdrop} onPress={onClose} activeOpacity={1} />
 
         <View style={styles.sheet}>
@@ -131,7 +152,39 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
             </TouchableOpacity>
           </View>
 
-          <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={[
+              styles.content,
+              { paddingBottom: isKeyboardVisible ? 24 + insets.bottom : footerHeight + 12 },
+            ]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.section}>
+              <Text style={styles.label}>Type</Text>
+              <View style={styles.typeTabsRow}>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => !isEditing && setType('DR')}
+                  disabled={isEditing}
+                  style={[styles.typeTab, type === 'DR' && styles.typeTabActive]}
+                >
+                  <Text style={[styles.typeTabText, type === 'DR' && styles.typeTabTextActive]}>EXPENSE</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => !isEditing && setType('CR')}
+                  disabled={isEditing}
+                  style={[styles.typeTab, type === 'CR' && styles.typeTabActive]}
+                >
+                  <Text style={[styles.typeTabText, type === 'CR' && styles.typeTabTextActive]}>INCOME</Text>
+                </TouchableOpacity>
+              </View>
+              {isEditing && <Text style={styles.lockHint}>Type cannot be changed for existing categories</Text>}
+            </View>
+
             <View style={styles.section}>
               <Text style={styles.label}>Name</Text>
               <Controller
@@ -180,32 +233,6 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.label}>Type</Text>
-              <View style={styles.typeRow}>
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => !isEditing && setType('DR')}
-                  disabled={isEditing}
-                  style={[styles.typeBtn, type === 'DR' && styles.typeBtnDanger]}
-                >
-                  <Ionicons name="arrow-down-circle-outline" size={16} color={type === 'DR' ? colors.danger : colors.textMuted} />
-                  <Text style={[styles.typeBtnText, type === 'DR' && styles.typeBtnTextDanger]}>Expense</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => !isEditing && setType('CR')}
-                  disabled={isEditing}
-                  style={[styles.typeBtn, type === 'CR' && styles.typeBtnSuccess]}
-                >
-                  <Ionicons name="arrow-up-circle-outline" size={16} color={type === 'CR' ? colors.success : colors.textMuted} />
-                  <Text style={[styles.typeBtnText, type === 'CR' && styles.typeBtnTextSuccess]}>Income</Text>
-                </TouchableOpacity>
-              </View>
-              {isEditing && <Text style={styles.lockHint}>Type cannot be changed for existing categories</Text>}
-            </View>
-
-            <View style={styles.section}>
               <Text style={styles.label}>Icon</Text>
               <View style={styles.iconGrid}>
                 {CATEGORY_ICONS.map((item) => (
@@ -246,7 +273,14 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
             </View>
           </ScrollView>
 
-          <View style={styles.footer}>
+          <View
+            style={[
+              styles.footer,
+              { paddingBottom: Math.max(insets.bottom + 12, Platform.OS === 'ios' ? 36 : 22) },
+              isKeyboardVisible && styles.footerHidden,
+            ]}
+            onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}
+          >
             <TouchableOpacity
               activeOpacity={0.9}
               style={[styles.primaryBtn, !isValid && styles.primaryBtnDisabled]}
@@ -258,7 +292,7 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
@@ -330,6 +364,9 @@ const createStyles = (colors: ThemeColors) =>
       paddingTop: 10,
       paddingBottom: 20,
     },
+    scroll: {
+      flex: 1,
+    },
     section: {
       paddingBottom: 22,
       borderBottomWidth: 1,
@@ -373,41 +410,33 @@ const createStyles = (colors: ThemeColors) =>
     answerLineError: {
       backgroundColor: colors.danger + '88',
     },
-    typeRow: {
+    typeTabsRow: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      gap: 8,
+      gap: 6,
+      alignSelf: 'flex-start',
     },
-    typeBtn: {
-      flex: 1,
-      height: 56,
-      borderRadius: 14,
-      backgroundColor: colors.background + '88',
-      borderWidth: 1.5,
+    typeTab: {
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 999,
+      backgroundColor: colors.background + 'AA',
+      borderWidth: 1,
       borderColor: colors.border,
-      flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
     },
-    typeBtnDanger: {
-      backgroundColor: colors.danger + '12',
-      borderColor: colors.danger + '48',
+    typeTabActive: {
+      backgroundColor: colors.text,
+      borderColor: colors.text,
     },
-    typeBtnSuccess: {
-      backgroundColor: colors.success + '12',
-      borderColor: colors.success + '48',
-    },
-    typeBtnText: {
-      marginLeft: 6,
+    typeTabText: {
       fontFamily: typography.fonts.semibold,
-      fontSize: 12,
+      fontSize: 11,
       color: colors.textMuted,
+      letterSpacing: 0.4,
     },
-    typeBtnTextDanger: {
-      color: colors.danger,
-    },
-    typeBtnTextSuccess: {
-      color: colors.success,
+    typeTabTextActive: {
+      color: colors.background,
     },
     lockHint: {
       marginTop: 8,
@@ -450,9 +479,19 @@ const createStyles = (colors: ThemeColors) =>
       transform: [{ scale: 1.08 }],
     },
     footer: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
       paddingHorizontal: 24,
       paddingTop: 10,
       paddingBottom: Platform.OS === 'ios' ? 36 : 22,
+      backgroundColor: colors.background + 'F2',
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    footerHidden: {
+      display: 'none',
     },
     primaryBtn: {
       height: 56,

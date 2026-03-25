@@ -3,7 +3,7 @@ import { BlurView } from '@sbaiahmed1/react-native-blur';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
-  KeyboardAvoidingView,
+  Keyboard,
   Modal,
   Platform,
   ScrollView,
@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CurrencyPickerModal } from '../../../components/ui/CurrencyPickerModal';
 import { ACCOUNT_COLORS, ACCOUNT_ICONS } from '../../../constants/picker';
 import { useTheme } from '../../../providers/ThemeProvider';
@@ -36,8 +37,10 @@ export type AccountFormModalProps = {
 
 export function AccountFormModal({ visible, onClose, account }: AccountFormModalProps) {
   const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const isEditing = !!account;
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   const { mutateAsync: createAccount } = useCreateAccount();
   const { mutateAsync: updateAccount } = useUpdateAccount();
@@ -46,6 +49,7 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [colorHex, setColorHex] = useState<string>(ACCOUNT_COLORS[0]);
   const [iconKey, setIconKey] = useState<string>(ACCOUNT_ICONS[0]);
+  const [footerHeight, setFooterHeight] = useState(96);
 
   const {
     control,
@@ -81,6 +85,23 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
     setIconKey(ACCOUNT_ICONS[0]);
   }, [account, visible, reset]);
 
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => {
+      setIsKeyboardVisible(true);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
   const handleSave = handleSubmit(async (data) => {
     const payload = {
       name: data.name.trim(),
@@ -106,7 +127,7 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.overlay}>
+      <View style={styles.overlay}>
         <TouchableOpacity style={styles.backdrop} onPress={onClose} activeOpacity={1} />
 
         <View style={styles.sheet}>
@@ -141,7 +162,15 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
             </TouchableOpacity>
           </View>
 
-          <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={[
+              styles.content,
+              { paddingBottom: isKeyboardVisible ? 24 + insets.bottom : footerHeight + 12 },
+            ]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
             <View style={styles.section}>
               <Text style={styles.label}>Account Name</Text>
               <Controller
@@ -287,7 +316,14 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
             </View>
           </ScrollView>
 
-          <View style={styles.footer}>
+          <View
+            style={[
+              styles.footer,
+              { paddingBottom: Math.max(insets.bottom + 12, Platform.OS === 'ios' ? 36 : 22) },
+              isKeyboardVisible && styles.footerHidden,
+            ]}
+            onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}
+          >
             <TouchableOpacity
               activeOpacity={0.9}
               style={[styles.primaryBtn, !isValid && styles.primaryBtnDisabled]}
@@ -299,7 +335,7 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
 
       <CurrencyPickerModal
         visible={showCurrencyPicker}
@@ -377,6 +413,9 @@ const createStyles = (colors: ThemeColors) =>
       paddingHorizontal: 24,
       paddingTop: 10,
       paddingBottom: 20,
+    },
+    scroll: {
+      flex: 1,
     },
     section: {
       paddingBottom: 22,
@@ -469,9 +508,19 @@ const createStyles = (colors: ThemeColors) =>
     },
     iconCellActive: {},
     footer: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
       paddingHorizontal: 24,
       paddingTop: 10,
       paddingBottom: Platform.OS === 'ios' ? 36 : 22,
+      backgroundColor: colors.background + 'F2',
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    footerHidden: {
+      display: 'none',
     },
     primaryBtn: {
       height: 56,

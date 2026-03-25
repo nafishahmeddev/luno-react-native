@@ -37,17 +37,6 @@ export default function CategoriesScreen() {
     );
   }, [categories, activeType, query]);
 
-  const totals = React.useMemo(() => {
-    const selected = filteredCategories;
-    const spent = selected.reduce((sum, cat) => sum + cat.expense, 0);
-    const budget = selected.reduce((sum, cat) => sum + Math.max(cat.budget, 0), 0);
-    return {
-      count: selected.length,
-      spent,
-      budget,
-    };
-  }, [filteredCategories]);
-
   const handleCreate = () => {
     setSelectedCategory(null);
     setModalVisible(true);
@@ -172,21 +161,6 @@ export default function CategoriesScreen() {
             <Text style={styles.heroKicker}>Category Control</Text>
             <Text style={styles.heroTitle}>{activeType === 'DR' ? 'Expense Categories' : 'Income Categories'}</Text>
 
-            <View style={styles.heroStatsRow}>
-              <View style={styles.heroStatTile}>
-                <Text style={styles.heroStatLabel}>Count</Text>
-                <Text style={styles.heroStatValue}>{totals.count}</Text>
-              </View>
-              <View style={styles.heroStatTile}>
-                <Text style={styles.heroStatLabel}>{activeType === 'DR' ? 'Spent' : 'Received'}</Text>
-                <MoneyText amount={totals.spent} style={styles.heroStatMoney} weight="bold" />
-              </View>
-              <View style={styles.heroStatTile}>
-                <Text style={styles.heroStatLabel}>Budget</Text>
-                <MoneyText amount={totals.budget} style={styles.heroStatMoney} weight="regular" />
-              </View>
-            </View>
-
             <View style={styles.controlRow}>
               <TouchableOpacity
                 style={[styles.segmentPill, activeType === 'DR' && styles.segmentPillActive]}
@@ -298,10 +272,10 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
 
   heroCard: {
     marginHorizontal: 24,
-    marginTop: 8,
-    marginBottom: 14,
+    marginTop: 6,
+    marginBottom: 10,
     borderRadius: 22,
-    padding: 16,
+    padding: 14,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -317,41 +291,9 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   heroTitle: {
     fontFamily: typography.fonts.headingRegular,
     color: colors.text,
-    fontSize: 24,
-    letterSpacing: -0.6,
+    fontSize: 20,
+    letterSpacing: -0.4,
     marginBottom: 12,
-  },
-  heroStatsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
-  },
-
-  heroStatTile: {
-    flex: 1,
-    borderRadius: 14,
-    backgroundColor: colors.background + 'B8',
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-  },
-  heroStatLabel: {
-    fontFamily: typography.fonts.medium,
-    color: colors.textMuted,
-    fontSize: 9,
-    letterSpacing: 1,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-  },
-  heroStatValue: {
-    fontFamily: typography.fonts.headingRegular,
-    color: colors.text,
-    fontSize: 22,
-    letterSpacing: -0.6,
-  },
-  heroStatMoney: {
-    fontSize: 13,
   },
 
   controlRow: {
