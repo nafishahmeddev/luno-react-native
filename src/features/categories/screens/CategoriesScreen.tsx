@@ -6,14 +6,14 @@ import { BlurBackground } from '../../../components/ui/BlurBackground';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { Header } from '../../../components/ui/Header';
 import { OptionsDialog } from '../../../components/ui/OptionsDialog';
-import { Category } from '../api/categories';
-import { CategoryFormModal } from '../components/CategoryFormModal';
-import { CategoryCard } from '../components/CategoryCard';
-import { CategoryTypeSelector } from '../components/CategoryTypeSelector';
-import { useCategories, useDeleteCategory } from '../hooks/categories';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { ThemeColors } from '../../../theme/colors';
 import { typography } from '../../../theme/typography';
+import { Category } from '../api/categories';
+import { CategoryCard } from '../components/CategoryCard';
+import { CategoryFormModal } from '../components/CategoryFormModal';
+import { CategoryTypeSelector } from '../components/CategoryTypeSelector';
+import { useCategories, useDeleteCategory } from '../hooks/categories';
 
 export const CategoriesScreen = () => {
   const { colors } = useTheme();
@@ -88,10 +88,10 @@ export const CategoriesScreen = () => {
       ) : (
         <View style={{ flex: 1 }}>
           <View style={styles.filtersWrap}>
-            <CategoryTypeSelector 
-              activeType={activeType} 
-              onTypeChange={setActiveType} 
-              colors={colors} 
+            <CategoryTypeSelector
+              activeType={activeType}
+              onTypeChange={setActiveType}
+              colors={colors}
             />
 
             <View style={styles.searchWrap}>
@@ -120,15 +120,15 @@ export const CategoriesScreen = () => {
             data={filteredCategories}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item, index }) => (
-              <CategoryCard 
-                item={item} 
-                index={index} 
-                colors={colors} 
-                onPress={handleEdit} 
+              <CategoryCard
+                item={item}
+                index={index}
+                colors={colors}
+                onPress={handleEdit}
                 onLongPress={(cat) => {
                   setSelectedCategory(cat);
                   setShowManageDialog(true);
-                }} 
+                }}
               />
             )}
             numColumns={2}
@@ -239,7 +239,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
 
   emptyTitle: {
-    fontFamily: typography.fonts.headingRegular,
+    fontFamily: typography.fonts.semibold,
     color: colors.text,
     fontSize: 20,
     marginTop: 10,

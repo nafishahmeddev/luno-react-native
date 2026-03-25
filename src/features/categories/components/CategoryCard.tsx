@@ -1,9 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Category } from '../api/categories';
 import { ThemeColors } from '../../../theme/colors';
 import { typography } from '../../../theme/typography';
+import { Category } from '../api/categories';
 
 interface CategoryCardProps {
   item: Category;
@@ -37,7 +37,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
       <View style={[styles.cardGlow, { backgroundColor: catColor + '30' }]} />
 
       <View style={styles.cardTopRow}>
-        <View style={[styles.categoryIconBox, { backgroundColor: catColor + '22' }]}> 
+        <View style={[styles.categoryIconBox, { backgroundColor: catColor + '22' }]}>
           <Ionicons name={item.icon as any || 'grid-outline'} size={20} color={catColor} />
         </View>
         <View style={[styles.typeBadge, item.type === 'DR' ? styles.typeBadgeDanger : styles.typeBadgeSuccess]}>
