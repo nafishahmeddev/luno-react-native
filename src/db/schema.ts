@@ -1,4 +1,5 @@
-import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { relations, sql } from 'drizzle-orm';
+import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 export const accounts = sqliteTable('accounts', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -12,7 +13,13 @@ export const accounts = sqliteTable('accounts', {
   balance: real('balance').notNull().default(0),
   income: real('income').notNull().default(0),
   expense: real('expense').notNull().default(0),
+  createdAt: text('created_at').notNull().default(sql`(CURRENT_TIMESTAMP)`),
+  updatedAt: text('updated_at').notNull().default(sql`(CURRENT_TIMESTAMP)`),
 });
+
+export const accountsRelations = relations(accounts, ({ many }) => ({
+  payments: many(payments),
+}));
 
 export const categories = sqliteTable('categories', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -20,7 +27,13 @@ export const categories = sqliteTable('categories', {
   icon: text('icon').notNull().default('grid'),
   color: integer('color').notNull(),
   type: text('type', { enum: ['CR', 'DR'] }).notNull().default('DR'),
+  createdAt: text('created_at').notNull().default(sql`(CURRENT_TIMESTAMP)`),
+  updatedAt: text('updated_at').notNull().default(sql`(CURRENT_TIMESTAMP)`),
 });
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  payments: many(payments),
+}));
 
 export const payments = sqliteTable('payments', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -30,4 +43,21 @@ export const payments = sqliteTable('payments', {
   type: text('type', { enum: ['CR', 'DR'] }).notNull(),
   datetime: text('datetime').notNull(),
   note: text('note').notNull(),
-});
+  createdAt: text('created_at').notNull().default(sql`(CURRENT_TIMESTAMP)`),
+  updatedAt: text('updated_at').notNull().default(sql`(CURRENT_TIMESTAMP)`),
+}, (table) => ({
+  accountIdIdx: index('payments_account_id_idx').on(table.accountId),
+  categoryIdIdx: index('payments_category_id_idx').on(table.categoryId),
+  datetimeIdx: index('payments_datetime_idx').on(table.datetime),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  account: one(accounts, {
+    fields: [payments.accountId],
+    references: [accounts.id],
+  }),
+  category: one(categories, {
+    fields: [payments.categoryId],
+    references: [categories.id],
+  }),
+}));

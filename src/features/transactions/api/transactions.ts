@@ -1,4 +1,4 @@
-import { SQL, and, count, desc, eq } from 'drizzle-orm';
+import { SQL, and, count, desc, eq, sql } from 'drizzle-orm';
 import { db } from '../../../db/client';
 import { accounts, categories, payments } from '../../../db/schema';
 
@@ -22,6 +22,8 @@ export type TransactionListItem = {
   type: 'CR' | 'DR';
   datetime: string;
   note: string;
+  createdAt: string;
+  updatedAt: string;
   account: {
     id: number;
     name: string;
@@ -56,6 +58,8 @@ const TRANSACTION_LIST_SELECT = {
     icon: categories.icon,
     color: categories.color,
   },
+  createdAt: payments.createdAt,
+  updatedAt: payments.updatedAt,
 } as const;
 
 const buildWhere = (filters: TransactionFilters): SQL | undefined => {
@@ -91,14 +95,17 @@ export const getTransactionsCount = async (filters: TransactionFilters = {}) => 
   return row?.total ?? 0;
 };
 
-/** Keep the original full-fetch for use outside the paginated list (stats, etc.) */
-export const getTransactions = async (): Promise<TransactionListItem[]> => {
+/** Fetch recent transactions with limit and optional filters */
+export const getTransactions = async (limit: number = 10, filters: TransactionFilters = {}): Promise<TransactionListItem[]> => {
+  const where = buildWhere(filters);
   const result = await db
     .select(TRANSACTION_LIST_SELECT)
     .from(payments)
     .innerJoin(accounts, eq(payments.accountId, accounts.id))
     .innerJoin(categories, eq(payments.categoryId, categories.id))
-    .orderBy(desc(payments.datetime));
+    .where(where)
+    .orderBy(desc(payments.datetime))
+    .limit(limit);
 
   return result;
 };
@@ -113,6 +120,8 @@ export const getTransactionById = async (id: number): Promise<Payment | null> =>
       type: payments.type,
       datetime: payments.datetime,
       note: payments.note,
+      createdAt: payments.createdAt,
+      updatedAt: payments.updatedAt,
     })
     .from(payments)
     .where(eq(payments.id, id))
@@ -125,23 +134,16 @@ export const createTransaction = async (data: InsertPayment) => {
   return await db.transaction(async (tx) => {
     const [payment] = await tx.insert(payments).values(data).returning();
     
-    const [account] = await tx.select().from(accounts).where(eq(accounts.id, data.accountId));
-    if (!account) throw new Error("Linked Account not found");
+    const balanceChange = data.type === 'CR' ? data.amount : -data.amount;
+    const incomeChange = data.type === 'CR' ? data.amount : 0;
+    const expenseChange = data.type === 'DR' ? data.amount : 0;
 
-    let newBalance = account.balance;
-    let newIncome = account.income;
-    let newExpense = account.expense;
-    
-    if (data.type === 'CR') {
-      newBalance += data.amount;
-      newIncome += data.amount;
-    } else if (data.type === 'DR') {
-      newBalance -= data.amount;
-      newExpense += data.amount;
-    }
-    
     await tx.update(accounts)
-      .set({ balance: newBalance, income: newIncome, expense: newExpense })
+      .set({ 
+        balance: sql`${accounts.balance} + ${balanceChange}`,
+        income: sql`${accounts.income} + ${incomeChange}`,
+        expense: sql`${accounts.expense} + ${expenseChange}`
+      })
       .where(eq(accounts.id, data.accountId));
       
     return payment;
@@ -153,65 +155,53 @@ export const deleteTransaction = async (id: number) => {
     const [payment] = await tx.select().from(payments).where(eq(payments.id, id));
     if (!payment) return null;
     
-    const [account] = await tx.select().from(accounts).where(eq(accounts.id, payment.accountId));
-    
-    if (account) {
-      let newBalance = account.balance;
-      let newIncome = account.income;
-      let newExpense = account.expense;
+    const balanceChange = payment.type === 'CR' ? -payment.amount : payment.amount;
+    const incomeChange = payment.type === 'CR' ? -payment.amount : 0;
+    const expenseChange = payment.type === 'DR' ? -payment.amount : 0;
+
+    await tx.update(accounts)
+      .set({ 
+        balance: sql`${accounts.balance} + ${balanceChange}`,
+        income: sql`${accounts.income} + ${incomeChange}`,
+        expense: sql`${accounts.expense} + ${expenseChange}`
+      })
+      .where(eq(accounts.id, payment.accountId));
       
-      if (payment.type === 'CR') {
-        newBalance -= payment.amount;
-        newIncome -= payment.amount;
-      } else if (payment.type === 'DR') {
-        newBalance += payment.amount;
-        newExpense -= payment.amount;
-      }
-      
-      await tx.update(accounts)
-        .set({ balance: newBalance, income: newIncome, expense: newExpense })
-        .where(eq(accounts.id, payment.accountId));
-    }
-      
-    const result = await tx.delete(payments).where(eq(payments.id, id));
-    return result;
+    return await tx.delete(payments).where(eq(payments.id, id));
   });
 };
 
 export const updateTransaction = async (id: number, data: UpdatePayment) => {
   return await db.transaction(async (tx) => {
-    // Fetch existing payment to know the old account + amount + type
     const [oldPayment] = await tx.select().from(payments).where(eq(payments.id, id));
     if (!oldPayment) throw new Error('Transaction not found');
 
-    // Reverse old impact on old account
-    const [oldAccount] = await tx.select().from(accounts).where(eq(accounts.id, oldPayment.accountId));
-    if (oldAccount) {
-      let { balance, income, expense } = oldAccount;
-      if (oldPayment.type === 'CR') {
-        balance -= oldPayment.amount;
-        income -= oldPayment.amount;
-      } else {
-        balance += oldPayment.amount;
-        expense -= oldPayment.amount;
-      }
-      await tx.update(accounts).set({ balance, income, expense }).where(eq(accounts.id, oldPayment.accountId));
-    }
+    // Reverse old impact
+    const oldBalanceChange = oldPayment.type === 'CR' ? -oldPayment.amount : oldPayment.amount;
+    const oldIncomeChange = oldPayment.type === 'CR' ? -oldPayment.amount : 0;
+    const oldExpenseChange = oldPayment.type === 'DR' ? -oldPayment.amount : 0;
 
-    // Apply new impact on (possibly different) account
-    const [newAccount] = await tx.select().from(accounts).where(eq(accounts.id, data.accountId));
-    if (!newAccount) throw new Error('Account not found');
-    let { balance, income, expense } = newAccount;
-    if (data.type === 'CR') {
-      balance += data.amount;
-      income += data.amount;
-    } else {
-      balance -= data.amount;
-      expense += data.amount;
-    }
-    await tx.update(accounts).set({ balance, income, expense }).where(eq(accounts.id, data.accountId));
+    await tx.update(accounts)
+      .set({ 
+        balance: sql`${accounts.balance} + ${oldBalanceChange}`,
+        income: sql`${accounts.income} + ${oldIncomeChange}`,
+        expense: sql`${accounts.expense} + ${oldExpenseChange}`
+      })
+      .where(eq(accounts.id, oldPayment.accountId));
 
-    // Persist updated payment fields
+    // Apply new impact
+    const newBalanceChange = data.type === 'CR' ? data.amount : -data.amount;
+    const newIncomeChange = data.type === 'CR' ? data.amount : 0;
+    const newExpenseChange = data.type === 'DR' ? data.amount : 0;
+
+    await tx.update(accounts)
+      .set({ 
+        balance: sql`${accounts.balance} + ${newBalanceChange}`,
+        income: sql`${accounts.income} + ${newIncomeChange}`,
+        expense: sql`${accounts.expense} + ${newExpenseChange}`
+      })
+      .where(eq(accounts.id, data.accountId));
+
     const [updated] = await tx.update(payments).set(data).where(eq(payments.id, id)).returning();
     return updated;
   });

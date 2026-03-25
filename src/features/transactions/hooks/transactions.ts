@@ -8,11 +8,11 @@ export const TRANSACTIONS_KEYS = {
   byId: (id: number) => ['transactions', 'by-id', id] as const,
 };
 
-/** Full fetch — used by stats screen */
-export const useTransactions = () => {
+/** Fetch recent transactions — used by stats screen or dashboard */
+export const useTransactions = (limit: number = 20, filters: api.TransactionFilters = {}) => {
   return useQuery({
-    queryKey: TRANSACTIONS_KEYS.all,
-    queryFn: api.getTransactions,
+    queryKey: [...TRANSACTIONS_KEYS.all, 'limited', limit, filters],
+    queryFn: () => api.getTransactions(limit, filters),
   });
 };
 
