@@ -15,16 +15,10 @@ export const ONBOARDING_STEPS: OnboardingStepDefinition[] = [
     subtitle: 'Your name becomes the holder default and personal context in the app.',
   },
   {
-    id: 'currency',
-    eyebrow: 'REGION',
-    title: 'Select your base currency.',
-    subtitle: 'Used as the default for onboarding account and new transactions.',
-  },
-  {
     id: 'account',
-    eyebrow: 'FIRST ACCOUNT',
-    title: 'Create your starting account.',
-    subtitle: 'No placeholders. We capture the complete first account setup here.',
+    eyebrow: 'YOUR FIRST ACCOUNT',
+    title: 'Now, your first account.',
+    subtitle: 'Answer a few quick questions and your starting wallet is ready.',
   },
 ];
 

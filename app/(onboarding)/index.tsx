@@ -17,7 +17,6 @@ import { Button } from '../../src/components/ui/Button';
 import { useCreateAccount } from '../../src/features/accounts/hooks/accounts';
 import { useCreateCategory } from '../../src/features/categories/hooks/categories';
 import { AccountStep } from '../../src/features/onboarding/components/AccountStep';
-import { CurrencyStep } from '../../src/features/onboarding/components/CurrencyStep';
 import { ProfileStep } from '../../src/features/onboarding/components/ProfileStep';
 import { WelcomeStep } from '../../src/features/onboarding/components/WelcomeStep';
 import {
@@ -45,7 +44,7 @@ export default function OnboardingScreen() {
   const [stepIndex, setStepIndex] = React.useState(0);
   const currentStep = ONBOARDING_STEPS[stepIndex];
 
-  const [defaultCurrency, setDefaultCurrency] = React.useState<string>(() => getDeviceCurrencyCode());
+  const [defaultCurrency] = React.useState<string>(() => getDeviceCurrencyCode());
   const [accountIcon, setAccountIcon] = React.useState<string>(ONBOARDING_ACCOUNT_ICONS[0]);
   const [accountColor, setAccountColor] = React.useState<string>(ONBOARDING_ACCOUNT_COLORS[0]);
 
@@ -197,8 +196,6 @@ export default function OnboardingScreen() {
         return <WelcomeStep />;
       case 'profile':
         return <ProfileStep />;
-      case 'currency':
-        return <CurrencyStep currency={defaultCurrency} onCurrencyChange={setDefaultCurrency} />;
       case 'account':
         return (
           <AccountStep
