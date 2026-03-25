@@ -14,6 +14,7 @@ import {
     View,
 } from 'react-native';
 import { Input } from '../../../components/ui/Input';
+import { CATEGORY_COLORS, CATEGORY_ICONS } from '../../../constants/picker';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { ThemeColors } from '../../../theme/colors';
 import { typography } from '../../../theme/typography';
@@ -31,38 +32,6 @@ export type CategoryFormModalProps = {
   category?: Category;
 };
 
-const ICONS = [
-  'grid-outline',
-  'fast-food-outline',
-  'cafe-outline',
-  'car-outline',
-  'bus-outline',
-  'airplane-outline',
-  'home-outline',
-  'medkit-outline',
-  'barbell-outline',
-  'book-outline',
-  'game-controller-outline',
-  'gift-outline',
-  'heart-outline',
-  'star-outline',
-] as const;
-
-const COLORS = [
-  '#00FFAA',
-  '#00F0FF',
-  '#8B5CF6',
-  '#EC4899',
-  '#F43F5E',
-  '#EAB308',
-  '#F97316',
-  '#10B981',
-  '#3B82F6',
-  '#64748B',
-  '#14B8A6',
-  '#F59E0B',
-] as const;
-
 export function CategoryFormModal({ visible, onClose, category }: CategoryFormModalProps) {
   const { colors, isDark } = useTheme();
   const { width } = useWindowDimensions();
@@ -75,8 +44,8 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
   const { mutateAsync: updateCategory } = useUpdateCategory();
 
   const [type, setType] = useState<'CR' | 'DR'>('DR');
-  const [icon, setIcon] = useState<string>(ICONS[0]);
-  const [colorHex, setColorHex] = useState<string>(COLORS[0]);
+  const [icon, setIcon] = useState<string>(CATEGORY_ICONS[0]);
+  const [colorHex, setColorHex] = useState<string>(CATEGORY_COLORS[0]);
 
   const {
     control,
@@ -97,15 +66,15 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
         budget: category.budget > 0 ? String(category.budget) : '',
       });
       setType(category.type);
-      setIcon(typeof category.icon === 'string' ? category.icon : ICONS[0]);
+      setIcon(typeof category.icon === 'string' ? category.icon : CATEGORY_ICONS[0]);
       setColorHex(`#${category.color.toString(16).padStart(6, '0').toUpperCase()}`);
       return;
     }
 
     reset({ name: '', budget: '' });
     setType('DR');
-    setIcon(ICONS[0]);
-    setColorHex(COLORS[0]);
+    setIcon(CATEGORY_ICONS[0]);
+    setColorHex(CATEGORY_COLORS[0]);
   }, [category, visible, reset]);
 
   const handleSave = handleSubmit(async (data) => {
@@ -237,7 +206,7 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
             <View style={styles.section}>
               <Text style={styles.label}>Icon</Text>
               <View style={styles.iconGrid}>
-                {ICONS.map((item) => (
+                {CATEGORY_ICONS.map((item) => (
                   <TouchableOpacity
                     key={item}
                     activeOpacity={0.9}
@@ -253,7 +222,7 @@ export function CategoryFormModal({ visible, onClose, category }: CategoryFormMo
             <View style={[styles.section, styles.sectionLast]}>
               <Text style={styles.label}>Color</Text>
               <View style={styles.colorGrid}>
-                {COLORS.map((item) => (
+                {CATEGORY_COLORS.map((item) => (
                   <TouchableOpacity
                     key={item}
                     activeOpacity={0.9}

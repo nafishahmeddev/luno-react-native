@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurBackground } from '../../src/components/ui/BlurBackground';
 import { Button } from '../../src/components/ui/Button';
+import { ACCOUNT_COLORS, ACCOUNT_ICONS } from '../../src/constants/picker';
 import { useCreateAccount } from '../../src/features/accounts/hooks/accounts';
 import { useCreateCategory } from '../../src/features/categories/hooks/categories';
 import { AccountStep } from '../../src/features/onboarding/components/AccountStep';
@@ -21,8 +22,6 @@ import { ProfileStep } from '../../src/features/onboarding/components/ProfileSte
 import { WelcomeStep } from '../../src/features/onboarding/components/WelcomeStep';
 import {
   getDeviceCurrencyCode,
-  ONBOARDING_ACCOUNT_COLORS,
-  ONBOARDING_ACCOUNT_ICONS,
   ONBOARDING_STEPS,
 } from '../../src/features/onboarding/constants';
 import { createOnboardingStyles } from '../../src/features/onboarding/styles';
@@ -45,8 +44,8 @@ export default function OnboardingScreen() {
   const currentStep = ONBOARDING_STEPS[stepIndex];
 
   const [defaultCurrency] = React.useState<string>(() => getDeviceCurrencyCode());
-  const [accountIcon, setAccountIcon] = React.useState<string>(ONBOARDING_ACCOUNT_ICONS[0]);
-  const [accountColor, setAccountColor] = React.useState<string>(ONBOARDING_ACCOUNT_COLORS[0]);
+  const [accountIcon, setAccountIcon] = React.useState<string>(ACCOUNT_ICONS[0]);
+  const [accountColor, setAccountColor] = React.useState<string>(ACCOUNT_COLORS[0]);
 
   const methods = useForm<OnboardingFormValues>({
     mode: 'onChange',

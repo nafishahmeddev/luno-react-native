@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { CurrencyPickerModal } from '../../../components/ui/CurrencyPickerModal';
 import { Input } from '../../../components/ui/Input';
+import { ACCOUNT_COLORS, ACCOUNT_ICONS } from '../../../constants/picker';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { ThemeColors } from '../../../theme/colors';
 import { typography } from '../../../theme/typography';
@@ -34,21 +35,6 @@ export type AccountFormModalProps = {
   account?: Account;
 };
 
-const COLORS = [
-  '#00FFAA',
-  '#00F0FF',
-  '#8B5CF6',
-  '#EC4899',
-  '#F43F5E',
-  '#EAB308',
-  '#F97316',
-  '#10B981',
-  '#3B82F6',
-  '#64748B',
-  '#14B8A6',
-  '#F59E0B',
-] as const;
-
 export function AccountFormModal({ visible, onClose, account }: AccountFormModalProps) {
   const { colors, isDark } = useTheme();
   const { width } = useWindowDimensions();
@@ -61,7 +47,8 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
 
   const [currency, setCurrency] = useState<string>('USD');
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
-  const [colorHex, setColorHex] = useState<string>(COLORS[0]);
+  const [colorHex, setColorHex] = useState<string>(ACCOUNT_COLORS[0]);
+  const [iconKey, setIconKey] = useState<string>(ACCOUNT_ICONS[0]);
 
   const {
     control,
@@ -85,12 +72,16 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
       });
       setCurrency(account.currency);
       setColorHex(`#${account.color.toString(16).padStart(6, '0').toUpperCase()}`);
+      // Re-attach '-outline' suffix so it matches the picker values
+      const matchedIcon = ACCOUNT_ICONS.find((i) => i === `${account.icon}-outline`) ?? ACCOUNT_ICONS[0];
+      setIconKey(matchedIcon);
       return;
     }
 
     reset({ name: '', holderName: '', accountNumber: '', balance: '' });
     setCurrency('USD');
-    setColorHex(COLORS[0]);
+    setColorHex(ACCOUNT_COLORS[0]);
+    setIconKey(ACCOUNT_ICONS[0]);
   }, [account, visible, reset]);
 
   const handleSave = handleSubmit(async (data) => {
@@ -101,6 +92,7 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
       balance: data.balance.trim() ? parseFloat(data.balance) : 0,
       currency,
       color: parseInt(colorHex.replace('#', ''), 16),
+      icon: iconKey.replace('-outline', ''),
     };
 
     try {
@@ -245,10 +237,30 @@ export function AccountFormModal({ visible, onClose, account }: AccountFormModal
               </TouchableOpacity>
             </View>
 
+            <View style={styles.section}>
+              <Text style={styles.label}>Icon</Text>
+              <View style={styles.colorGrid}>
+                {ACCOUNT_ICONS.map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    activeOpacity={0.9}
+                    onPress={() => setIconKey(item)}
+                    style={[
+                      styles.iconCell,
+                      { width: swatchSize, height: swatchSize },
+                      iconKey === item && { backgroundColor: colorHex + '33', borderColor: colorHex },
+                    ]}
+                  >
+                    <Ionicons name={item as any} size={18} color={iconKey === item ? colorHex : colors.textMuted} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
             <View style={[styles.section, styles.sectionLast]}>
               <Text style={styles.label}>Color</Text>
               <View style={styles.colorGrid}>
-                {COLORS.map((item) => (
+                {ACCOUNT_COLORS.map((item) => (
                   <TouchableOpacity
                     key={item}
                     activeOpacity={0.9}
@@ -435,6 +447,15 @@ const createStyles = (colors: ThemeColors) =>
     colorCellActive: {
       borderColor: colors.text,
       transform: [{ scale: 1.05 }],
+    },
+    iconCell: {
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: 'transparent',
+      backgroundColor: colors.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 8,
     },
     footer: {
       paddingHorizontal: 24,

@@ -203,13 +203,4 @@ export const getDeviceCurrencyCode = (): string => {
   return currencyCode ?? 'USD';
 };
 
-export const ONBOARDING_ACCOUNT_ICONS = [
-  'wallet-outline',
-  'card-outline',
-  'cash-outline',
-  'business-outline',
-  'server-outline',
-  'diamond-outline',
-] as const;
 
-export const ONBOARDING_ACCOUNT_COLORS = ['#6BD498', '#8DECB8', '#3FBF7F', '#F5C451', '#63A4FF', '#FF8A65'] as const;

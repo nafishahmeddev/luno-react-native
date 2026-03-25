@@ -2,9 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ACCOUNT_COLORS, ACCOUNT_ICONS } from '../../../constants/picker';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { typography } from '../../../theme/typography';
-import { ONBOARDING_ACCOUNT_COLORS, ONBOARDING_ACCOUNT_ICONS } from '../constants';
 import { OnboardingFormValues } from '../types';
 
 type AccountStepProps = {
@@ -24,14 +24,7 @@ export function AccountStep({
 }: AccountStepProps) {
   const { colors } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { control, watch, formState: { errors } } = useFormContext<OnboardingFormValues>();
-
-  const accountName = watch('accountName');
-  const accountHolder = watch('accountHolder');
-  const openingBalance = watch('openingBalance');
-
-  const previewName = accountName?.trim() || 'My Account';
-  const previewHolder = accountHolder?.trim() || 'Account Holder';
+  const { control, formState: { errors } } = useFormContext<OnboardingFormValues>();
 
   return (
     <View style={styles.wrapper}>
@@ -138,7 +131,7 @@ export function AccountStep({
       <View style={styles.selectorSection}>
         <Text style={styles.selectorLabel}>PICK AN ICON</Text>
         <View style={styles.iconWrap}>
-          {ONBOARDING_ACCOUNT_ICONS.map((iconName) => {
+          {ACCOUNT_ICONS.map((iconName) => {
             const selected = accountIcon === iconName;
             return (
               <TouchableOpacity
@@ -161,7 +154,7 @@ export function AccountStep({
       <View style={styles.selectorSection}>
         <Text style={styles.selectorLabel}>PICK A COLOR</Text>
         <View style={styles.colorWrap}>
-          {ONBOARDING_ACCOUNT_COLORS.map((swatch) => {
+          {ACCOUNT_COLORS.map((swatch) => {
             const selected = accountColor === swatch;
             return (
               <TouchableOpacity
