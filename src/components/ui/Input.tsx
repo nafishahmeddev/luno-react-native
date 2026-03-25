@@ -55,9 +55,9 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   inputContainer: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
-    borderWidth: 0,
-    borderColor: 'transparent',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
     overflow: 'hidden',
   },
   minimalContainer: {
@@ -73,7 +73,8 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     color: colors.text,
     fontSize: typography.sizes.lg,
     paddingHorizontal: 16,
-    height: 64,
+    paddingVertical: 12,
+    height: 56,
     fontFamily: typography.fonts.regular,
   },
   minimalInput: {
