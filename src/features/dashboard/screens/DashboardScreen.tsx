@@ -181,25 +181,35 @@ export function DashboardScreen() {
           )}
 
           <Text style={styles.heroBadge}>TOTAL BALANCE</Text>
-          <MoneyText
-            amount={balancesByCurrency[selectedCurrency] || 0}
-            currency={selectedCurrency}
-            style={styles.heroBalance}
-            weight="bold"
-          />
+          <View style={styles.heroBalanceContainer}>
+            <MoneyText
+              amount={balancesByCurrency[selectedCurrency] || 0}
+              currency={selectedCurrency}
+              style={styles.heroBalance}
+              weight="bold"
+            />
+          </View>
 
           {/* Income / Expense split bar */}
           <View style={styles.splitRow}>
             <View style={styles.splitItem}>
-              <View style={[styles.splitDot, { backgroundColor: colors.success }]} />
-              <Text style={styles.splitLabel}>IN</Text>
-              <MoneyText amount={totals.income} currency={selectedCurrency} type="CR" weight="bold" style={styles.splitValue} />
+              <View style={[styles.splitIconBox, { backgroundColor: colors.success + '1A' }]}>
+                <Ionicons name="arrow-down-outline" size={14} color={colors.success} />
+              </View>
+              <View>
+                <Text style={styles.splitLabel}>INCOME</Text>
+                <MoneyText amount={totals.income} currency={selectedCurrency} type="CR" weight="bold" style={styles.splitValue} />
+              </View>
             </View>
             <View style={styles.splitDivider} />
             <View style={styles.splitItem}>
-              <View style={[styles.splitDot, { backgroundColor: colors.danger }]} />
-              <Text style={styles.splitLabel}>OUT</Text>
-              <MoneyText amount={totals.expense} currency={selectedCurrency} type="DR" weight="bold" style={styles.splitValue} />
+              <View style={[styles.splitIconBox, { backgroundColor: colors.danger + '1A' }]}>
+                <Ionicons name="arrow-up-outline" size={14} color={colors.danger} />
+              </View>
+              <View>
+                <Text style={styles.splitLabel}>EXPENSE</Text>
+                <MoneyText amount={totals.expense} currency={selectedCurrency} type="DR" weight="bold" style={styles.splitValue} />
+              </View>
             </View>
           </View>
 
@@ -422,24 +432,22 @@ const createStyles = (colors: ThemeColors, screenWidth: number) => StyleSheet.cr
   /* ── Hero balance card ── */
   heroCard: {
     marginHorizontal: 24,
-    marginBottom: 16,
-    borderRadius: 24,
+    marginBottom: 20,
+    borderRadius: 30,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 20,
+    padding: 24,
     overflow: 'hidden',
   },
   currencyTabsRow: {
     flexDirection: 'row',
-    gap: 4,
-    marginBottom: 16,
+    gap: 6,
+    marginBottom: 20,
   },
   currencyTab: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 999,
-    backgroundColor: colors.background + 'AA',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: colors.background + '80',
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -450,8 +458,7 @@ const createStyles = (colors: ThemeColors, screenWidth: number) => StyleSheet.cr
   currencyTabText: {
     fontFamily: typography.fonts.semibold,
     color: colors.textMuted,
-    fontSize: 11,
-    letterSpacing: 0.4,
+    fontSize: 12,
   },
   currencyTabTextActive: {
     color: colors.background,
@@ -459,53 +466,58 @@ const createStyles = (colors: ThemeColors, screenWidth: number) => StyleSheet.cr
   heroBadge: {
     fontFamily: typography.fonts.semibold,
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.5,
-    marginBottom: 6,
+    marginBottom: 8,
+  },
+  heroBalanceContainer: {
+    marginBottom: 24,
   },
   heroBalance: {
-    fontSize: 42,
-    lineHeight: 46,
-    letterSpacing: -1.5,
-    marginBottom: 20,
+    fontSize: 44,
+    lineHeight: 48,
+    letterSpacing: -2,
   },
   splitRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 20,
   },
   splitItem: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
+    gap: 10,
   },
-  splitDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
+  splitIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   splitLabel: {
     fontFamily: typography.fonts.semibold,
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: 9,
     letterSpacing: 1.2,
+    marginBottom: 2,
   },
   splitValue: {
-    fontSize: 13,
+    fontSize: 15,
   },
   splitDivider: {
     width: 1,
-    height: 28,
+    height: 32,
     backgroundColor: colors.border,
-    marginHorizontal: 14,
+    marginHorizontal: 16,
   },
   flowBar: {
     flexDirection: 'row',
-    height: 4,
-    borderRadius: 999,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.background + '60',
     overflow: 'hidden',
-    gap: 2,
   },
   flowBarIncome: {
     borderRadius: 999,

@@ -3,15 +3,17 @@ import * as api from '../api/transactions';
 
 export const TRANSACTIONS_KEYS = {
   all: ['transactions'] as const,
-  paged: (filters: api.TransactionFilters) => ['transactions', 'paged', filters] as const,
-  count: (filters: api.TransactionFilters) => ['transactions', 'count', filters] as const,
-  byId: (id: number) => ['transactions', 'by-id', id] as const,
+  lists: () => [...TRANSACTIONS_KEYS.all, 'list'] as const,
+  list: (filters: api.TransactionFilters) => [...TRANSACTIONS_KEYS.lists(), { filters }] as const,
+  details: () => [...TRANSACTIONS_KEYS.all, 'detail'] as const,
+  detail: (id: number) => [...TRANSACTIONS_KEYS.details(), id] as const,
+  count: (filters: api.TransactionFilters) => [...TRANSACTIONS_KEYS.all, 'count', { filters }] as const,
 };
 
 /** Fetch recent transactions — used by stats screen or dashboard */
 export const useTransactions = (limit: number = 20, filters: api.TransactionFilters = {}) => {
   return useQuery({
-    queryKey: [...TRANSACTIONS_KEYS.all, 'limited', limit, filters],
+    queryKey: [...TRANSACTIONS_KEYS.lists(), 'limited', limit, filters],
     queryFn: () => api.getTransactions(limit, filters),
   });
 };
@@ -19,7 +21,7 @@ export const useTransactions = (limit: number = 20, filters: api.TransactionFilt
 /** Infinite paginated fetch — used by the transactions list screen */
 export const useInfiniteTransactions = (filters: api.TransactionFilters = {}) => {
   return useInfiniteQuery({
-    queryKey: TRANSACTIONS_KEYS.paged(filters),
+    queryKey: TRANSACTIONS_KEYS.list(filters),
     queryFn: ({ pageParam }) => api.getTransactionsPaged(pageParam, filters),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) =>
@@ -36,7 +38,7 @@ export const useTransactionsCount = (filters: api.TransactionFilters = {}) => {
 
 export const useTransactionById = (id?: number | null) => {
   return useQuery({
-    queryKey: id != null ? TRANSACTIONS_KEYS.byId(id) : ['transactions', 'by-id', 'disabled'],
+    queryKey: id != null ? TRANSACTIONS_KEYS.detail(id) : ['transactions', 'detail', 'disabled'],
     queryFn: () => api.getTransactionById(id as number),
     enabled: id != null,
   });
@@ -47,7 +49,7 @@ export const useCreateTransaction = () => {
   return useMutation({
     mutationFn: api.createTransaction,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: TRANSACTIONS_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
@@ -59,7 +61,7 @@ export const useDeleteTransaction = () => {
   return useMutation({
     mutationFn: api.deleteTransaction,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: TRANSACTIONS_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
@@ -71,8 +73,9 @@ export const useUpdateTransaction = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: api.UpdatePayment }) =>
       api.updateTransaction(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: TRANSACTIONS_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: TRANSACTIONS_KEYS.detail(id) });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
