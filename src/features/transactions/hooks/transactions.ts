@@ -34,3 +34,15 @@ export const useDeleteTransaction = () => {
     },
   });
 };
+
+export const useUpdateTransaction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: api.UpdatePayment }) =>
+      api.updateTransaction(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: TRANSACTIONS_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    },
+  });
+};
