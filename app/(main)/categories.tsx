@@ -37,6 +37,11 @@ export default function CategoriesScreen() {
     );
   }, [categories, activeType, query]);
 
+  const totalByType = React.useMemo(
+    () => categories?.filter((cat) => cat.type === activeType).length ?? 0,
+    [categories, activeType]
+  );
+
   const handleCreate = () => {
     setSelectedCategory(null);
     setModalVisible(true);
@@ -71,12 +76,15 @@ export default function CategoriesScreen() {
     ];
   }, [selectedCategory]);
 
-  const renderItem = ({ item }: { item: Category }) => {
+  const renderItem = ({ item, index }: { item: Category; index: number }) => {
     const catColor = item.color ? '#' + item.color.toString(16).padStart(6, '0') : colors.primary;
 
     return (
       <TouchableOpacity
-        style={styles.categoryCard}
+        style={[
+          styles.categoryCard,
+          index % 2 === 0 ? styles.categoryCardLeft : styles.categoryCardRight,
+        ]}
         onPress={() => handleEdit(item)}
         onLongPress={() => {
           setSelectedCategory(item);
@@ -85,10 +93,10 @@ export default function CategoriesScreen() {
         delayLongPress={280}
         activeOpacity={0.92}
       >
-        <View style={[styles.leftAccent, { backgroundColor: catColor }]} />
+        <View style={[styles.cardGlow, { backgroundColor: catColor + '30' }]} />
 
         <View style={styles.cardTopRow}>
-          <View style={[styles.categoryIconBox, { backgroundColor: catColor + '1F' }]}> 
+          <View style={[styles.categoryIconBox, { backgroundColor: catColor + '22' }]}> 
             <Ionicons name={item.icon as any || 'grid-outline'} size={20} color={catColor} />
           </View>
           <View style={[styles.typeBadge, item.type === 'DR' ? styles.typeBadgeDanger : styles.typeBadgeSuccess]}>
@@ -100,10 +108,14 @@ export default function CategoriesScreen() {
 
         <View style={styles.cardMainRow}>
           <View style={styles.cardInfo}>
-            <Text style={styles.categoryName} numberOfLines={1}>{item.name}</Text>
-            <Text style={styles.categorySubtext}>Tap to edit, hold for more options.</Text>
+            <Text style={styles.categoryName} numberOfLines={2}>{item.name}</Text>
+            <Text style={styles.categorySubtext}>Tap to edit</Text>
           </View>
-          <Ionicons name="ellipsis-horizontal" size={16} color={colors.textMuted} />
+        </View>
+
+        <View style={styles.cardFooter}>
+          <Text style={styles.cardFooterText}>Hold for options</Text>
+          <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
         </View>
       </TouchableOpacity>
     );
@@ -119,11 +131,8 @@ export default function CategoriesScreen() {
         <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <View style={{ flex: 1 }}>
-          <View style={styles.heroCard}>
-            <Text style={styles.heroKicker}>Category Control</Text>
-            <Text style={styles.heroTitle}>{activeType === 'DR' ? 'Expense Categories' : 'Income Categories'}</Text>
-
-            <View style={styles.controlRow}>
+          <View style={styles.filtersWrap}>
+            <View style={styles.typeTabsRail}>
               <TouchableOpacity
                 style={[styles.segmentPill, activeType === 'DR' && styles.segmentPillActive]}
                 onPress={() => setActiveType('DR')}
@@ -158,13 +167,18 @@ export default function CategoriesScreen() {
                 </TouchableOpacity>
               ) : null}
             </View>
+
+            <View style={styles.filterMetaRow}>
+              <Text style={styles.filterMetaText}>{filteredCategories.length} shown</Text>
+              <Text style={styles.filterMetaText}>{totalByType} total</Text>
+            </View>
           </View>
 
           <FlatList
             data={filteredCategories}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderItem}
-            numColumns={1}
+            numColumns={2}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             key={`${activeType}-list`}
@@ -220,66 +234,49 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, overflow: 'hidden' },
 
   listContent: {
-    paddingHorizontal: 24,
-    paddingTop: 4,
+    paddingHorizontal: 20,
+    paddingTop: 6,
     paddingBottom: 100,
   },
 
-  heroCard: {
-    marginHorizontal: 24,
+  filtersWrap: {
+    marginHorizontal: 20,
     marginTop: 6,
-    marginBottom: 10,
-    borderRadius: 22,
-    padding: 14,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  heroKicker: {
-    fontFamily: typography.fonts.semibold,
-    color: colors.textMuted,
-    fontSize: 10,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  heroTitle: {
-    fontFamily: typography.fonts.headingRegular,
-    color: colors.text,
-    fontSize: 20,
-    letterSpacing: -0.4,
-    marginBottom: 12,
+    marginBottom: 8,
+    gap: 8,
   },
 
-  controlRow: {
+  typeTabsRail: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 10,
+    height: 46,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface + 'D9',
+    padding: 4,
+    gap: 4,
   },
 
   segmentPill: {
     flex: 1,
-    height: 44,
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 7,
-    borderRadius: 12,
-    backgroundColor: colors.background + 'B8',
-    borderWidth: 1,
-    borderColor: colors.border,
+    gap: 6,
+    borderRadius: 10,
+    backgroundColor: 'transparent',
   },
 
   segmentPillActive: {
     backgroundColor: colors.text,
-    borderColor: colors.text,
   },
 
   segmentPillText: {
     fontFamily: typography.fonts.semibold,
     color: colors.textMuted,
     fontSize: 12,
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
   },
 
   segmentPillTextActive: {
@@ -287,7 +284,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
 
   searchWrap: {
-    height: 46,
+    height: 42,
     borderRadius: 13,
     borderWidth: 1,
     borderColor: colors.border,
@@ -306,44 +303,68 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     color: colors.text,
   },
 
-  categoryCard: {
-    position: 'relative',
-    width: '100%',
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 12,
-    overflow: 'hidden',
+  filterMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
   },
 
-  leftAccent: {
+  filterMetaText: {
+    fontFamily: typography.fonts.semibold,
+    fontSize: 10,
+    letterSpacing: 0.4,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+  },
+
+  categoryCard: {
+    position: 'relative',
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 10,
+    overflow: 'hidden',
+    minHeight: 156,
+  },
+
+  categoryCardLeft: {
+    marginRight: 6,
+  },
+
+  categoryCardRight: {
+    marginLeft: 6,
+  },
+
+  cardGlow: {
     position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 3,
+    right: -24,
+    top: -24,
+    width: 88,
+    height: 88,
+    borderRadius: 999,
   },
 
   cardTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   categoryIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 13,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   typeBadge: {
-    height: 24,
+    height: 22,
     borderRadius: 999,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -355,8 +376,8 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   typeBadgeText: {
     fontFamily: typography.fonts.semibold,
-    fontSize: 10,
-    letterSpacing: 0.8,
+    fontSize: 9,
+    letterSpacing: 0.7,
   },
   typeBadgeTextDanger: {
     color: colors.danger,
@@ -377,15 +398,32 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   categoryName: {
     fontFamily: typography.fonts.headingRegular,
     color: colors.text,
-    fontSize: 22,
+    fontSize: 20,
     letterSpacing: -0.5,
+    lineHeight: 23,
   },
 
   categorySubtext: {
     fontFamily: typography.fonts.regular,
     color: colors.textMuted,
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 11,
+    marginTop: 6,
+  },
+
+  cardFooter: {
+    marginTop: 'auto',
+    paddingTop: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  cardFooterText: {
+    fontFamily: typography.fonts.semibold,
+    fontSize: 10,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: colors.textMuted,
   },
 
   emptyContainer: {
