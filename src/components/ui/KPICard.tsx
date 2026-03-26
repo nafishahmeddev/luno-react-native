@@ -38,26 +38,46 @@ export const KPICard = ({ currencies, selectedCurrency, onSelectCurrency, metric
           </ScrollView>
         </View>
       )}
-      <View style={styles.kpiStrip}>
-        <View style={styles.kpiCell}>
-          <Text style={styles.kpiLabel}>IN</Text>
-          <MoneyText amount={metrics.income} currency={selectedCurrency ?? undefined} type="CR" weight="bold" style={styles.kpiValue} />
+      <View style={styles.kpiBody}>
+        {/* Top: Net Balance */}
+        <View style={styles.kpiMainContent}>
+          <View>
+            <Text style={styles.kpiLabel}>NET SAVINGS</Text>
+            <MoneyText
+              amount={Math.abs(metrics.income - metrics.expense)}
+              currency={selectedCurrency ?? undefined}
+              type={metrics.income >= metrics.expense ? 'CR' : 'DR'}
+              weight="bold"
+              style={styles.kpiValueLarge}
+            />
+          </View>
         </View>
-        <View style={styles.kpiSep} />
-        <View style={styles.kpiCell}>
-          <Text style={styles.kpiLabel}>OUT</Text>
-          <MoneyText amount={metrics.expense} currency={selectedCurrency ?? undefined} type="DR" weight="bold" style={styles.kpiValue} />
-        </View>
-        <View style={styles.kpiSep} />
-        <View style={styles.kpiCell}>
-          <Text style={styles.kpiLabel}>NET</Text>
-          <MoneyText
-            amount={Math.abs(metrics.income - metrics.expense)}
-            currency={selectedCurrency ?? undefined}
-            type={metrics.income >= metrics.expense ? 'CR' : 'DR'}
-            weight="bold"
-            style={styles.kpiValue}
-          />
+
+        <View style={styles.kpiDivider} />
+
+        {/* Bottom: In/Out Split */}
+        <View style={styles.kpiSecondaryContent}>
+          <View style={styles.kpiCell}>
+            <Text style={styles.kpiLabelSmall}>INCOME</Text>
+            <MoneyText
+              amount={metrics.income}
+              currency={selectedCurrency ?? undefined}
+              type="CR"
+              weight="semibold"
+              style={styles.kpiValueSmall}
+            />
+          </View>
+          <View style={styles.kpiVerticalSep} />
+          <View style={styles.kpiCell}>
+            <Text style={styles.kpiLabelSmall}>EXPENSES</Text>
+            <MoneyText
+              amount={metrics.expense}
+              currency={selectedCurrency ?? undefined}
+              type="DR"
+              weight="semibold"
+              style={styles.kpiValueSmall}
+            />
+          </View>
         </View>
       </View>
     </View>
@@ -105,28 +125,57 @@ const createStyles = (colors: ThemeColors) =>
     currencyTabTextActive: {
       color: colors.background,
     },
-    kpiStrip: {
+    kpiBody: {
+      padding: 16,
+      paddingBottom: 14,
+      gap: 12,
+    },
+    kpiMainContent: {
       flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    kpiSecondaryContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     kpiCell: {
       flex: 1,
-      paddingVertical: 14,
-      paddingHorizontal: 12,
-      gap: 5,
+      gap: 2,
     },
-    kpiSep: {
+    kpiVerticalSep: {
       width: 1,
-      marginVertical: 12,
+      height: 24,
       backgroundColor: colors.border,
+      marginHorizontal: 16,
+      opacity: 0.6,
     },
     kpiLabel: {
       color: colors.textMuted,
       fontFamily: TYPOGRAPHY.fonts.semibold,
       fontSize: 9,
-      letterSpacing: 1.4,
+      letterSpacing: 1.2,
+      textTransform: 'uppercase',
+      marginBottom: 2,
     },
-    kpiValue: {
-      fontSize: 15,
+    kpiLabelSmall: {
+      color: colors.textMuted,
+      fontFamily: TYPOGRAPHY.fonts.semibold,
+      fontSize: 8,
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+    },
+    kpiValueLarge: {
+      fontSize: 24,
+      lineHeight: 28,
+    },
+    kpiValueSmall: {
+      fontSize: 14,
       lineHeight: 18,
+    },
+    kpiDivider: {
+      height: 1,
+      backgroundColor: colors.border,
+      opacity: 0.5,
     },
   });
