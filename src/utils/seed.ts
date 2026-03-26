@@ -1,139 +1,175 @@
+import { InferSelectModel, eq, sql } from 'drizzle-orm';
 import { db } from '../db/client';
 import { accounts, categories, payments } from '../db/schema';
-import { eq, sql } from 'drizzle-orm';
+
+type Category = InferSelectModel<typeof categories>;
 
 /**
- * Multipliers relative to USD to provide realistic amounts for different currencies.
+ * Currency-based scaling factors for realistic amount generation.
  */
 const CURRENCY_MULTIPLIERS: Record<string, number> = {
-  USD: 1,
-  EUR: 0.92,
-  GBP: 0.79,
-  INR: 83,
-  JPY: 151,
-  KRW: 1340,
-  IDR: 15800,
-  VND: 24700,
-  AED: 3.67,
-  SAR: 3.75,
-  CAD: 1.36,
-  AUD: 1.52,
-  BRL: 5.0,
-  MXN: 16.7,
-  TRY: 32.2,
+  USD: 1, EUR: 0.92, GBP: 0.79, INR: 83, JPY: 151, KRW: 1340,
+  IDR: 15800, VND: 24700, AED: 3.67, SAR: 3.75, CAD: 1.36,
+  AUD: 1.52, BRL: 5.0, MXN: 16.7, TRY: 32.2,
+};
+
+type SeedContext = {
+  accountId: number;
+  multiplier: number;
+  incomeCategories: Category[];
+  expenseCategories: Category[];
+  now: Date;
 };
 
 /**
- * Seeds the database with random transactions for the past 12 months.
- * This is intended for development and testing purposes only.
+ * Generates a monthly salary transaction.
+ */
+function generateSalary(monthDate: Date, ctx: SeedContext) {
+  const baseAmount = 4000 + Math.floor(Math.random() * 3000);
+  const amount = (baseAmount + Math.floor(Math.random() * 1000)) * ctx.multiplier;
+  const date = new Date(monthDate);
+  date.setDate(1 + Math.floor(Math.random() * 5)); // 1st - 5th
+
+  return {
+    accountId: ctx.accountId,
+    categoryId: ctx.incomeCategories[Math.floor(Math.random() * ctx.incomeCategories.length)].id,
+    amount,
+    type: 'CR' as const,
+    datetime: date.toISOString(),
+    note: 'Monthly Salary Credit',
+  };
+}
+
+/**
+ * Generates a recurring monthly rent payment.
+ */
+function generateRent(monthDate: Date, ctx: SeedContext) {
+  const baseAmount = 1000 + Math.floor(Math.random() * 800);
+  const amount = baseAmount * ctx.multiplier;
+  const date = new Date(monthDate);
+  date.setDate(1); // Usually 1st
+
+  const rentCat = ctx.expenseCategories.find(c => {
+    const name = c.name.toLowerCase();
+    return name.includes('rent') || name.includes('housing');
+  }) || ctx.expenseCategories[0];
+  
+  return {
+    accountId: ctx.accountId,
+    categoryId: rentCat.id,
+    amount,
+    type: 'DR' as const,
+    datetime: date.toISOString(),
+    note: 'Monthly Rent Payment',
+  };
+}
+
+/**
+ * Generates a set of random daily expenses for a given month.
+ */
+function generateRandomExpenses(monthDate: Date, ctx: SeedContext, isCurrentMonth: boolean) {
+  const transactions = [];
+  const count = 5 + Math.floor(Math.random() * 10);
+  const maxDay = isCurrentMonth ? ctx.now.getDate() : 28;
+
+  const notes = [
+    'Grocery Shopping', 'Coffee with friend', 'Amazon Purchase', 
+    'Uber Ride', 'Netflix Subscription', 'Gym Membership', 
+    'Dining Out', 'Pharmacy', 'Utility bill', 'Gas Station'
+  ];
+
+  for (let i = 0; i < count; i++) {
+    const baseAmount = 5 + Math.floor(Math.random() * 150);
+    const amount = baseAmount * ctx.multiplier;
+    const date = new Date(monthDate);
+    date.setDate(1 + Math.floor(Math.random() * maxDay));
+
+    const category = ctx.expenseCategories[Math.floor(Math.random() * ctx.expenseCategories.length)];
+    const note = notes[Math.floor(Math.random() * notes.length)];
+
+    transactions.push({
+      accountId: ctx.accountId,
+      categoryId: category.id,
+      amount,
+      type: 'DR' as const,
+      datetime: date.toISOString(),
+      note: `${note} (${category.name})`,
+    });
+  }
+  return transactions;
+}
+
+/**
+ * Robust utility to professionally seed the database with realistic multi-account data.
  */
 export async function seedDummyData() {
   try {
-    // 1. Get all accounts
     const allAccounts = await db.select().from(accounts);
     if (allAccounts.length === 0) {
       throw new Error('No accounts found. Please complete onboarding first.');
     }
 
-    // 2. Get categories
     const allCategories = await db.select().from(categories);
     const incomeCats = allCategories.filter(c => c.type === 'CR');
     const expenseCats = allCategories.filter(c => c.type === 'DR');
 
     if (incomeCats.length === 0 || expenseCats.length === 0) {
-      throw new Error('Missing categories. Please ensure seed categories are present.');
+      throw new Error('Required categories missing. Ensure base categories are seeded.');
     }
 
     const now = new Date();
-    let totalInserted = 0;
+    let totalSeeded = 0;
 
-    // 3. Loop through each account
     for (const account of allAccounts) {
-      const multiplier = CURRENCY_MULTIPLIERS[account.currency.toUpperCase()] ?? 1;
-      const transactions = [];
-      let accountIncome = 0;
-      let accountExpense = 0;
+      const ctx: SeedContext = {
+        accountId: account.id,
+        multiplier: CURRENCY_MULTIPLIERS[account.currency.toUpperCase()] ?? 1,
+        incomeCategories: incomeCats,
+        expenseCategories: expenseCats,
+        now,
+      };
 
-      // Randomize base amounts slightly per account so they aren't identical
-      const baseSalary = 3000 + Math.floor(Math.random() * 4000);
-      const baseRent = 800 + Math.floor(Math.random() * 1000);
+      const accountTransactions = [];
 
-      // 4. Generate data for 12 months for THIS account
+      // Generate 12 months of history
       for (let m = 0; m < 12; m++) {
+        const isCurrentMonth = m === 0;
         const monthDate = new Date(now.getFullYear(), now.getMonth() - m, 1);
-        
-        // A. Monthly Salary (Income)
-        const salaryAmount = (baseSalary + Math.floor(Math.random() * 1000)) * multiplier;
-        const salaryDate = new Date(monthDate);
-        salaryDate.setDate(1 + Math.floor(Math.random() * 5)); // 1st - 5th
-        
-        transactions.push({
-          accountId: account.id,
-          categoryId: incomeCats[Math.floor(Math.random() * incomeCats.length)].id,
-          amount: salaryAmount,
-          type: 'CR' as const,
-          datetime: salaryDate.toISOString(),
-          note: 'Monthly Salary Credit',
-        });
-        accountIncome += salaryAmount;
 
-        // B. Monthly Rent (Expense) - Only for some accounts maybe? Let's do all for now.
-        const rentAmount = (baseRent + Math.floor(Math.random() * 200)) * multiplier;
-        const rentDate = new Date(monthDate);
-        rentDate.setDate(1); // 1st of each month
-        
-        transactions.push({
-          accountId: account.id,
-          categoryId: expenseCats.find(c => c.name.toLowerCase().includes('rent'))?.id || expenseCats[0].id,
-          amount: rentAmount,
-          type: 'DR' as const,
-          datetime: rentDate.toISOString(),
-          note: 'Monthly Rent Payment',
-        });
-        accountExpense += rentAmount;
+        // 1. Income
+        accountTransactions.push(generateSalary(monthDate, ctx));
 
-        // C. 4-10 Random Expenses per month
-        const expenseCount = 4 + Math.floor(Math.random() * 7);
-        for (let i = 0; i < expenseCount; i++) {
-          const amount = (5 + Math.floor(Math.random() * 150)) * multiplier;
-          const date = new Date(monthDate);
-          const maxDay = m === 0 ? now.getDate() : 28;
-          date.setDate(1 + Math.floor(Math.random() * maxDay));
-          
-          const cat = expenseCats[Math.floor(Math.random() * expenseCats.length)];
-          
-          transactions.push({
-            accountId: account.id,
-            categoryId: cat.id,
-            amount: amount,
-            type: 'DR' as const,
-            datetime: date.toISOString(),
-            note: `Purchase at ${cat.name}`,
-          });
-          accountExpense += amount;
-        }
+        // 2. Fixed Cost
+        accountTransactions.push(generateRent(monthDate, ctx));
+
+        // 3. Variable Spending
+        accountTransactions.push(...generateRandomExpenses(monthDate, ctx, isCurrentMonth));
       }
 
-      // 5. Batch insert payments for this account
-      if (transactions.length > 0) {
-        await db.insert(payments).values(transactions);
-        totalInserted += transactions.length;
+      // Batch insert transactions for this account
+      if (accountTransactions.length > 0) {
+        await db.insert(payments).values(accountTransactions);
 
-        // 6. Update this account's totals
+        const income = accountTransactions.filter(t => t.type === 'CR').reduce((sum, t) => sum + t.amount, 0);
+        const expense = accountTransactions.filter(t => t.type === 'DR').reduce((sum, t) => sum + t.amount, 0);
+
+        // Update account state
         await db.update(accounts)
           .set({
-            balance: sql`${accounts.balance} + ${accountIncome} - ${accountExpense}`,
-            income: sql`${accounts.income} + ${accountIncome}`,
-            expense: sql`${accounts.expense} + ${accountExpense}`,
-            updatedAt: new Date().toISOString(),
+            balance: sql`${accounts.balance} + ${income} - ${expense}`,
+            income: sql`${accounts.income} + ${income}`,
+            expense: sql`${accounts.expense} + ${expense}`,
+            updatedAt: now.toISOString(),
           })
           .where(eq(accounts.id, account.id));
+
+        totalSeeded += accountTransactions.length;
       }
     }
 
-    return totalInserted;
-  } catch (error) {
-    console.error('Seeding failed:', error);
-    throw error;
+    return totalSeeded;
+  } catch (err: any) {
+    console.error('[Seeder Error]:', err);
+    throw new Error(`Failed to seed realistic data: ${err.message}`);
   }
 }
