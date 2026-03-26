@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import Constants from 'expo-constants';
 import React from 'react';
 import { Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -135,7 +136,7 @@ export default function SettingsScreen() {
             <View style={styles.heroGridDivider} />
             <View style={styles.heroGridItem}>
               <Text style={styles.heroGridLabel}>VERSION</Text>
-              <Text style={styles.heroGridValue}>v1.2.0-STABLE</Text>
+              <Text style={styles.heroGridValue}>v{Constants.expoConfig?.version || '1.0.0'}</Text>
             </View>
           </View>
         </View>
