@@ -96,7 +96,7 @@ export default function OnboardingScreen() {
       // ── Food & Drink ────────────────────────────────────────────────
       { name: 'Groceries',     icon: 'basket-outline',        color: toDbColor('#F5C451'), type: 'DR' },
       { name: 'Dining Out',    icon: 'restaurant-outline',    color: toDbColor('#FB923C'), type: 'DR' },
-      { name: 'Delivery',      icon: 'moped-outline',         color: toDbColor('#F87171'), type: 'DR' },
+      { name: 'Delivery',      icon: 'bicycle-outline',      color: toDbColor('#F87171'), type: 'DR' },
       { name: 'Coffee',        icon: 'cafe-outline',          color: toDbColor('#C4A35A'), type: 'DR' },
       { name: 'Drinks',        icon: 'wine-outline',          color: toDbColor('#C084FC'), type: 'DR' },
 

@@ -33,7 +33,7 @@ type Props = {
 
 const toHexColor = (value: number) => `#${value.toString(16).padStart(6, '0')}`;
 
-export const TransactionRow = ({ tx, colors, onPress, isFirst, isLast, showDate }: Props) => {
+export const TransactionRow = React.memo(({ tx, colors, onPress, isFirst, isLast, showDate }: Props) => {
   const categoryColor = toHexColor(tx.category.color);
   const iconName: keyof typeof Ionicons.glyphMap =
     tx.category.icon in Ionicons.glyphMap
@@ -104,7 +104,9 @@ export const TransactionRow = ({ tx, colors, onPress, isFirst, isLast, showDate 
       </View>
     </TouchableOpacity>
   );
-};
+});
+
+TransactionRow.displayName = 'TransactionRow';
 
 const styles = StyleSheet.create({
   container: {

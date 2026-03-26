@@ -4,6 +4,7 @@ import React from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -259,6 +260,46 @@ export function TransactionsScreen() {
     [],
   );
 
+  const renderItem = React.useCallback(({ item }: { item: [string, TransactionListItem[]] }) => {
+    const [dateLabel, items] = item;
+    const dayTotal = items.reduce(
+      (acc, tx) => {
+        if (tx.type === 'CR') acc.in += tx.amount;
+        else acc.out += tx.amount;
+        return acc;
+      },
+      { in: 0, out: 0 },
+    );
+    return (
+      <View style={styles.daySection}>
+        <View style={styles.dayHeaderRow}>
+          <Text style={styles.dayTitle}>{dateLabel}</Text>
+          <View style={styles.dayTotals}>
+            {dayTotal.in > 0 && (
+              <MoneyText amount={dayTotal.in} type="CR" style={styles.dayTotalValue} />
+            )}
+            {dayTotal.out > 0 && (
+              <MoneyText amount={dayTotal.out} type="DR" style={styles.dayTotalValue} />
+            )}
+          </View>
+        </View>
+        <View style={styles.dayCard}>
+          {items.map((tx, idx) => (
+            <SwipeableRow
+              key={tx.id}
+              tx={tx}
+              isFirst={idx === 0}
+              isLast={idx === items.length - 1}
+              colors={colors}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </View>
+      </View>
+    );
+  }, [colors, handleEdit, handleDelete, styles]);
+
   if (txQuery.isLoading) {
     return (
       <View style={styles.loadingWrap}>
@@ -290,10 +331,15 @@ export function TransactionsScreen() {
       <FlatList
         data={groupedByDate}
         keyExtractor={(item) => item[0]}
+        renderItem={renderItem}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         onEndReached={loadMore}
         onEndReachedThreshold={0.4}
+        initialNumToRender={8}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        removeClippedSubviews={Platform.OS === 'android'}
         ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
         ListHeaderComponent={(
           <View style={styles.listHeader}>
@@ -337,45 +383,6 @@ export function TransactionsScreen() {
             <ActivityIndicator size="small" color={colors.primary} />
           </View>
         ) : null}
-        renderItem={({ item }) => {
-          const [dateLabel, items] = item;
-          const dayTotal = items.reduce(
-            (acc, tx) => {
-              if (tx.type === 'CR') acc.in += tx.amount;
-              else acc.out += tx.amount;
-              return acc;
-            },
-            { in: 0, out: 0 },
-          );
-          return (
-            <View style={styles.daySection}>
-              <View style={styles.dayHeaderRow}>
-                <Text style={styles.dayTitle}>{dateLabel}</Text>
-                <View style={styles.dayTotals}>
-                  {dayTotal.in > 0 && (
-                    <MoneyText amount={dayTotal.in} type="CR" style={styles.dayTotalValue} />
-                  )}
-                  {dayTotal.out > 0 && (
-                    <MoneyText amount={dayTotal.out} type="DR" style={styles.dayTotalValue} />
-                  )}
-                </View>
-              </View>
-              <View style={styles.dayCard}>
-                {items.map((tx, idx) => (
-                  <SwipeableRow
-                    key={tx.id}
-                    tx={tx}
-                    isFirst={idx === 0}
-                    isLast={idx === items.length - 1}
-                    colors={colors}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </View>
-            </View>
-          );
-        }}
       />
 
       <TouchableOpacity style={styles.fab} onPress={() => router.push('/transactions/create')} activeOpacity={0.9}>
